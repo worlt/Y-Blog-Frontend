@@ -1,7 +1,6 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
 
-
 export const useAuditorInfoStore = defineStore('auditorInfo', () => {
 
         const info = ref({})
