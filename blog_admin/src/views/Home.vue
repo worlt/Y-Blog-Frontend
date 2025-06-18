@@ -1,10 +1,10 @@
 <script setup>
-import {Document, User, Bell, Setting, SwitchButton} from "@element-plus/icons-vue";
+import {Bell, Document, Setting, SwitchButton, User} from "@element-plus/icons-vue";
 import {useAdminInfoStore} from "@/stores/adminInfo.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {useTokenStore} from "@/stores/token.js";
 import router from "@/router/index.js";
-import {computed, ref, onMounted, onUnmounted} from "vue";
+import {computed, onMounted, onUnmounted, ref} from "vue";
 import {adminLogout} from "@/api/admin.js";
 
 const adminInfoStore = useAdminInfoStore();
@@ -68,12 +68,10 @@ const handleAvatarUpdate = (event) => {
   if (event.detail && event.detail.avatar) {
     // 设置一个随机时间戳参数，避免浏览器缓存
     const timestamp = new Date().getTime();
-    const avatarUrl = event.detail.avatar.includes('?') 
-      ? `${event.detail.avatar}&t=${timestamp}` 
-      : `${event.detail.avatar}?t=${timestamp}`;
-    
     // 更新头像
-    avatar.value = avatarUrl;
+    avatar.value = event.detail.avatar.includes('?')
+        ? `${event.detail.avatar}&t=${timestamp}`
+        : `${event.detail.avatar}?t=${timestamp}`;
   } else {
     // 强制刷新头像
     fetchAvatar();
@@ -178,6 +176,7 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   font-size: 20px;
+  color: #9485ef;
   font-weight: bolder;
 }
 

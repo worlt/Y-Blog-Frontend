@@ -4,7 +4,6 @@ import { useAdminInfoStore } from "@/stores/adminInfo.js";
 import { ElMessage, ElLoading } from "element-plus";
 import { getById, updateAdmin, updatePassword, sendCode, resetPasswordByEmail } from "@/api/admin.js";
 import { uploadImage } from "@/api/common.js";
-import request from "@/utils/request.js";
 
 // 获取当前登录的管理员信息
 const adminInfoStore = useAdminInfoStore();
@@ -22,6 +21,7 @@ const roleText = computed(() => {
     case 0: return '管理员';
     case 1: return '审核员';
     case 2: return '普通用户';
+    case 3: return 'VIP用户';
     default: return '未知角色';
   }
 });

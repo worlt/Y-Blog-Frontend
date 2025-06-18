@@ -1,5 +1,4 @@
 import {createRouter, createWebHistory} from "vue-router";
-import { useTokenStore } from '@/stores/token.js'
 
 //定义路由
 const routes = [
@@ -40,7 +39,7 @@ const routes = [
                 meta: { title: '管理员管理' }
             },
             {
-                path: '/user/auditor',
+                path: '/user/audit',
                 component: () => import('@/views/user/Auditor.vue'),
                 meta: { title: '审核员管理' }
             },
