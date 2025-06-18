@@ -1,5 +1,5 @@
 <script setup>
-import {reactive, ref} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import {userReportPageQuery, getUserReportById, getUserById, handleUserReport} from "@/api/userReport.js";
 import {ElMessage} from "element-plus";
 
@@ -178,9 +178,9 @@ const submitHandle = async () => {
 }
 
 // 初始加载数据
-getList();
-
-// TODO：修改获取举报详情时直接拿VO
+onMounted(() => {
+  getList();
+})
 </script>
 
 <template>

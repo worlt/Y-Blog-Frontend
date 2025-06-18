@@ -1,5 +1,5 @@
 <script setup>
-import {reactive, ref} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import {commentReportPageQuery, getCommentReportById, getCommentById, handleCommentReport} from "@/api/commentReport.js";
 import {ElMessage} from "element-plus";
 
@@ -178,7 +178,9 @@ const submitHandle = async () => {
 }
 
 // 初始加载数据
-getList();
+onMounted(() => {
+  getList();
+})
 </script>
 
 <template>
