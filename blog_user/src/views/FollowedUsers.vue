@@ -23,18 +23,40 @@ onMounted(() => {
 // 加载我关注的用户
 const loadFollowedUsers = async () => {
   loading.value = true
+  
   try {
+    console.log('正在加载关注用户列表...')
     const result = await userApi.getFollows()
+    console.log('关注用户列表API响应:', result)
     
-    if (result.code === 0 && result.data) {
-      followList.value = result.data || []
+    if (result.code === 0) {
+      // 处理不同的返回数据结构
+      let userData = []
+      
+      if (Array.isArray(result.data)) {
+        userData = result.data
+      } else if (result.data && typeof result.data === 'object' && result.data.records) {
+        userData = result.data.records
+      } else if (result.data && typeof result.data === 'object') {
+        userData = [result.data]
+      }
+      
+      // 确保所有用户数据都有一个唯一ID
+      followList.value = userData.map(user => {
+        return {
+          ...user,
+          id: user.userId || user.id || Math.random().toString(36).substr(2, 9)
+        }
+      })
+      
+      console.log('处理后的关注用户列表:', followList.value)
     } else {
-      ElMessage.error('获取关注列表失败')
+      ElMessage.warning(result.msg || '暂无关注数据')
       followList.value = []
     }
   } catch (error) {
     console.error('获取关注列表失败:', error)
-    ElMessage.error('获取关注列表失败')
+    ElMessage.error('获取关注列表失败，请稍后重试')
     followList.value = []
   } finally {
     loading.value = false
@@ -45,7 +67,7 @@ const loadFollowedUsers = async () => {
 const handleCancelFollow = async (user) => {
   try {
     await ElMessageBox.confirm(
-      `确定要取消关注"${user.username}"吗？`, 
+      `确定要取消关注"${user.username || '该用户'}"吗？`, 
       '提示', 
       {
         confirmButtonText: '确定',
@@ -54,14 +76,23 @@ const handleCancelFollow = async (user) => {
       }
     )
     
-    cancelingFollow.value = user.id
+    const userId = user.userId || user.id
+    if (!userId) {
+      ElMessage.error('无法获取用户ID')
+      return
+    }
+    
+    cancelingFollow.value = userId
     
     // 调用关注接口取消关注
-    const result = await userApi.followUser(user.userId || user.id)
+    const result = await userApi.followUser(userId)
     
     if (result.code === 0) {
       ElMessage.success('已取消关注')
-      loadFollowedUsers() // 重新加载列表
+      // 从本地列表中移除该用户
+      followList.value = followList.value.filter(item => 
+        (item.userId !== userId) && (item.id !== userId)
+      )
     } else {
       ElMessage.error(result.msg || '取消关注失败')
     }
@@ -77,29 +108,49 @@ const handleCancelFollow = async (user) => {
 
 // 查看用户
 const handleViewUser = (user) => {
-  // 跳转到用户主页或个人资料页
-  router.push(`/user/${user.userId || user.id}`)
+  const userId = user.userId || user.id
+  if (!userId) {
+    ElMessage.warning('无法获取用户ID')
+    return
+  }
+  
+  // 跳转到用户主页
+  try {
+    router.push(`/user/${userId}`)
+  } catch (error) {
+    console.error('导航失败:', error)
+    ElMessage.warning('暂不支持查看用户详情')
+  }
 }
 
 // 格式化时间
 const formatDate = (dateString) => {
-  if (!dateString) return ''
+  if (!dateString) return '未知时间'
   
-  const now = new Date()
-  const date = new Date(dateString)
-  const diffInMs = now - date
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
-  
-  if (diffInDays < 1) {
-    return '今天'
-  } else if (diffInDays < 7) {
-    return `${diffInDays}天前`
-  } else {
-    return date.toLocaleDateString('zh-CN', { 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit'
-    })
+  try {
+    const now = new Date()
+    const date = new Date(dateString)
+    
+    if (isNaN(date.getTime())) {
+      return '未知时间'
+    }
+    
+    const diffInMs = now - date
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
+    
+    if (diffInDays < 1) {
+      return '今天'
+    } else if (diffInDays < 7) {
+      return `${diffInDays}天前`
+    } else {
+      return date.toLocaleDateString('zh-CN', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit'
+      })
+    }
+  } catch (e) {
+    return '未知时间'
   }
 }
 </script>
@@ -114,13 +165,13 @@ const formatDate = (dateString) => {
     <div class="followed-list-container">
       <!-- 加载中 -->
       <div v-if="loading" class="loading-container">
-        <el-skeleton :rows="10" animated />
+        <el-skeleton :rows="5" animated />
       </div>
       
       <!-- 空列表 -->
       <div v-else-if="followList.length === 0" class="empty-container">
         <el-empty description="暂无关注的用户">
-          <el-button type="primary" @click="router.push('/blogs')">去关注更多用户</el-button>
+          <el-button type="primary" @click="router.push('/blogs')">浏览更多用户</el-button>
         </el-empty>
       </div>
       
@@ -128,27 +179,27 @@ const formatDate = (dateString) => {
       <div v-else class="user-list">
         <div 
           v-for="user in followList" 
-          :key="user.userId || user.id"
+          :key="user.id"
           class="user-item"
         >
           <!-- 用户头像 -->
-          <div class="user-avatar" @click="handleViewUser(user)">
+          <div class="user-avatar">
             <el-avatar :size="60" :src="user.avatar">
-              <span v-if="!user.avatar">{{ user.username?.charAt(0).toUpperCase() }}</span>
+              {{ (user.username || 'User').charAt(0).toUpperCase() }}
             </el-avatar>
           </div>
           
           <!-- 用户信息 -->
-          <div class="user-info" @click="handleViewUser(user)">
-            <h3 class="user-name">{{ user.username }}</h3>
+          <div class="user-info">
+            <h3 class="user-name">{{ user.username || '未知用户' }}</h3>
             <div class="user-meta">
-              <div class="follow-count">
+              <!-- <div class="follow-count">
                 <span class="count-label">关注：</span>
-                <span class="count-value">{{ user.followCount || '--' }}</span>
-              </div>
+                <span class="count-value">{{ user.followCount || 0 }}</span>
+              </div> -->
               <div class="fans-count">
                 <span class="count-label">粉丝：</span>
-                <span class="count-value">{{ user.fansCount || '--' }}</span>
+                <span class="count-value">{{ user.fans || 0 }}</span>
               </div>
               <div class="follow-time" v-if="user.followTime">
                 关注于 {{ formatDate(user.followTime) }}
@@ -159,26 +210,27 @@ const formatDate = (dateString) => {
           
           <!-- 操作按钮 -->
           <div class="user-actions">
-            <el-button 
+            <!-- 暂时隐藏查看按钮，因为暂不支持查看用户详情 -->
+            <!-- <el-button 
               type="primary"
-              icon="User"
               size="small"
+              plain
               @click="handleViewUser(user)"
               title="查看用户"
-              plain
             >
+              <el-icon><User /></el-icon>
               查看
-            </el-button>
+            </el-button> -->
             
             <el-button 
               type="danger"
-              icon="Close"
               size="small"
+              plain
               @click="handleCancelFollow(user)"
               :loading="cancelingFollow === (user.userId || user.id)"
               title="取消关注"
-              plain
             >
+              <el-icon><Close /></el-icon>
               取消关注
             </el-button>
           </div>
@@ -199,21 +251,18 @@ const formatDate = (dateString) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .page-title {
   color: #333;
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
+  font-weight: 600;
 }
 
-.loading-container {
-  padding: 20px;
-}
-
-.empty-container {
-  padding: 60px 0;
+.loading-container, .empty-container {
+  padding: 40px;
   text-align: center;
 }
 
@@ -225,52 +274,69 @@ const formatDate = (dateString) => {
 
 .user-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 16px;
   border-radius: 8px;
-  background-color: white;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.05);
-  transition: box-shadow 0.3s;
+  background-color: #fff;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
 }
 
 .user-item:hover {
-  box-shadow: 0 4px 16px 0 rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
 }
 
 .user-avatar {
-  margin-right: 20px;
-  cursor: pointer;
+  margin-right: 16px;
 }
 
 .user-info {
   flex: 1;
   min-width: 0;
-  cursor: pointer;
 }
 
 .user-name {
   margin: 0 0 8px;
   font-size: 18px;
+  font-weight: 600;
   color: #333;
 }
 
 .user-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 8px;
   font-size: 14px;
   color: #666;
 }
 
+.follow-count, .fans-count {
+  display: flex;
+  align-items: center;
+}
+
+.count-label {
+  margin-right: 2px;
+  color: #888;
+}
+
+.count-value {
+  font-weight: 500;
+  color: #409EFF;
+}
+
+.follow-time {
+  color: #888;
+}
+
 .user-bio {
   font-size: 14px;
   color: #666;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  margin-top: 8px;
+  white-space: pre-line;
+  line-height: 1.5;
 }
 
 .user-actions {
@@ -278,5 +344,22 @@ const formatDate = (dateString) => {
   flex-direction: column;
   gap: 8px;
   margin-left: 16px;
+}
+
+@media (max-width: 768px) {
+  .user-item {
+    flex-direction: column;
+  }
+  
+  .user-avatar {
+    margin-right: 0;
+    margin-bottom: 16px;
+  }
+  
+  .user-actions {
+    flex-direction: row;
+    margin-left: 0;
+    margin-top: 16px;
+  }
 }
 </style> 

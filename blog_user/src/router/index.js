@@ -43,13 +43,8 @@ const routes = [
                 meta: { requiresAuth: true }
             },
             {
-                path: '/following',
-                component: () => import('@/views/Following.vue'),
-                meta: { requiresAuth: true }
-            },
-            {
                 path: '/liked',
-                component: () => import('@/views/Liked.vue'),
+                component: () => import('@/views/LikedBlogs.vue'),
                 meta: { requiresAuth: true }
             },
             {
@@ -63,11 +58,6 @@ const routes = [
                 meta: { requiresAuth: true }
             },
             {
-                path: '/my-liked-blogs',
-                component: () => import('@/views/LikedBlogs.vue'),
-                meta: { requiresAuth: true }
-            },
-            {
                 path: '/my-disliked-blogs',
                 component: () => import('@/views/DislikedBlogs.vue'),
                 meta: { requiresAuth: true }
@@ -75,6 +65,7 @@ const routes = [
             {
                 path: '/my-follows',
                 component: () => import('@/views/FollowedUsers.vue'),
+                name: 'followed-users',
                 meta: { requiresAuth: true }
             },
             {
@@ -143,6 +134,8 @@ router.beforeEach((to, from, next) => {
 
 // 全局后置守卫
 router.afterEach((to, from) => {
+    console.log(`路由变化: ${from.path} -> ${to.path}`);
+    
     // 如果是从登录页成功跳转，清理历史记录
     if (from.path === '/auth') {
         // 使用 replaceState 清理历史记录

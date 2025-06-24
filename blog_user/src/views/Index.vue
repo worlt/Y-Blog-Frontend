@@ -52,10 +52,30 @@ let loadCooldown = false;
 // 滚动容器引用
 const scrollContainer = ref(null);
 
+// 记录是否是手动触发的resize事件
+let isManualResize = false;
+
 // 窗口大小变化处理函数
 const handleResize = () => {
-  // 触发el-affix重新计算位置
+  // 避免无限递归：只有当不是手动触发的事件才重新触发
+  if (!isManualResize) {
+    isManualResize = true;
+    // 触发el-affix重新计算位置
+    window.dispatchEvent(new Event('resize'));
+    // 设置一个短暂的延时后重置标志
+    setTimeout(() => {
+      isManualResize = false;
+    }, 100);
+  }
+};
+
+// 手动触发一次resize事件的函数
+const triggerResize = () => {
+  isManualResize = true;
   window.dispatchEvent(new Event('resize'));
+  setTimeout(() => {
+    isManualResize = false;
+  }, 100);
 };
 
 // 获取所有分类
@@ -233,7 +253,7 @@ const handleImageError = (event) => {
 // 左侧导航菜单数据
 const sideMenuItems = ref([
   { name: '首页', icon: homeIcon, path: '/index', active: true, requireAuth: false },
-  { name: '关注', icon: accountHeartIcon, path: '/following', requireAuth: true },
+  { name: '关注', icon: accountHeartIcon, path: '/my-follows', requireAuth: true },
   { name: '点赞', icon: thumbUpIcon, path: '/liked', requireAuth: true },
   { name: '收藏', icon: bookmarkIcon, path: '/collections', requireAuth: true },
   { name: '历史', icon: historyIcon, path: '/history', requireAuth: true }
@@ -342,7 +362,7 @@ onMounted(async () => {
   
   // 延迟触发一次resize事件，确保初始加载时affixes正确定位
   setTimeout(() => {
-    handleResize();
+    triggerResize();
   }, 500);
 });
 

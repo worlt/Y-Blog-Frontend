@@ -129,14 +129,6 @@ export const collectBlog = (id) => {
  * @returns {Promise} - 返回收藏列表的Promise
  */
 export const getMyCollections = (params = {}) => {
-  // 后端接口是 /getCollections，返回List<CollectionVO>
-  // 如果需要分页，需要后端修改接口支持分页参数
-  if (Object.keys(params).length === 0) {
-    return request.get(`${URL}/getCollections`);
-  }
-  
-  // 暂时仍使用原接口，忽略分页参数
-  // TODO: 需要后端修改getCollections接口支持分页
   return request.get(`${URL}/getCollections`, { params });
 };
 
@@ -144,8 +136,8 @@ export const getMyCollections = (params = {}) => {
  * 获取收藏列表（保持兼容性）
  * @returns {Promise} - 返回收藏列表的Promise
  */
-export const getCollections = () => {
-  return request.get(`${URL}/getCollections`);
+export const getCollections = (params = {}) => {
+  return request.get(`${URL}/getCollections`, { params });
 };
 
 /**
@@ -204,10 +196,11 @@ export const viewBlog = (id) => {
 
 /**
  * 获取用户浏览历史
+ * @param {Object} params - 查询参数，包括page、pageSize等
  * @returns {Promise} - 返回浏览历史的Promise
  */
-export const getViewHistory = () => {
-  return request.get(`${URL}/viewHistory`);
+export const getViewHistory = (params = {}) => {
+  return request.get(`${URL}/viewHistory`, { params });
 };
 
 /**
@@ -230,16 +223,18 @@ export const isDisliked = (id) => {
 
 /**
  * 获取用户点赞的博客列表
+ * @param {Object} params - 查询参数，包括page、pageSize等
  * @returns {Promise} - 返回点赞博客列表的Promise
  */
-export const getLikedBlogs = () => {
-  return request.get(`${URL}/getLikedBlogs`);
+export const getLikedBlogs = (params = {}) => {
+  return request.get(`${URL}/getLikedBlogs`, { params });
 };
 
 /**
  * 获取用户点踩的博客列表
+ * @param {Object} params - 查询参数，包括page、pageSize等
  * @returns {Promise} - 返回点踩博客列表的Promise
  */
-export const getDislikedBlogs = () => {
-  return request.get(`${URL}/getDislikedBlogs`);
+export const getDislikedBlogs = (params = {}) => {
+  return request.get(`${URL}/getDislikedBlogs`, { params });
 }; 

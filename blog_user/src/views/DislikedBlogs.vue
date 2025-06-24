@@ -1,9 +1,14 @@
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { View, ThumbsDown } from '@element-plus/icons-vue'
 import * as blogApi from '@/api/blog.js'
+import { Icon } from '@iconify/vue'
+import eyeIcon from '@iconify/icons-mdi/eye'
+import heartIcon from '@iconify/icons-mdi/heart'
+import starIcon from '@iconify/icons-mdi/star'
+import loadingIcon from '@iconify/icons-mdi/loading'
 
 const router = useRouter()
 
@@ -20,85 +25,48 @@ const sortOptions = [
 // 当前排序
 const currentSort = ref(sortOptions[0].value)
 
-// 分页参数
-const pagination = reactive({
-  currentPage: 1,
-  pageSize: 10,
-  total: 0
-})
-
 // 加载状态
 const loading = ref(false)
 
 // 取消点踩状态
 const cancelingDislike = ref(null)
 
-onMounted(() => {
-  loadDislikedBlogs()
+// 是否还有更多数据
+const hasMore = ref(true)
+
+// 分页参数
+const queryParams = reactive({
+  page: 1,
+  pageSize: 10
 })
 
-// 加载我点踩的博客
-const loadDislikedBlogs = async () => {
-  loading.value = true
-  try {
-    const result = await blogApi.getDislikedBlogs()
-    
-    if (result.code === 0 && result.data) {
-      const blogs = result.data || []
-      
-      // 客户端排序和分页
-      let sortedBlogs = [...blogs]
-      
-      // 根据当前排序进行排序
-      const [sortField, sortOrder] = currentSort.value.split(',')
-      sortedBlogs.sort((a, b) => {
-        let aValue = a[sortField]
-        let bValue = b[sortField]
-        
-        // 处理时间字段
-        if (sortField.includes('Time') || sortField.includes('Date')) {
-          aValue = new Date(aValue).getTime()
-          bValue = new Date(bValue).getTime()
-        }
-        
-        if (sortOrder === 'desc') {
-          return bValue - aValue
-        } else {
-          return aValue - bValue
-        }
-      })
-      
-      // 客户端分页
-      pagination.total = sortedBlogs.length
-      const startIndex = (pagination.currentPage - 1) * pagination.pageSize
-      const endIndex = startIndex + pagination.pageSize
-      dislikedBlogList.value = sortedBlogs.slice(startIndex, endIndex)
-      
-    } else {
-      ElMessage.error('获取点踩博客列表失败')
-      dislikedBlogList.value = []
-      pagination.total = 0
-    }
-  } catch (error) {
-    console.error('获取点踩博客列表失败:', error)
-    ElMessage.error('获取点踩博客列表失败')
-    dislikedBlogList.value = []
-    pagination.total = 0
-  } finally {
-    loading.value = false
+// 滚动加载定时器，防止多次触发
+let scrollTimer = null
+// 防止连续加载的冷却期
+let loadCooldown = false
+
+onMounted(() => {
+  // 初始加载数据
+  fetchDislikedBlogs(true)
+  
+  // 找到正确的滚动容器并添加事件监听
+  const scrollElement = document.querySelector('.el-main')
+  if (scrollElement) {
+    scrollElement.addEventListener('scroll', lazyLoad)
+  } else {
+    window.addEventListener('scroll', lazyLoad)
   }
-}
+  
+  setTimeout(() => {
+    // 检查是否需要加载更多
+    checkAndLoadMoreIfNeeded()
+  }, 1000)
+})
 
 // 处理排序变化
 const handleSortChange = () => {
-  pagination.currentPage = 1 // 重置到第一页
-  loadDislikedBlogs()
-}
-
-// 处理分页变化
-const handlePageChange = (page) => {
-  pagination.currentPage = page
-  loadDislikedBlogs()
+  // 重置分页并重新加载
+  fetchDislikedBlogs(true)
 }
 
 // 取消点踩
@@ -121,7 +89,7 @@ const handleCancelDislike = async (blog) => {
     
     if (result.code === 0) {
       ElMessage.success('已取消点踩')
-      loadDislikedBlogs() // 重新加载列表
+      fetchDislikedBlogs(true) // 重新加载列表
     } else {
       ElMessage.error(result.msg || '取消点踩失败')
     }
@@ -142,8 +110,9 @@ const handleView = (blog) => {
 
 // 格式化日期
 const formatDate = (dateString) => {
-  if (!dateString) return ''
+  if (!dateString) return 'Invalid Date'
   const date = new Date(dateString)
+  if (isNaN(date.getTime())) return 'Invalid Date'
   return date.toLocaleDateString('zh-CN', { 
     year: 'numeric', 
     month: '2-digit', 
@@ -153,8 +122,168 @@ const formatDate = (dateString) => {
 
 // 获取博客统计信息的安全方法
 const getBlogStat = (blog, field, defaultValue = 0) => {
-  return blog[field] || defaultValue
+  return blog && blog[field] !== undefined ? blog[field] : defaultValue
 }
+
+// 获取点踩博客列表
+const fetchDislikedBlogs = async (reset = false, isLoadMore = false) => {
+  // 如果处于冷却期，直接返回
+  if (loadCooldown) return
+
+  if (loading.value) return
+
+  loading.value = true
+
+  try {
+    let currentPage
+    if (isLoadMore) {
+      currentPage = queryParams.page + 1
+    } else if (reset) {
+      currentPage = 1
+      queryParams.page = 1
+    } else {
+      currentPage = queryParams.page
+    }
+
+    // 添加排序参数
+    const [sortField, sortOrder] = currentSort.value.split(',')
+    
+    const params = {
+      ...queryParams,
+      page: currentPage,
+      sortField: sortField,
+      sortOrder: sortOrder
+    }
+
+    const result = await blogApi.getDislikedBlogs(params)
+
+    if (result.code === 0) {
+      // 检查返回数据结构
+      console.log('点踩博客返回数据:', result.data)
+      
+      // 处理不同的返回数据结构情况
+      let records, total
+      
+      if (Array.isArray(result.data)) {
+        // 如果直接返回数组，则使用数组作为记录
+        records = result.data
+        total = records.length
+      } else if (result.data && typeof result.data === 'object') {
+        // 如果返回分页对象，则从中提取records和total
+        records = result.data.records || []
+        total = result.data.total || records.length
+      } else {
+        // 默认为空数组
+        records = []
+        total = 0
+      }
+
+      if (reset || !isLoadMore) {
+        dislikedBlogList.value = records
+        queryParams.page = 1
+      } else if (records && records.length > 0) {
+        dislikedBlogList.value = [...dislikedBlogList.value, ...records]
+      }
+
+      queryParams.page = currentPage
+
+      // 判断是否还有更多数据
+      if (total !== undefined) {
+        const totalPages = Math.ceil(total / queryParams.pageSize)
+        hasMore.value = queryParams.page < totalPages
+      } else {
+        hasMore.value = records && records.length === queryParams.pageSize
+      }
+
+      // 设置加载冷却期，防止连续加载
+      loadCooldown = true
+      setTimeout(() => {
+        loadCooldown = false
+        
+        // 检查是否需要继续加载（如果内容不足以填满容器）
+        setTimeout(() => {
+          checkAndLoadMoreIfNeeded()
+        }, 300)
+      }, 500)
+    } else {
+      ElMessage.error(result.msg || '获取点踩博客列表失败')
+      dislikedBlogList.value = []
+      hasMore.value = false
+    }
+  } catch (error) {
+    console.error('获取点踩博客列表失败:', error)
+    ElMessage.error('获取点踩博客列表失败')
+    dislikedBlogList.value = []
+    hasMore.value = false
+  } finally {
+    loading.value = false
+  }
+}
+
+// 检查是否需要继续加载更多
+const checkAndLoadMoreIfNeeded = () => {
+  // 如果数据已经加载完，或者正在加载，则不执行
+  if (!hasMore.value || loading.value || loadCooldown) return
+  
+  // 获取滚动容器
+  const container = document.querySelector('.el-main') || document.documentElement
+  const scrollHeight = container.scrollHeight
+  const clientHeight = container.clientHeight
+  
+  // 如果内容不足以产生滚动，并且还有更多数据可以加载，则继续加载
+  if (scrollHeight <= clientHeight && hasMore.value) {
+    loadMore()
+  }
+}
+
+// 滚动加载处理函数
+const lazyLoad = () => {
+  if (loading.value || !hasMore.value || scrollTimer || loadCooldown) {
+    return
+  }
+
+  // 获取正确的滚动容器 - 优先使用el-main元素，退化使用document
+  const container = document.querySelector('.el-main') || document.documentElement
+  const scrollTop = container.scrollTop
+  const clientHeight = container.clientHeight
+  const scrollHeight = container.scrollHeight
+
+  // 计算距离底部的距离
+  const distanceFromBottom = scrollHeight - (scrollTop + clientHeight)
+
+  // 当距离底部小于200px时触发加载
+  if (distanceFromBottom <= 200) {
+    scrollTimer = setTimeout(() => {
+      loadMore()
+      scrollTimer = null
+    }, 300) // 增加防抖延迟时间
+  }
+}
+
+// 加载更多数据
+const loadMore = () => {
+  if (!hasMore.value || loading.value || loadCooldown) {
+    return
+  }
+
+  fetchDislikedBlogs(false, true)
+}
+
+// 组件卸载时清理
+onUnmounted(() => {
+  // 移除正确容器上的事件监听
+  const scrollElement = document.querySelector('.el-main')
+  if (scrollElement) {
+    scrollElement.removeEventListener('scroll', lazyLoad)
+  } else {
+    window.removeEventListener('scroll', lazyLoad)
+  }
+  
+  if (scrollTimer) {
+    clearTimeout(scrollTimer)
+    scrollTimer = null
+  }
+})
 </script>
 
 <template>
@@ -186,7 +315,7 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
     <!-- 点踩博客列表 -->
     <div class="disliked-blog-list-container">
       <!-- 加载中 -->
-      <div v-if="loading" class="loading-container">
+      <div v-if="loading && dislikedBlogList.length === 0" class="loading-container">
         <el-skeleton :rows="10" animated />
       </div>
       
@@ -207,31 +336,34 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
           <!-- 博客内容 -->
           <div class="blog-info">
             <h3 class="blog-title" @click="handleView(blog)">
-              {{ blog.title }}
+              {{ blog.title || '无标题博客' }}
             </h3>
             
-            <div class="blog-summary">
-              {{ blog.content?.substring(0, 150) || '暂无摘要' }}
+            <div class="blog-summary" v-if="blog.content">
+              {{ blog.content.substring(0, 150) || '暂无摘要' }}
+            </div>
+            <div class="blog-summary" v-else>
+              暂无摘要
             </div>
             
             <div class="blog-meta">
               <div class="blog-author">{{ blog.username || '未知作者' }}</div>
-              <div class="blog-category" v-if="blog.category">
-                {{ blog.category }}
+              <div class="blog-category" v-if="blog.categoryName">
+                {{ blog.categoryName }}
               </div>
-              <div class="blog-date">{{ formatDate(blog.createTime || blog.publishTime) }}</div>
+              <div class="blog-date">{{ formatDate(blog.createTime || blog.publishTime || blog.dislikeTime) }}</div>
               <div class="blog-stats">
                 <span class="stat-item">
-                  <i class="el-icon-view"></i> 
+                  <Icon :icon="eyeIcon" height="16" />
                   {{ getBlogStat(blog, 'views') }}
                 </span>
                 <span class="stat-item">
-                  <i class="el-icon-thumb"></i> 
+                  <Icon :icon="heartIcon" height="16" />
                   {{ getBlogStat(blog, 'likes') }}
                 </span>
                 <span class="stat-item">
-                  <i class="el-icon-chat-dot-round"></i> 
-                  {{ getBlogStat(blog, 'comments') }}
+                  <Icon :icon="starIcon" height="16" />
+                  {{ getBlogStat(blog, 'collections') }}
                 </span>
               </div>
             </div>
@@ -265,16 +397,23 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
         </div>
       </div>
       
-      <!-- 分页 -->
-      <div class="pagination-container" v-if="!loading && pagination.total > 0">
-        <el-pagination
-          background
-          layout="prev, pager, next"
-          :current-page="pagination.currentPage"
-          :page-size="pagination.pageSize"
-          :total="pagination.total"
-          @current-change="handlePageChange"
-        />
+      <!-- 加载更多 -->
+      <div v-if="hasMore" class="load-more-container">
+        <el-button 
+          v-if="!loading" 
+          @click="loadMore" 
+          type="primary" 
+          text
+        >
+          加载更多
+        </el-button>
+        <div v-else class="loading-more">
+          <Icon :icon="loadingIcon" height="24" class="loading-icon" />
+          <span>加载中...</span>
+        </div>
+      </div>
+      <div v-else-if="dislikedBlogList.length > 0" class="no-more-data">
+        没有更多数据了
       </div>
     </div>
   </div>
@@ -415,9 +554,33 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
   margin-left: 16px;
 }
 
-.pagination-container {
-  margin-top: 32px;
+.load-more-container {
+  text-align: center;
+  margin-top: 24px;
+  padding: 12px 0;
+}
+
+.loading-more {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 8px;
+  color: #909399;
+}
+
+.loading-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-more-data {
+  text-align: center;
+  color: #909399;
+  margin-top: 24px;
+  padding: 12px 0;
 }
 </style> 

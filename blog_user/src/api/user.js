@@ -154,3 +154,12 @@ export const getUserShares = (userId) => {
   return request.get(`${URL}/shares${userId ? `?userId=${userId}` : ''}`);
 };
 
+/**
+ * 获取用户统计信息
+ * @param {Number} userId - 用户id，可选，不传则获取当前登录用户的统计信息
+ * @returns {Promise} - 返回包含用户统计信息的Promise
+ */
+export const getUserStats = (userId) => {
+  return request.get(`${URL}/stats${userId ? `?userId=${userId}` : ''}`);
+};
+

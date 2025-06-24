@@ -1,6 +1,5 @@
 <script setup>
 import {ref, computed, watch, nextTick, onMounted, onUnmounted} from "vue";
-import {Search, Bell} from "@element-plus/icons-vue";
 import {useUserInfoStore} from "@/stores/userInfo.js";
 import {useTokenStore} from "@/stores/token.js";
 import router from "@/router/index.js";
@@ -8,6 +7,7 @@ import {ElMessage} from "element-plus";
 import AuthDialog from '@/components/AuthDialog.vue';
 import { eventBus } from '@/utils/request.js';
 import * as messageApi from '@/api/message.js';
+import { Icon } from '@iconify/vue';
 
 const input = ref('')
 
@@ -115,34 +115,48 @@ const goToAuthPage = () => {
 
 // 处理下拉菜单命令
 const handleCommand = (command) => {
-  switch (command) {
-    case 'profile':
-      router.push('/my-profile');
-      break;
-    case 'my-blogs':
-      router.push('/my-blogs');
-      break;
-    case 'collections':
-      router.push('/my-collections');
-      break;
-    case 'liked':
-      router.push('/my-liked-blogs');
-      break;
-    case 'disliked':
-      router.push('/my-disliked-blogs');
-      break;
-    case 'follows':
-      router.push('/my-follows');
-      break;
-    case 'followers':
-      router.push('/my-followers');
-      break;
-    case 'messages':
-      router.push('/messages');
-      break;
-    case 'logout':
-      logout();
-      break;
+  try {
+    console.log('处理菜单命令:', command)
+    
+    switch (command) {
+      case 'profile':
+        router.push('/my-profile');
+        break;
+      case 'my-blogs':
+        router.push('/my-blogs');
+        break;
+      case 'collections':
+        router.push('/my-collections');
+        break;
+      case 'liked':
+        console.log('点击了点赞菜单项，跳转到/liked')
+        router.push({
+          path: '/liked',
+          replace: false
+        });
+        break;
+      case 'disliked':
+        router.push('/my-disliked-blogs');
+        break;
+      case 'follows':
+        console.log('点击了关注菜单项，跳转到/my-follows')
+        router.push('/my-follows');
+        break;
+      case 'followers':
+        router.push('/my-followers');
+        break;
+      case 'messages':
+        router.push('/messages');
+        break;
+      case 'logout':
+        logout();
+        break;
+      default:
+        console.error('未知的菜单命令:', command);
+    }
+  } catch (error) {
+    console.error('菜单导航错误:', error);
+    ElMessage.error('导航失败，请稍后重试');
   }
 }
 
@@ -251,9 +265,7 @@ const handleLoginSuccess = (userData) => {
         <div class="middle">
           <el-input v-model="input" class="input" placeholder="请输入搜索内容" @keyup.enter="handleSearch"/>
           <el-button class="search-btn" round @click="handleSearch">
-            <el-icon style="margin: 0 5px 0 0">
-              <Search/>
-            </el-icon>
+            <Icon icon="mdi:magnify" style="margin: 0 5px 0 0"/>
             搜索
           </el-button>
         </div>
@@ -270,29 +282,66 @@ const handleLoginSuccess = (userData) => {
               </div>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="profile">个人资料</el-dropdown-item>
-                  <el-dropdown-item command="my-blogs">我的博客</el-dropdown-item>
-                  <el-dropdown-item command="collections">我的收藏</el-dropdown-item>
-                  <el-dropdown-item command="liked">我的点赞</el-dropdown-item>
-                  <el-dropdown-item command="disliked">我的点踩</el-dropdown-item>
-                  <el-dropdown-item command="follows">我的关注</el-dropdown-item>
-                  <el-dropdown-item command="followers">我的粉丝</el-dropdown-item>
+                  <el-dropdown-item command="profile">
+                    <Icon icon="mdi:account" style="margin-right: 4px"/>
+                    个人资料
+                  </el-dropdown-item>
+                  <el-dropdown-item command="my-blogs">
+                    <Icon icon="mdi:file-document-multiple" style="margin-right: 4px"/>
+                    我的博客
+                  </el-dropdown-item>
+                  <el-dropdown-item command="collections">
+                    <Icon icon="mdi:bookmark-multiple" style="margin-right: 4px"/>
+                    我的收藏
+                  </el-dropdown-item>
+                  <el-dropdown-item command="liked">
+                    <Icon icon="mdi:thumb-up" style="margin-right: 4px"/>
+                    我的点赞
+                  </el-dropdown-item>
+                  <el-dropdown-item command="disliked">
+                    <Icon icon="mdi:thumb-down" style="margin-right: 4px"/>
+                    我的点踩
+                  </el-dropdown-item>
+                  <el-dropdown-item command="follows">
+                    <Icon icon="mdi:account-multiple" style="margin-right: 4px"/>
+                    我的关注
+                  </el-dropdown-item>
+                  <el-dropdown-item command="followers">
+                    <Icon icon="mdi:account-group" style="margin-right: 4px"/>
+                    我的粉丝
+                  </el-dropdown-item>
                   <el-dropdown-item command="messages">
+                    <Icon icon="mdi:message-text" style="margin-right: 4px"/>
                     消息
                     <el-badge v-if="unreadMessageCount > 0" :value="unreadMessageCount" class="message-badge" />
                   </el-dropdown-item>
-                  <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+                  <el-dropdown-item command="logout">
+                    <Icon icon="mdi:logout" style="margin-right: 4px"/>
+                    退出登录
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
           </div>
           <div class="message-container" @click="goToMessages">
-            <div class="message">消息</div>
+            <Icon icon="mdi:message-text" style="margin-right: 4px"/>
+            <span>消息</span>
             <el-badge v-if="unreadMessageCount > 0" :value="unreadMessageCount" :max="99" class="message-badge" />
           </div>
-          <div class="history" @click="goToHistory">历史</div>
-          <div class="creation" @click="goToCreation">创作中心</div>
-          <div class="create"><el-button class="create-btn" @click="handleCreate"> + 创作</el-button></div>
+          <div class="history" @click="goToHistory">
+            <Icon icon="mdi:history" style="margin-right: 4px"/>
+            <span>历史</span>
+          </div>
+          <div class="creation" @click="goToCreation">
+            <Icon icon="mdi:file-document-edit" style="margin-right: 4px"/>
+            <span>创作中心</span>
+          </div>
+          <div class="create">
+            <el-button class="create-btn" @click="handleCreate">
+              <Icon icon="mdi:plus" style="margin-right: 4px"/>
+              创作
+            </el-button>
+          </div>
         </div>
       </el-header>
       <el-main class="main"><router-view/></el-main>
@@ -400,10 +449,6 @@ const handleLoginSuccess = (userData) => {
   align-items: center;
 }
 
-.message {
-  margin-right: 2px;
-}
-
 .message-badge {
   position: absolute;
   top: -10px;
@@ -413,11 +458,22 @@ const handleLoginSuccess = (userData) => {
 .history {
   margin-left: 20px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
 }
 
 .creation {
   margin-left: 20px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* 右侧导航菜单的文本元素样式 */
+.right span {
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 
 .create {
@@ -429,5 +485,13 @@ const handleLoginSuccess = (userData) => {
   border-radius: 20px;
   background-color: #b885e8;
   color: white;
+  display: flex;
+  align-items: center;
+}
+
+/* 所有图标垂直居中 */
+:deep(.iconify) {
+  display: inline-flex;
+  vertical-align: middle;
 }
 </style>

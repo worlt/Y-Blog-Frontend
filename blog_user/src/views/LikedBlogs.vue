@@ -1,11 +1,20 @@
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { View, ThumbsUp } from '@element-plus/icons-vue'
+import {View, Collection, StarFilled} from '@element-plus/icons-vue'
+import { useTokenStore } from '@/stores/token.js'
+import { useUserInfoStore } from '@/stores/userInfo.js'
 import * as blogApi from '@/api/blog.js'
+import { Icon } from '@iconify/vue'
+import eyeIcon from '@iconify/icons-mdi/eye'
+import heartIcon from '@iconify/icons-mdi/heart'
+import starIcon from '@iconify/icons-mdi/star'
+import loadingIcon from '@iconify/icons-mdi/loading'
 
 const router = useRouter()
+const tokenStore = useTokenStore()
+const userInfoStore = useUserInfoStore()
 
 // 点赞博客列表
 const likedBlogList = ref([])
@@ -20,92 +29,172 @@ const sortOptions = [
 // 当前排序
 const currentSort = ref(sortOptions[0].value)
 
-// 分页参数
-const pagination = reactive({
-  currentPage: 1,
-  pageSize: 10,
-  total: 0
-})
-
 // 加载状态
 const loading = ref(false)
 
 // 取消点赞状态
 const cancelingLike = ref(null)
 
-onMounted(() => {
-  loadLikedBlogs()
+// 是否还有更多数据
+const hasMore = ref(true)
+
+// 分页参数
+const queryParams = reactive({
+  page: 1,
+  pageSize: 10
 })
 
-// 加载我点赞的博客
-const loadLikedBlogs = async () => {
+// 滚动加载控制变量
+let scrollTimer = null
+let loadCooldown = false
+
+// 监听排序变化自动重新加载
+watch(() => currentSort.value, () => {
+  fetchLikedBlogs(true)
+})
+
+onMounted(() => {
+  // 初始加载数据
+  fetchLikedBlogs(true)
+  
+  // 添加滚动监听
+  const scrollElement = document.querySelector('.el-main')
+  if (scrollElement) {
+    scrollElement.addEventListener('scroll', handleScroll)
+  } else {
+    window.addEventListener('scroll', handleScroll)
+  }
+  
+  // 检查是否需要加载更多
+  setTimeout(checkAndLoadMoreIfNeeded, 500)
+})
+
+// 处理滚动加载
+const handleScroll = () => {
+  if (loading.value || !hasMore.value || scrollTimer || loadCooldown) {
+    return
+  }
+
+  const container = document.querySelector('.el-main') || document.documentElement
+  const scrollTop = container.scrollTop
+  const clientHeight = container.clientHeight
+  const scrollHeight = container.scrollHeight
+  const distanceFromBottom = scrollHeight - (scrollTop + clientHeight)
+
+  // 当距离底部小于200px时触发加载
+  if (distanceFromBottom <= 200) {
+    scrollTimer = setTimeout(() => {
+      loadMore()
+      scrollTimer = null
+    }, 300)
+  }
+}
+
+// 检查是否需要继续加载更多
+const checkAndLoadMoreIfNeeded = () => {
+  if (!hasMore.value || loading.value || loadCooldown) return
+  
+  const container = document.querySelector('.el-main') || document.documentElement
+  const scrollHeight = container.scrollHeight
+  const clientHeight = container.clientHeight
+  
+  if (scrollHeight <= clientHeight && hasMore.value) {
+    loadMore()
+  }
+}
+
+// 加载更多数据
+const loadMore = () => {
+  if (!hasMore.value || loading.value || loadCooldown) return
+  
+  const nextPage = queryParams.page + 1
+  fetchLikedBlogs(false, nextPage)
+}
+
+// 获取点赞博客列表
+const fetchLikedBlogs = async (reset = false, page = null) => {
+  if (loadCooldown || loading.value) return
+
   loading.value = true
+
   try {
-    const result = await blogApi.getLikedBlogs()
+    const currentPage = reset ? 1 : (page || queryParams.page)
     
-    if (result.code === 0 && result.data) {
-      const blogs = result.data || []
+    // 解析排序字段和排序方式
+    const [sortField, sortOrder] = currentSort.value.split(',')
+    
+    const params = {
+      page: currentPage,
+      pageSize: queryParams.pageSize,
+      sortField,
+      sortOrder
+    }
+
+    const result = await blogApi.getLikedBlogs(params)
+
+    if (result.code === 0) {
+      // 处理返回结果
+      const pageResult = result.data
+      const records = Array.isArray(pageResult) ? pageResult : 
+                     (pageResult?.records || [])
+      const total = pageResult?.total || records.length
       
-      // 客户端排序和分页
-      let sortedBlogs = [...blogs]
-      
-      // 根据当前排序进行排序
-      const [sortField, sortOrder] = currentSort.value.split(',')
-      sortedBlogs.sort((a, b) => {
-        let aValue = a[sortField]
-        let bValue = b[sortField]
+      // 对数据进行去重处理
+      if (records && records.length > 0) {
+        // 使用Set去重
+        const uniqueRecords = [...new Map(records.map(blog => [blog.id, blog])).values()]
         
-        // 处理时间字段
-        if (sortField.includes('Time') || sortField.includes('Date')) {
-          aValue = new Date(aValue).getTime()
-          bValue = new Date(bValue).getTime()
-        }
-        
-        if (sortOrder === 'desc') {
-          return bValue - aValue
+        if (reset) {
+          likedBlogList.value = uniqueRecords
         } else {
-          return aValue - bValue
+          // 追加数据时过滤掉已有的博客
+          const existingIds = new Set(likedBlogList.value.map(blog => blog.id))
+          const newRecords = uniqueRecords.filter(blog => !existingIds.has(blog.id))
+          likedBlogList.value = [...likedBlogList.value, ...newRecords]
         }
-      })
+      } else if (reset) {
+        likedBlogList.value = []
+      }
       
-      // 客户端分页
-      pagination.total = sortedBlogs.length
-      const startIndex = (pagination.currentPage - 1) * pagination.pageSize
-      const endIndex = startIndex + pagination.pageSize
-      likedBlogList.value = sortedBlogs.slice(startIndex, endIndex)
+      // 更新页码
+      queryParams.page = currentPage
       
+      // 判断是否还有更多数据
+      const totalPages = Math.ceil(total / queryParams.pageSize)
+      hasMore.value = currentPage < totalPages
+
+      // 设置冷却时间
+      loadCooldown = true
+      setTimeout(() => {
+        loadCooldown = false
+        // 检查是否需要继续加载
+        checkAndLoadMoreIfNeeded()
+      }, 300)
     } else {
-      ElMessage.error('获取点赞博客列表失败')
-      likedBlogList.value = []
-      pagination.total = 0
+      ElMessage.error(result.msg || '获取点赞博客列表失败')
+      if (reset) likedBlogList.value = []
+      hasMore.value = false
     }
   } catch (error) {
     console.error('获取点赞博客列表失败:', error)
     ElMessage.error('获取点赞博客列表失败')
-    likedBlogList.value = []
-    pagination.total = 0
+    if (reset) likedBlogList.value = []
+    hasMore.value = false
   } finally {
     loading.value = false
   }
 }
 
-// 处理排序变化
-const handleSortChange = () => {
-  pagination.currentPage = 1 // 重置到第一页
-  loadLikedBlogs()
-}
-
-// 处理分页变化
-const handlePageChange = (page) => {
-  pagination.currentPage = page
-  loadLikedBlogs()
-}
-
 // 取消点赞
 const handleCancelLike = async (blog) => {
+  if (!tokenStore.getToken()) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
   try {
     await ElMessageBox.confirm(
-      `确定要取消点赞"${blog.title}"吗？`, 
+      `确定要取消点赞"${blog.title || '该博客'}"吗？`, 
       '提示', 
       {
         confirmButtonText: '确定',
@@ -116,12 +205,12 @@ const handleCancelLike = async (blog) => {
     
     cancelingLike.value = blog.id
     
-    // 调用点赞接口取消点赞
     const result = await blogApi.likeBlog(blog.id)
     
     if (result.code === 0) {
       ElMessage.success('已取消点赞')
-      loadLikedBlogs() // 重新加载列表
+      // 从列表中移除该博客
+      likedBlogList.value = likedBlogList.value.filter(item => item.id !== blog.id)
     } else {
       ElMessage.error(result.msg || '取消点赞失败')
     }
@@ -135,43 +224,64 @@ const handleCancelLike = async (blog) => {
   }
 }
 
-// 查看博客
-const handleView = (blog) => {
+// 查看博客详情
+const viewBlog = (blog) => {
   router.push(`/blog/${blog.id}`)
 }
 
 // 格式化日期
 const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', { 
-    year: 'numeric', 
-    month: '2-digit', 
-    day: '2-digit'
-  })
+  if (!dateString) return '未知时间'
+  
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return '未知时间'
+    
+    return date.toLocaleDateString('zh-CN', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch (e) {
+    return '未知时间'
+  }
 }
 
-// 获取博客统计信息的安全方法
+// 安全获取博客属性
 const getBlogStat = (blog, field, defaultValue = 0) => {
-  return blog[field] || defaultValue
+  return blog && blog[field] !== undefined ? blog[field] : defaultValue
 }
+
+// 组件卸载时清理
+onUnmounted(() => {
+  const scrollElement = document.querySelector('.el-main')
+  if (scrollElement) {
+    scrollElement.removeEventListener('scroll', handleScroll)
+  } else {
+    window.removeEventListener('scroll', handleScroll)
+  }
+  
+  if (scrollTimer) {
+    clearTimeout(scrollTimer)
+    scrollTimer = null
+  }
+})
 </script>
 
 <template>
-  <div class="liked-blogs-page">
-    <div class="page-header">
+  <div class="liked-blogs-container">
+    <div class="liked-blogs-header">
       <h2 class="page-title">我的点赞</h2>
-    </div>
-    
-    <!-- 筛选工具栏 -->
-    <div class="filter-toolbar">
-      <!-- 右侧排序选择 -->
-      <div class="sort-selector">
-        <span class="sort-label">排序:</span>
+      
+      <!-- 排序选择器 -->
+      <!-- <div class="filter-bar">
+        <span class="sort-label">排序方式：</span>
         <el-select 
-          v-model="currentSort"
-          size="small"
-          @change="handleSortChange"
+          v-model="currentSort" 
+          size="small" 
+          placeholder="选择排序方式"
         >
           <el-option
             v-for="option in sortOptions"
@@ -180,114 +290,127 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
             :value="option.value"
           />
         </el-select>
-      </div>
+      </div> -->
     </div>
-    
-    <!-- 点赞博客列表 -->
-    <div class="liked-blog-list-container">
+
+    <!-- 博客列表 -->
+    <div class="blog-list-wrapper">
       <!-- 加载中 -->
-      <div v-if="loading" class="loading-container">
-        <el-skeleton :rows="10" animated />
+      <div v-if="loading && likedBlogList.length === 0" class="loading-state">
+        <el-skeleton :rows="5" animated />
       </div>
       
-      <!-- 空列表 -->
-      <div v-else-if="likedBlogList.length === 0" class="empty-container">
+      <!-- 空状态 -->
+      <div v-else-if="likedBlogList.length === 0" class="empty-state">
         <el-empty description="暂无点赞的博客">
-          <el-button type="primary" @click="router.push('/blogs')">浏览博客</el-button>
+          <el-button type="primary" @click="router.push('/blogs')">
+            去浏览博客
+          </el-button>
         </el-empty>
       </div>
       
-      <!-- 点赞博客列表 -->
-      <div v-else class="blog-list">
-        <div 
-          v-for="blog in likedBlogList" 
-          :key="blog.id"
-          class="blog-item"
-        >
-          <!-- 博客内容 -->
-          <div class="blog-info">
-            <h3 class="blog-title" @click="handleView(blog)">
-              {{ blog.title }}
-            </h3>
-            
-            <div class="blog-summary">
-              {{ blog.content?.substring(0, 150) || '暂无摘要' }}
+      <!-- 博客列表 -->
+      <template v-else>
+        <div class="blog-list">
+          <div 
+            v-for="blog in likedBlogList" 
+            :key="blog.id" 
+            class="blog-card"
+          >
+            <div class="blog-content" @click="viewBlog(blog)">
+              <h3 class="blog-title">{{ blog.title || '无标题博客' }}</h3>
+              
+              <div class="blog-excerpt">
+                {{ blog.content ? blog.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : '暂无内容' }}
+              </div>
+              
+              <div class="blog-meta">
+                <span class="blog-author">
+                  <el-avatar :size="20" :src="blog.avatar">{{ blog.username?.substring(0, 1) }}</el-avatar>
+                  {{ blog.username || '未知作者' }}
+                </span>
+                
+                <span v-if="blog.categoryName" class="blog-category">
+                  {{ blog.categoryName }}
+                </span>
+                
+                <span class="blog-date">
+                  {{ formatDate(blog.likeTime || blog.createTime) }}
+                </span>
+                
+                <div class="blog-stats">
+                  <span class="stat-item">
+                    <el-icon><View /></el-icon> 
+                    {{ getBlogStat(blog, 'views') }}
+                  </span>
+                  <span class="stat-item liked">
+                    <el-icon><StarFilled /></el-icon> 
+                    {{ getBlogStat(blog, 'likes') }}
+                  </span>
+                  <span class="stat-item">
+                    <el-icon><Collection /></el-icon> 
+                    {{ getBlogStat(blog, 'collections') }}
+                  </span>
+                </div>
+              </div>
             </div>
             
-            <div class="blog-meta">
-              <div class="blog-author">{{ blog.username || '未知作者' }}</div>
-              <div class="blog-category" v-if="blog.category">
-                {{ blog.category }}
-              </div>
-              <div class="blog-date">{{ formatDate(blog.createTime || blog.publishTime) }}</div>
-              <div class="blog-stats">
-                <span class="stat-item">
-                  <i class="el-icon-view"></i> 
-                  {{ getBlogStat(blog, 'views') }}
-                </span>
-                <span class="stat-item">
-                  <i class="el-icon-thumb"></i> 
-                  {{ getBlogStat(blog, 'likes') }}
-                </span>
-                <span class="stat-item">
-                  <i class="el-icon-chat-dot-round"></i> 
-                  {{ getBlogStat(blog, 'comments') }}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 博客操作 -->
-          <div class="blog-actions">
-            <el-button 
-              type="primary"
-              icon="View"
-              size="small"
-              @click="handleView(blog)"
-              title="查看博客"
-              plain
-            >
-              查看
-            </el-button>
-            
-            <el-button 
-              type="danger"
-              icon="ThumbsUp"
-              size="small"
-              @click="handleCancelLike(blog)"
-              :loading="cancelingLike === blog.id"
-              title="取消点赞"
-              plain
-            >
-              取消点赞
-            </el-button>
+            <!-- <div class="blog-actions">
+              <el-button
+                type="primary"
+                size="small"
+                plain
+                @click="viewBlog(blog)"
+                title="查看博客"
+              >
+                查看
+              </el-button>
+              
+              <el-button
+                type="danger"
+                size="small"
+                plain
+                @click="handleCancelLike(blog)"
+                :loading="cancelingLike === blog.id"
+                title="取消点赞"
+              >
+                取消点赞
+              </el-button>
+            </div> -->
           </div>
         </div>
-      </div>
-      
-      <!-- 分页 -->
-      <div class="pagination-container" v-if="!loading && pagination.total > 0">
-        <el-pagination
-          background
-          layout="prev, pager, next"
-          :current-page="pagination.currentPage"
-          :page-size="pagination.pageSize"
-          :total="pagination.total"
-          @current-change="handlePageChange"
-        />
-      </div>
+        
+        <!-- 加载更多 -->
+        <div v-if="hasMore" class="load-more">
+          <el-button 
+            v-if="!loading" 
+            @click="loadMore" 
+            type="primary" 
+            text
+          >
+            加载更多
+          </el-button>
+          <div v-else class="loading-more">
+            <el-icon class="is-loading"><Loading /></el-icon>
+            <span>加载中...</span>
+          </div>
+        </div>
+        <div v-else class="no-more">
+          没有更多数据了
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <style scoped>
-.liked-blogs-page {
+.liked-blogs-container {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.page-header {
+.liked-blogs-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -295,38 +418,29 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
 }
 
 .page-title {
-  color: #333;
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #333;
 }
 
-.filter-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.sort-selector {
+.filter-bar {
   display: flex;
   align-items: center;
 }
 
 .sort-label {
   margin-right: 8px;
-  color: #666;
+  color: #606266;
+  font-size: 14px;
 }
 
-.liked-blog-list-container {
-  min-height: 400px;
+.blog-list-wrapper {
+  min-height: 300px;
 }
 
-.loading-container {
-  padding: 20px;
-}
-
-.empty-container {
-  padding: 60px 0;
+.loading-state, .empty-state {
+  padding: 40px 0;
   text-align: center;
 }
 
@@ -334,46 +448,49 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  margin-bottom: 20px;
 }
 
-.blog-item {
+.blog-card {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   padding: 16px;
   border-radius: 8px;
-  background-color: white;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.05);
-  transition: box-shadow 0.3s;
+  background-color: #fff;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
-.blog-item:hover {
-  box-shadow: 0 4px 16px 0 rgba(0,0,0,0.1);
+.blog-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
 }
 
-.blog-info {
+.blog-content {
   flex: 1;
   min-width: 0;
+  cursor: pointer;
 }
 
 .blog-title {
   margin: 0 0 12px;
   font-size: 18px;
-  cursor: pointer;
-  color: #333;
-  transition: color 0.3s;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
 }
 
-.blog-title:hover {
-  color: #409eff;
-}
-
-.blog-summary {
-  font-size: 14px;
-  color: #666;
+.blog-excerpt {
   margin-bottom: 12px;
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.6;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -385,20 +502,29 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  font-size: 13px;
-  color: #999;
   gap: 12px;
+  font-size: 13px;
+  color: #909399;
+}
+
+.blog-author {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .blog-category {
   padding: 2px 8px;
-  background-color: #f5f7fa;
+  background-color: #ecf5ff;
+  color: #409eff;
   border-radius: 4px;
+  font-size: 12px;
 }
 
 .blog-stats {
   display: flex;
   gap: 12px;
+  margin-left: auto;
 }
 
 .stat-item {
@@ -407,17 +533,54 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
   gap: 4px;
 }
 
+.stat-item.liked {
+  color: #f56c6c;
+}
+
 .blog-actions {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 8px;
   margin-left: 16px;
 }
 
-.pagination-container {
-  margin-top: 32px;
+.load-more {
   display: flex;
   justify-content: center;
+  margin-top: 20px;
+}
+
+.loading-more {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #909399;
+}
+
+.no-more {
+  text-align: center;
+  color: #909399;
+  padding: 16px 0;
+  font-size: 14px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .liked-blogs-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .blog-card {
+    flex-direction: column;
+  }
+  
+  .blog-actions {
+    flex-direction: row;
+    margin-left: 0;
+    margin-top: 12px;
+    width: 100%;
+  }
 }
 </style> 
