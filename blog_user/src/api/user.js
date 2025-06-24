@@ -1,4 +1,5 @@
 import request from "@/utils/request.js";
+import { useUserInfoStore } from "@/stores/userInfo.js";
 
 const URL = '/user/user'
 
@@ -48,12 +49,21 @@ export const resetPassword = (data) => {
 };
 
 /**
- * 编辑用户信息
- * @param {Object} data - 用户信息
+ * 编辑用户信息 (对应后端 PUT /update)
+ * @param {Object} data - 用户信息，对应UserDTO
  * @returns {Promise} - 返回Promise
  */
 export const updateUserInfo = (data) => {
   return request.put(`${URL}/update`, data);
+};
+
+/**
+ * 更新用户个人资料（别名，保持兼容性）
+ * @param {Object} data - 用户信息
+ * @returns {Promise} - 返回Promise
+ */
+export const updateUserProfile = (data) => {
+  return updateUserInfo(data);
 };
 
 /**
@@ -63,6 +73,40 @@ export const updateUserInfo = (data) => {
  */
 export const getUserById = (id) => {
   return request.get(`${URL}/getById/${id}`);
+};
+
+/**
+ * 获取用户个人资料（当前登录用户）
+ * @returns {Promise} - 返回包含用户信息的Promise
+ */
+export const getUserProfile = () => {
+  // 使用userInfoStore获取当前用户ID
+  const userInfoStore = useUserInfoStore();
+  const currentUserId = userInfoStore.userInfo?.id;
+  
+  if (currentUserId) {
+    return getUserById(currentUserId);
+  }
+  
+  // 如果store中没有用户信息，尝试从localStorage获取
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  if (userInfo.id) {
+    return getUserById(userInfo.id);
+  }
+  
+  return Promise.reject(new Error('用户未登录'));
+};
+
+/**
+ * 获取指定用户的个人资料
+ * @param {Number} userId - 用户ID，如果不传则获取当前登录用户的资料
+ * @returns {Promise} - 返回包含用户信息的Promise
+ */
+export const getUserProfileById = (userId) => {
+  if (userId) {
+    return getUserById(userId);
+  }
+  return getUserProfile();
 };
 
 /**
