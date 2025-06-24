@@ -57,10 +57,7 @@ const resetForm = reactive({
 // 申诉表单数据
 const appealForm = reactive({
   email: '',
-  username: '',
-  reason: '',
-  contactInfo: '',
-  description: ''
+  appealReason: ''
 })
 
 // 验证规则
@@ -149,18 +146,9 @@ const appealRules = {
     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
   ],
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' }
-  ],
-  reason: [
-    { required: true, message: '请选择申诉理由', trigger: 'change' }
-  ],
-  contactInfo: [
-    { required: true, message: '请输入联系方式', trigger: 'blur' }
-  ],
-  description: [
-    { required: true, message: '请输入详细说明', trigger: 'blur' },
-    { min: 10, message: '详细说明至少10个字符', trigger: 'blur' }
+  appealReason: [
+    { required: true, message: '请填写申诉理由', trigger: 'blur' },
+    { min: 5, message: '申诉理由至少需要5个字符', trigger: 'blur' }
   ]
 }
 
@@ -333,16 +321,12 @@ const handleAppeal = async () => {
       try {
         const response = await appealApi.appealSubmit({
           email: appealForm.email,
-          username: appealForm.username,
-          reason: appealForm.reason,
-          contactInfo: appealForm.contactInfo,
-          description: appealForm.description,
-          submitTime: new Date(),
-          status: 0 // 待处理状态
+          appealReason: appealForm.appealReason
+          // 只传递后端需要的字段：邮箱和申诉原因
         })
         
         if (response.code === 0) {
-          ElMessage.success('申诉提交成功，我们将尽快处理')
+          ElMessage.success('申诉提交成功，我们将尽快处理，后续请留意账号邮箱')
           showAppealForm.value = false
           // 清空表单
           appealFormRef.value.resetFields()
@@ -666,28 +650,12 @@ const switchForm = (formName) => {
             <el-input v-model="appealForm.email" placeholder="请输入邮箱地址" />
           </el-form-item>
           
-          <el-form-item label="用户名" prop="username">
-            <el-input v-model="appealForm.username" placeholder="请输入用户名" />
-          </el-form-item>
-          
-          <el-form-item label="申诉理由" prop="reason">
-            <el-select v-model="appealForm.reason" placeholder="请选择申诉理由" class="full-width">
-              <el-option label="账号被盗用" value="被盗用" />
-              <el-option label="误封禁" value="误封禁" />
-              <el-option label="其他原因" value="其他原因" />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item label="联系方式" prop="contactInfo">
-            <el-input v-model="appealForm.contactInfo" placeholder="请输入联系方式（手机号/微信等）" />
-          </el-form-item>
-          
-          <el-form-item label="详细说明" prop="description">
+          <el-form-item label="申诉理由" prop="appealReason">
             <el-input 
-              v-model="appealForm.description" 
+              v-model="appealForm.appealReason" 
               type="textarea" 
-              :rows="4"
-              placeholder="请详细说明申诉原因（至少10个字符）" 
+              :rows="3"
+              placeholder="请详细描述您的申诉原因" 
             />
           </el-form-item>
           
