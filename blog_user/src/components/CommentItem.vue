@@ -2,7 +2,9 @@
 import { defineProps, defineEmits } from 'vue'
 import { ElButton } from 'element-plus'
 import { Icon } from '@iconify/vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const props = defineProps({
   comment: {
     type: Object,
@@ -46,6 +48,13 @@ const handleReply = () => {
 const handleDelete = () => {
   emit('delete', props.comment.id)
 }
+
+// 查看用户资料
+const viewUserProfile = (userId) => {
+  if (userId) {
+    router.push(`/user/${userId}`)
+  }
+}
 </script>
 
 <template>
@@ -53,12 +62,23 @@ const handleDelete = () => {
     <!-- 评论内容 -->
     <div class="comment-content-wrapper">
       <div class="comment-user">
-        <el-avatar :size="28" :src="comment.userAvatar || ''" />
+        <el-avatar 
+          :size="28" 
+          :src="comment.userAvatar || ''" 
+          @click="viewUserProfile(comment.userId)"
+          class="clickable-avatar"
+        />
         <div class="comment-user-info">
           <div class="comment-username">
-            {{ comment.username || '匿名用户' }}
+            <span 
+              @click="viewUserProfile(comment.userId)" 
+              class="clickable-username"
+            >{{ comment.username || '匿名用户' }}</span>
             <span v-if="comment.replyToUsername" class="reply-to">
-              回复 <span class="replied-user">{{ comment.replyToUsername }}</span>
+              回复 <span 
+                class="replied-user"
+                @click="viewUserProfile(comment.replyToUserId)"
+              >{{ comment.replyToUsername }}</span>
             </span>
           </div>
           <div class="comment-time">{{ formatDate(comment.createTime) }}</div>
@@ -168,6 +188,11 @@ const handleDelete = () => {
   color: #409eff;
   font-weight: 600;
   font-size: 11px;
+  cursor: pointer;
+}
+
+.replied-user:hover {
+  text-decoration: underline;
 }
 
 .child-comments {
@@ -175,5 +200,18 @@ const handleDelete = () => {
   margin-left: 25px;
   padding-left: 10px;
   border-left: 2px solid #e8eaec;
+}
+
+.clickable-avatar {
+  cursor: pointer;
+}
+
+.clickable-username {
+  cursor: pointer;
+}
+
+.clickable-username:hover {
+  text-decoration: underline;
+  color: #409eff;
 }
 </style> 

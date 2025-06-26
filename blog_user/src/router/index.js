@@ -79,6 +79,11 @@ const routes = [
                 meta: { requiresAuth: true }
             },
             {
+                path: '/user/:userId',
+                component: () => import('@/views/UserProfile.vue'),
+                name: 'user-profile'
+            },
+            {
                 path: '/search',
                 component: () => import('@/views/Search.vue')
             },
