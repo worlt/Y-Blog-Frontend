@@ -1,7 +1,7 @@
 <script setup>
 import {ref} from "vue";
-import {useTokenStore} from "@/strores/token.js";
-import {useAuditorInfoStore} from "@/strores/auditorInfo.js";
+import {useTokenStore} from "@/stores/token.js";
+import {useAuditorInfoStore} from "@/stores/auditorInfo.js";
 import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 import {auditorLogin} from "@/api/auditor.js";

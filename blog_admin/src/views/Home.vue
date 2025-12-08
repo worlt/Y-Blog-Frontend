@@ -13,14 +13,21 @@ const avatar = ref(null);
 
 // 测试头像是否可用
 const fetchAvatar = async () => {
+  // 如果头像地址为空或无效，直接使用默认头像
+  const avatarUrl = adminInfoStore.info?.avatar;
+  if (!avatarUrl || avatarUrl.trim() === '') {
+    avatar.value = null;
+    return;
+  }
+  
   try {
-    const response = await fetch(adminInfoStore.info.avatar);
+    const response = await fetch(avatarUrl);
     // 检查返回的内容类型是否为图片
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('image')) {
       throw new Error('返回的内容不是图片');
     }
-    avatar.value = adminInfoStore.info.avatar;
+    avatar.value = avatarUrl;
   } catch (error) {
     console.log('无效地址：', error);
     avatar.value = null;
@@ -48,9 +55,19 @@ const handleCommend = (commend) =>{
           type: 'warning'
         }
     ).then(async () => {
+      try {
+        // 先调用后端退出接口（需要token）
+        await adminLogout()
+      } catch (e) {
+        // 即使后端退出失败，也继续执行本地退出
+        console.warn('后端退出接口调用失败:', e)
+      }
+      
+      // 清除本地认证信息
       tokenStore.removeToken();
       adminInfoStore.removeInfo();
-      await adminLogout()
+      
+      // 跳转到登录页
       await router.push('/login');
 
       ElMessage({

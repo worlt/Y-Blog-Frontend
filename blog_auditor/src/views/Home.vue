@@ -1,7 +1,7 @@
 <script setup>
-import {useAuditorInfoStore} from "@/strores/auditorInfo.js";
+import {useAuditorInfoStore} from "@/stores/auditorInfo.js";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {useTokenStore} from "@/strores/token.js";
+import {useTokenStore} from "@/stores/token.js";
 import {auditorLogout} from "@/api/auditor.js";
 import router from "@/router/index.js";
 import {computed, onMounted, onUnmounted, ref} from "vue";

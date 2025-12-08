@@ -3,7 +3,7 @@
 import {computed, onMounted, reactive, ref} from "vue";
 import {getDetail, resetPasswordByEmail, sendCode, updateAuditor, updatePassword} from "@/api/auditor.js";
 import {ElLoading, ElMessage} from "element-plus";
-import {useAuditorInfoStore} from "@/strores/auditorInfo.js";
+import {useAuditorInfoStore} from "@/stores/auditorInfo.js";
 import {uploadImage} from "@/api/common.js";
 
 const auditorInfoStore = useAuditorInfoStore();

@@ -1,42 +1,48 @@
 import axios from "axios";
-import {useTokenStore} from "@/strores/token.js";
-import {ElMessage} from "element-plus";
+import { useTokenStore } from "@/stores/token.js";
+import { ElMessage } from "element-plus";
 import router from "@/router/index.js";
-
+import { createErrorHandler, ERROR_STRATEGY, handleRequestError } from "@common/utils/errorHandler.js";
 
 const baseURL = '/api';
-const instance = axios.create({baseURL});
+const instance = axios.create({ baseURL });
 
+// 创建专用的错误处理器 - 审核后台使用跳转策略
+const errorHandler = createErrorHandler({
+    strategy: ERROR_STRATEGY.REDIRECT,
+    router: router,
+    clearAuth: () => {
+        const tokenStore = useTokenStore();
+        tokenStore.removeToken();
+    }
+});
+
+// 请求拦截器
 instance.interceptors.request.use(
     (config) => {
         const tokenStore = useTokenStore();
+        const token = tokenStore.getToken();
 
-        if (tokenStore.token) {
-            config.headers.auditorToken = tokenStore.token;
+        if (token) {
+            config.headers.auditorToken = token;
         }
         return config;
     },
     (err) => {
-        return Promise.reject(err);
+        // 请求错误回调 - 使用统一错误处理
+        return handleRequestError(err);
     }
 )
 
+// 响应拦截器
 instance.interceptors.response.use(
     result => {
-        if (result.data.code === 0) {
-            return result.data;
-        }
-        ElMessage.error(result.data.msg ? result.data.msg : '服务异常')
-        return Promise.reject(result.data)
+        // 使用统一的业务响应处理
+        return errorHandler.handleBusinessResponse(result);
     },
     err => {
-        if (err.response.status === 401) {
-            ElMessage.error('请先登录')
-            router.push('/login')
-        } else {
-            ElMessage.error('服务异常')
-        }
-        return Promise.reject(err)
+        // 使用统一的HTTP错误处理
+        return errorHandler.handleResponseError(err);
     }
 )
 

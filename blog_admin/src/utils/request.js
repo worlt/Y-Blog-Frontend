@@ -1,10 +1,21 @@
 import axios from "axios";
-import {ElMessage} from "element-plus";
-import {useTokenStore} from "@/stores/token.js";
+import { ElMessage } from "element-plus";
+import { useTokenStore } from "@/stores/token.js";
 import router from "@/router/index.js";
+import { createErrorHandler, ERROR_STRATEGY, handleRequestError } from "@common/utils/errorHandler.js";
 
 const baseURL = '/api';
 const instance = axios.create({ baseURL });
+
+// 创建专用的错误处理器 - 管理后台使用跳转策略
+const errorHandler = createErrorHandler({
+    strategy: ERROR_STRATEGY.REDIRECT,
+    router: router,
+    clearAuth: () => {
+        const tokenStore = useTokenStore();
+        tokenStore.removeToken();
+    }
+});
 
 // 请求拦截器
 instance.interceptors.request.use(
@@ -12,37 +23,28 @@ instance.interceptors.request.use(
         // 请求前的回调
         // 添加token
         const tokenStore = useTokenStore();
+        const token = tokenStore.getToken();
 
-        if (tokenStore.token) {
-            config.headers.adminToken = tokenStore.token;
+        if (token) {
+            config.headers.adminToken = token;
         }
         return config;
     },
     (err) => {
-        // 请求错误回调
-        return Promise.reject(err);
+        // 请求错误回调 - 使用统一错误处理
+        return handleRequestError(err);
     }
 )
 
 // 响应拦截器
 instance.interceptors.response.use(
     result => {
-        if (result.data.code === 0) {
-            return result.data;
-        }
-        // 操作失败
-        ElMessage.error(result.data.msg ? result.data.msg : '服务异常')
-        // 异步操作状态转换失败
-        return Promise.reject(result.data)
+        // 使用统一的业务响应处理
+        return errorHandler.handleBusinessResponse(result);
     },
     err => {
-        if (err.response.status === 401) {
-            ElMessage.error('请先登录')
-            router.push('/login')
-        } else {
-           ElMessage.error('服务异常')
-        }
-        return Promise.reject(err);
+        // 使用统一的HTTP错误处理
+        return errorHandler.handleResponseError(err);
     }
 )
 
