@@ -34,17 +34,27 @@ function handleUserLogin() {
 
 // 检查未读消息
 function checkUnreadMessages() {
-  if (!tokenStore.token) return
+  // 更严格的登录检查
+  if (!tokenStore.token || !userInfoStore.info?.id) {
+    console.log('用户未登录，跳过检查未读消息');
+    return;
+  }
   
   messageApi.getUnreadCount()
     .then(res => {
       if (res.code === 0) {
         // 通知组件更新未读消息数
         eventBus.emit('unread-count-update', res.data)
+      } else if (res.code !== -1) {
+        // 只有非认证错误才打印日志（code=-1已被拦截器处理）
+        console.log('获取未读消息数失败:', res.msg);
       }
     })
     .catch(err => {
-      console.error('获取未读消息数失败:', err)
+      // 如果是认证错误，已由拦截器处理，不需要打印日志
+      if (err.message !== '认证过期') {
+        console.error('获取未读消息数失败:', err);
+      }
     })
 }
 </script>

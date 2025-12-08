@@ -5,9 +5,10 @@ import {useTokenStore} from "@/stores/token.js";
 import router from "@/router/index.js";
 import {ElMessage} from "element-plus";
 import AuthDialog from '@/components/AuthDialog.vue';
-import { eventBus } from '@/utils/request.js';
+import { eventBus, stopMessageChecking } from '@/utils/request.js';
 import * as messageApi from '@/api/message.js';
 import { Icon } from '@iconify/vue';
+import { executeAutoLogout } from '@common/utils/autoLogout.js';
 
 const input = ref('')
 
@@ -79,16 +80,26 @@ onUnmounted(() => {
 
 // 加载未读消息数
 const loadUnreadMessageCount = () => {
-  if (!isLoggedIn.value) return;
+  // 更严格的登录检查
+  if (!tokenStore.token || !userInfoStore.info?.id) {
+    console.log('用户未登录，跳过获取未读消息数');
+    return;
+  }
   
   messageApi.getUnreadCount()
     .then(res => {
       if (res.code === 0) {
         unreadMessageCount.value = res.data;
+      } else if (res.code !== -1) {
+        // 只有非认证错误才打印日志（code=-1已被拦截器处理）
+        console.log('获取未读消息数失败:', res.msg);
       }
     })
     .catch(err => {
-      console.error('获取未读消息数失败:', err);
+      // 如果是认证错误，已由拦截器处理，不需要打印日志
+      if (err.message !== '认证过期') {
+        console.error('获取未读消息数失败:', err);
+      }
     });
 };
 
@@ -162,10 +173,17 @@ const handleCommand = (command) => {
 
 // 退出登录
 const logout = () => {
-  userInfoStore.removeInfo();
-  tokenStore.removeToken();
-  ElMessage.success('已退出登录');
+  // 使用统一的自动登出处理
+  executeAutoLogout({
+    tokenStore,
+    userStore: userInfoStore,
+    stopMessageChecking,
+    reason: '用户主动退出登录'
+  });
+  
+  // 跳转到首页
   router.push('/');
+  ElMessage.success('已退出登录');
 }
 
 // 搜索处理

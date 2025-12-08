@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory} from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 
 //定义路由
 const routes = [
@@ -39,7 +39,7 @@ const routes = [
                 meta: { title: '管理员管理' }
             },
             {
-                path: '/user/audit',
+                path: '/user/auditor',
                 component: () => import('@/views/user/Auditor.vue'),
                 meta: { title: '审核员管理' }
             },
@@ -61,9 +61,9 @@ const routes = [
             },
             // 系统配置
             {
-              path: '/config/personal',
-              component: () => import('@/views/config/Personal.vue'),
-              meta: { title: '个人中心'}
+                path: '/config/personal',
+                component: () => import('@/views/config/Personal.vue'),
+                meta: { title: '个人中心' }
             },
             {
                 path: '/config/permission',
@@ -84,6 +84,40 @@ const routes = [
 const router = createRouter({
     history: createWebHistory(),
     routes: routes
+})
+
+// 路由前置守卫 - 检查用户登录状态
+router.beforeEach((to, from, next) => {
+    // 登录页面直接放行
+    if (to.path === '/login') {
+        next()
+        return
+    }
+
+    // 从localStorage获取持久化的token
+    // pinia-persistedstate-plugin 会同步将状态存储到 localStorage
+    let token = null
+    const tokenData = localStorage.getItem('token')
+
+    if (tokenData) {
+        try {
+            const parsed = JSON.parse(tokenData)
+            token = parsed.token
+        } catch (e) {
+            console.warn('解析token失败:', e)
+        }
+    }
+
+    // 如果没有token，重定向到登录页
+    if (!token) {
+        next({
+            path: '/login',
+            query: { redirect: to.fullPath }
+        })
+        return
+    }
+
+    next()
 })
 
 export default router
