@@ -17,6 +17,8 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0',
+    port: 2000,
     proxy: {
       '/api': {
         // 获取路径中包含/api的请求
