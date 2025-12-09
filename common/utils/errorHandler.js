@@ -56,16 +56,31 @@ export function createErrorHandler(config = {}) {
 
     // 处理400错误
     if (status === HTTP_STATUS.BAD_REQUEST) {
+      // 检查是否为token过期相关的错误
+      const tokenExpiredMessages = [
+        '请重新登录',
+        '登录状态已过期',
+        '用户未登录',
+        'token已过期',
+        '无效的token',
+        'JWT令牌已过期',
+        '登录已过期',
+        '身份验证失败'
+      ]
+      
+      const errorMsg = responseData && responseData.msg ? responseData.msg : ''
+      if (errorMsg && tokenExpiredMessages.some(msg => errorMsg.includes(msg))) {
+        return handleUnauthorized()
+      }
+
       // 如果是用户未登录访问需要认证的接口，静默处理
-      if (responseData && responseData.msg && responseData.msg.includes('用户未登录')) {
+      if (errorMsg.includes('用户未登录')) {
         console.log('用户未登录访问需要认证的接口，已静默处理')
         return Promise.reject(error)
       }
 
       // 优先使用后端返回的错误消息
-      const errorMessage = (responseData && responseData.msg)
-        ? responseData.msg
-        : getHttpErrorMessage(status)
+      const errorMessage = errorMsg || getHttpErrorMessage(status)
       ElMessage.error(errorMessage)
       return Promise.reject(error)
     }
@@ -90,6 +105,20 @@ export function createErrorHandler(config = {}) {
       return handleUnauthorized()
     }
 
+    // 检查是否为token过期相关的错误消息
+    const tokenExpiredMessages = [
+      '请重新登录',
+      '登录状态已过期',
+      '用户未登录',
+      'token已过期',
+      '无效的token',
+      'JWT令牌已过期'
+    ]
+    
+    if (msg && tokenExpiredMessages.some(errorMsg => msg.includes(errorMsg))) {
+      return handleUnauthorized()
+    }
+
     // 显示错误消息
     ElMessage.error(errorMessage)
     return Promise.reject(data)
@@ -106,7 +135,7 @@ export function createErrorHandler(config = {}) {
 
     switch (strategy) {
       case ERROR_STRATEGY.REDIRECT:
-        ElMessage.error('请先登录')
+        ElMessage.error('登录已过期，请重新登录')
         if (router) {
           router.push('/login')
         }
@@ -136,7 +165,7 @@ export function createErrorHandler(config = {}) {
 
       case ERROR_STRATEGY.MESSAGE_ONLY:
       default:
-        ElMessage.error('登录状态已过期，请重新登录')
+        ElMessage.error('登录已过期，请重新登录')
         if (onUnauthorized) {
           onUnauthorized()
         }

@@ -61,4 +61,12 @@ router.beforeEach((to, from, next) => {
     }
 });
 
+// 路由后置钩子 - 监听路由变化，如果被重定向到登录页，说明token已过期
+router.afterEach((to, from) => {
+    // 如果从非登录页跳转到登录页，说明token过期或被清除
+    if (from.path !== '/login' && to.path === '/login') {
+        console.log('检测到token过期，已自动跳转到登录页')
+    }
+});
+
 export default router

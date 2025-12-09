@@ -91,7 +91,7 @@ onUnmounted(() => {
           Y-Blog审核系统
         </div>
         <div class="block">
-          <div style="margin-right: 20px">管理员：<strong>{{auditorInfo.info.username}}</strong></div>
+          <div style="margin-right: 20px">审核员：<strong>{{auditorInfo.info.username}}</strong></div>
         <el-dropdown placement="top" @command="handleCommend">
           <span>
             <el-avatar :src="getAvatar"></el-avatar>
