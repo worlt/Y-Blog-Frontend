@@ -5,6 +5,8 @@
   import {useRouter, useRoute} from "vue-router";
   import {adminLogin} from "@/api/admin.js";
   import {ElMessage} from "element-plus";
+  import { useSlideVerify } from '@common/composables/useSlideVerify.js';
+  import SlideVerify from "@common/components/SlideVerify.vue";
 
   // 定义表单规则
   const rules = {
@@ -25,6 +27,12 @@
   const adminInfoStore = useAdminInfoStore();
   const router = useRouter();
   const route = useRoute();
+  const { 
+    verifyDialogVisible, 
+    slideVerifyRef, 
+    triggerVerification, 
+    handleVerification 
+  } = useSlideVerify();
   
   // 获取重定向地址
   const getRedirect = () => {
@@ -32,26 +40,29 @@
     return redirect ? decodeURIComponent(redirect) : '/';
   }
 
-  // 登录
-  const login = async ()=> {
+  const login = () => {
     if (!loginData.value.username || !loginData.value.password) {
       ElMessage.warning('请填写用户名和密码');
       return;
     }
-    
-    let result = await adminLogin(loginData.value);
-    console.log(result)
-    if (result.code === 0) {
-      ElMessage.success(result.msg ? result.msg : '登录成功');
-      // 将token存储到pinia中
-      console.log(result.data)
-      tokenStore.setToken(result.data.token)
-      // 将用户消息存储到pinia中
-      adminInfoStore.setInfo(result.data)
-      // 跳转到重定向地址或首页
-      await router.push(getRedirect())
-    } else {
-      ElMessage.error(result.msg ? result.msg : '登录失败');
+    triggerVerification(submitLogin);
+  }
+
+  const submitLogin = async () => {
+    try {
+      const result = await adminLogin(loginData.value);
+      if (result.code === 0) {
+        ElMessage.success(result.msg || '登录成功');
+        tokenStore.setToken(result.data.token);
+        adminInfoStore.setInfo(result.data);
+        await router.push(getRedirect());
+      } else {
+        ElMessage.error(result.msg || '登录失败');
+        slideVerifyRef.value?.reset();
+      }
+    } catch (error) {
+      console.error('登录异常:', error);
+      ElMessage.error('登录异常，请稍后重试');
     }
   }
 
@@ -86,6 +97,15 @@
         <el-button type="primary" class="login-button" @click="login()">登 录</el-button>
       </el-form-item>
     </el-form>
+
+    <el-dialog v-model="verifyDialogVisible" title="请完成安全验证" width="350px" :close-on-click-modal="false">
+      <div class="dialog-content">
+        <SlideVerify
+          ref="slideVerifyRef"
+          @verify="handleVerification"
+        />
+      </div>
+    </el-dialog>
   </div>
 </div>
 </template>

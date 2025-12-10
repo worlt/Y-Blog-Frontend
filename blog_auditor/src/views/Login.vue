@@ -5,6 +5,8 @@ import {useAuditorInfoStore} from "@/stores/auditorInfo.js";
 import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 import {auditorLogin} from "@/api/auditor.js";
+import { useSlideVerify } from '@common/composables/useSlideVerify.js';
+import SlideVerify from "@common/components/SlideVerify.vue";
 
 const rules = {
   username: [
@@ -24,24 +26,36 @@ const tokenStore = useTokenStore();
 const auditorInfo = useAuditorInfoStore();
 const router = useRouter();
 
-const login = async () => {
+const { 
+  verifyDialogVisible, 
+  slideVerifyRef, 
+  triggerVerification, 
+  handleVerification 
+} = useSlideVerify();
+
+const login = () => {
   if (!loginData.value.username || !loginData.value.password) {
     ElMessage.warning('请填写用户名和密码');
     return;
   }
+  triggerVerification(submitLogin);
+}
 
-  let result = await auditorLogin(loginData.value);
-  console.log(result)
-  if (result.code === 0) {
-    ElMessage.success(result.msg ? result.msg : '登录成功')
-    console.log(result.data)
-
-    tokenStore.setToken(result.data.token)
-
-    auditorInfo.setInfo(result.data)
-    await router.push('/')
-  } else {
-    ElMessage.error(result.msg ? result.msg : '登录失败')
+const submitLogin = async () => {
+  try {
+    const result = await auditorLogin(loginData.value);
+    if (result.code === 0) {
+      ElMessage.success(result.msg || '登录成功');
+      tokenStore.setToken(result.data.token);
+      auditorInfo.setInfo(result.data);
+      await router.push('/');
+    } else {
+      ElMessage.error(result.msg || '登录失败');
+      slideVerifyRef.value?.reset();
+    }
+  } catch (error) {
+    console.error('登录异常:', error);
+    ElMessage.error('登录异常，请稍后重试');
   }
 }
 
@@ -58,12 +72,21 @@ const login = async () => {
           <el-input v-model="loginData.username" clearable placeholder="请输入用户名"></el-input>
         </el-form-item>
         <el-form-item label="密码" prop="password">
-          <el-input v-model="loginData.password" clearable placeholder="请输入密码"></el-input>
+          <el-input v-model="loginData.password" type="password" show-password clearable placeholder="请输入密码"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button class="login-button" type="primary" @click="login()">登录</el-button>
         </el-form-item>
       </el-form>
+
+      <el-dialog v-model="verifyDialogVisible" title="请完成安全验证" width="350px" :close-on-click-modal="false">
+        <div class="dialog-content">
+          <SlideVerify
+            ref="slideVerifyRef"
+            @verify="handleVerification"
+          />
+        </div>
+      </el-dialog>
     </div>
   </div>
 </template>

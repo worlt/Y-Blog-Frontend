@@ -6,6 +6,8 @@ import * as appealApi from '@/api/appeal.js'
 import { ElMessage, ElTabs, ElTabPane } from 'element-plus'
 import { useTokenStore } from '@/stores/token.js'
 import { useUserInfoStore } from '@/stores/userInfo.js'
+import SlideVerify from '@common/components/SlideVerify.vue'
+import { useSlideVerify } from '@common/composables/useSlideVerify.js'
 
 const router = useRouter()
 const tokenStore = useTokenStore()
@@ -164,71 +166,32 @@ const registerFormRef = ref(null)
 const resetFormRef = ref(null)
 const appealFormRef = ref(null)
 
+const { 
+  verifyDialogVisible, 
+  slideVerifyRef, 
+  triggerVerification, 
+  handleVerification 
+} = useSlideVerify();
+
 // 密码登录处理
 const handleLogin = async () => {
-  if (!loginFormRef.value) return
-  
-  await loginFormRef.value.validate(async (valid) => {
+  await loginFormRef.value.validate((valid) => {
     if (valid) {
-      try {
-        const response = await userApi.loginByPassword({
-          email: loginForm.email,
-          password: loginForm.password
-        })
-        
-        if (response.code === 0) {
-          // 登录成功
-          handleLoginSuccess(response.data)
-        } else {
-          // 检查是否是账号被封禁错误
-          if (response.msg && response.msg.includes('已被封禁')) {
-            showAppealForm.value = true
-            appealForm.email = loginForm.email
-          } else {
-            ElMessage.error(response.msg || '登录失败，请稍后重试')
-          }
-        }
-      } catch (error) {
-        console.error('登录异常:', error)
-        ElMessage.error('登录异常，请稍后重试')
-      }
+      triggerVerification(submitPasswordLogin)
     }
   })
 }
 
 // 验证码登录处理
 const handleCodeLogin = async () => {
-  if (!codeLoginFormRef.value) return
-  
-  await codeLoginFormRef.value.validate(async (valid) => {
+  await codeLoginFormRef.value.validate((valid) => {
     if (valid) {
-      try {
-        const response = await userApi.loginByCode({
-          email: codeLoginForm.email,
-          code: codeLoginForm.code
-        })
-        
-        if (response.code === 0) {
-          // 登录成功
-          handleLoginSuccess(response.data)
-        } else {
-          // 检查是否是账号被封禁错误
-          if (response.msg && response.msg.includes('已被封禁')) {
-            showAppealForm.value = true
-            appealForm.email = codeLoginForm.email
-          } else {
-            ElMessage.error(response.msg || '登录失败，请稍后重试')
-          }
-        }
-      } catch (error) {
-        console.error('验证码登录异常:', error)
-        ElMessage.error('验证码登录异常，请稍后重试')
-      }
+      triggerVerification(submitCodeLogin)
     }
   })
 }
 
-// 处理登录成功
+// 登录成功后的通用处理
 const handleLoginSuccess = (userData) => {
   // 使用Pinia store保存token和用户信息
   tokenStore.setToken(userData.token)
@@ -238,15 +201,15 @@ const handleLoginSuccess = (userData) => {
     avatar: userData.avatar,
     role: userData.role
   })
-  
+
   ElMessage.success('登录成功')
-  
+
   // 获取重定向路径
   const redirectPath = router.currentRoute.value.query.redirect || '/'
-  
+
   // 使用 replace 替代 push，避免可以回退到登录页
   router.replace(redirectPath)
-  
+
   // 清除浏览器历史记录中的登录页面
   setTimeout(() => {
     window.history.replaceState(null, '', redirectPath)
@@ -255,67 +218,102 @@ const handleLoginSuccess = (userData) => {
 
 // 注册处理
 const handleRegister = async () => {
-  if (!registerFormRef.value) return
-  
-  await registerFormRef.value.validate(async (valid) => {
+  await registerFormRef.value.validate((valid) => {
     if (valid) {
-      try {
-        const response = await userApi.register({
-          email: registerForm.email,
-          username: registerForm.username,
-          password: registerForm.password,
-          code: registerForm.code
-        })
-        
-        if (response.code === 0) {
-          ElMessage.success('注册成功，请登录')
-          activeForm.value = 'login'
-          // 清空表单
-          registerFormRef.value.resetFields()
-        } else {
-          ElMessage.error(response.msg || '注册失败，请稍后重试')
-        }
-      } catch (error) {
-        console.error('注册异常:', error)
-        ElMessage.error('注册异常，请稍后重试')
-      }
+      triggerVerification(submitRegister)
     }
   })
 }
 
 // 重置密码处理
 const handleResetPassword = async () => {
-  if (!resetFormRef.value) return
-  
-  await resetFormRef.value.validate(async (valid) => {
+  await resetFormRef.value.validate((valid) => {
     if (valid) {
-      try {
-        const response = await userApi.resetPassword({
-          email: resetForm.email,
-          code: resetForm.code,
-          password: resetForm.password
-        })
-        
-        if (response.code === 0) {
-          ElMessage.success('密码重置成功，请使用新密码登录')
-          activeForm.value = 'login'
-          // 清空表单
-          resetFormRef.value.resetFields()
-        } else {
-          ElMessage.error(response.msg || '密码重置失败，请稍后重试')
-        }
-      } catch (error) {
-        console.error('密码重置异常:', error)
-        ElMessage.error('密码重置异常，请稍后重试')
-      }
+      triggerVerification(submitResetPassword)
     }
   })
+}
+
+// 实际提交逻辑
+const submitPasswordLogin = async () => {
+  try {
+    const response = await userApi.loginByPassword({
+      email: loginForm.email,
+      password: loginForm.password
+    })
+    if (response.code === 0) {
+      handleLoginSuccess(response.data)
+    } else {
+      ElMessage.error(response.msg || '登录失败')
+      slideVerifyRef.value?.reset()
+    }
+  } catch (error) {
+    console.error('登录异常:', error)
+  }
+}
+
+const submitCodeLogin = async () => {
+  try {
+    const response = await userApi.loginByCode({
+      email: codeLoginForm.email,
+      code: codeLoginForm.code
+    })
+    if (response.code === 0) {
+      handleLoginSuccess(response.data)
+    } else {
+      ElMessage.error(response.msg || '登录失败')
+      slideVerifyRef.value?.reset()
+    }
+  } catch (error) {
+    console.error('验证码登录异常:', error)
+  }
+}
+
+const submitRegister = async () => {
+  try {
+    const response = await userApi.register({
+      email: registerForm.email,
+      username: registerForm.username,
+      password: registerForm.password,
+      code: registerForm.code
+    })
+    if (response.code === 0) {
+      ElMessage.success('注册成功，请登录')
+      activeForm.value = 'login'
+      registerFormRef.value.resetFields()
+    } else {
+      ElMessage.error(response.msg || '注册失败')
+      slideVerifyRef.value?.reset()
+    }
+  } catch (error) {
+    console.error('注册异常:', error)
+  }
+}
+
+const submitResetPassword = async () => {
+  try {
+    const response = await userApi.resetPassword({
+      email: resetForm.email,
+      code: resetForm.code,
+      password: resetForm.password
+    })
+    if (response.code === 0) {
+      ElMessage.success('密码重置成功，请使用新密码登录')
+      activeForm.value = 'login'
+      resetFormRef.value.resetFields()
+    } else {
+      ElMessage.error(response.msg || '密码重置失败')
+      slideVerifyRef.value?.reset()
+    }
+  } catch (error) {
+    console.error('密码重置异常:', error)
+  }
 }
 
 // 提交申诉处理
 const handleAppeal = async () => {
   if (!appealFormRef.value) return
-  
+
   await appealFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
@@ -324,7 +322,7 @@ const handleAppeal = async () => {
           appealReason: appealForm.appealReason
           // 只传递后端需要的字段：邮箱和申诉原因
         })
-        
+
         if (response.code === 0) {
           ElMessage.success('申诉提交成功，我们将尽快处理，后续请留意账号邮箱')
           showAppealForm.value = false
@@ -344,7 +342,7 @@ const handleAppeal = async () => {
 // 发送验证码
 const sendCode = async (type) => {
   let email
-  
+
   switch (type) {
     case 'register':
       email = registerForm.email
@@ -358,22 +356,22 @@ const sendCode = async (type) => {
     default:
       email = ''
   }
-  
+
   if (!email) {
     ElMessage.warning('请先输入邮箱地址')
     return
   }
-  
+
   const emailReg = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
   if (!emailReg.test(email)) {
     ElMessage.warning('请输入正确的邮箱格式')
     return
   }
-  
+
   try {
     codeSending.value = true
     const response = await userApi.sendVerificationCode(email)
-    
+
     if (response.code === 0) {
       ElMessage.success('验证码已发送，请查收邮箱')
       // 开始倒计时
@@ -412,7 +410,7 @@ const switchForm = (formName) => {
   <div class="auth-container">
     <div class="left-section">
       <div class="logo-container">
-<!--        <el-image :src="logo" fit="contain" class="logo-image"></el-image>-->
+        <!--        <el-image :src="logo" fit="contain" class="logo-image"></el-image>-->
         <h1 class="site-name">Y-Blog</h1>
       </div>
       <div class="slogan">
@@ -420,7 +418,7 @@ const switchForm = (formName) => {
         <p>欢迎来到我们的博客平台，在这里你可以记录自己的生活点滴，分享你的专业知识，结交志同道合的朋友。</p>
       </div>
     </div>
-    
+
     <div class="right-section">
       <!-- 登录表单 -->
       <el-card v-if="activeForm === 'login' && !showAppealForm" class="auth-card">
@@ -429,10 +427,10 @@ const switchForm = (formName) => {
             <span class="header-title">账号登录</span>
           </div>
         </template>
-        
+
         <el-tabs v-model="loginType" class="login-tabs">
           <el-tab-pane label="密码登录" name="password">
-            <el-form 
+            <el-form
               ref="loginFormRef"
               :model="loginForm"
               :rules="loginRules"
@@ -443,27 +441,27 @@ const switchForm = (formName) => {
               <el-form-item label="邮箱" prop="email" label-width="70px">
                 <el-input v-model="loginForm.email" placeholder="请输入邮箱地址" />
               </el-form-item>
-              
+
               <el-form-item label="密码" prop="password" label-width="70px">
-                <el-input 
-                  v-model="loginForm.password" 
-                  type="password" 
+                <el-input
+                  v-model="loginForm.password"
+                  type="password"
                   placeholder="请输入密码"
-                  show-password 
+                  show-password
                 />
               </el-form-item>
-              
+
               <div class="form-actions">
                 <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
                 <el-button type="text" @click="switchForm('reset')">忘记密码?</el-button>
               </div>
-              
+
               <el-button type="primary" class="full-width-button" @click="handleLogin">登录</el-button>
             </el-form>
           </el-tab-pane>
-          
+
           <el-tab-pane label="验证码登录" name="code">
-            <el-form 
+            <el-form
               ref="codeLoginFormRef"
               :model="codeLoginForm"
               :rules="codeLoginRules"
@@ -474,35 +472,35 @@ const switchForm = (formName) => {
               <el-form-item label="邮箱" prop="email" label-width="70px">
                 <el-input v-model="codeLoginForm.email" placeholder="请输入邮箱地址" />
               </el-form-item>
-              
+
               <el-form-item label="验证码" prop="code" label-width="70px">
                 <div class="code-input-group">
                   <el-input v-model="codeLoginForm.code" placeholder="请输入验证码" />
-                  <el-button 
-                    :disabled="codeSending || countdown > 0" 
+                  <el-button
+                    :disabled="codeSending || countdown > 0"
                     @click="sendCode('login')"
                   >
                     {{ countdown > 0 ? `${countdown}秒` : '获取验证码' }}
                   </el-button>
                 </div>
               </el-form-item>
-              
+
               <div class="form-actions">
                 <el-checkbox v-model="codeLoginForm.rememberMe">记住我</el-checkbox>
                 <div></div>
               </div>
-              
+
               <el-button type="primary" class="full-width-button" @click="handleCodeLogin">登录</el-button>
             </el-form>
           </el-tab-pane>
         </el-tabs>
-        
+
         <div class="form-footer">
           <span>还没有账号?</span>
           <el-button type="text" @click="switchForm('register')">立即注册</el-button>
         </div>
       </el-card>
-      
+
       <!-- 注册表单 -->
       <el-card v-if="activeForm === 'register'" class="auth-card">
         <template #header>
@@ -510,8 +508,8 @@ const switchForm = (formName) => {
             <span class="header-title">账号注册</span>
           </div>
         </template>
-        
-        <el-form 
+
+        <el-form
           ref="registerFormRef"
           :model="registerForm"
           :rules="registerRules"
@@ -521,50 +519,50 @@ const switchForm = (formName) => {
           <el-form-item label="邮箱" prop="email">
             <el-input v-model="registerForm.email" placeholder="请输入邮箱地址" />
           </el-form-item>
-          
+
           <el-form-item label="验证码" prop="code">
             <div class="code-input-group">
               <el-input v-model="registerForm.code" placeholder="请输入验证码" />
-              <el-button 
-                :disabled="codeSending || countdown > 0" 
+              <el-button
+                :disabled="codeSending || countdown > 0"
                 @click="sendCode('register')"
               >
                 {{ countdown > 0 ? `${countdown}秒` : '获取验证码' }}
               </el-button>
             </div>
           </el-form-item>
-          
+
           <el-form-item label="用户名" prop="username">
             <el-input v-model="registerForm.username" placeholder="请输入用户名" />
           </el-form-item>
-          
+
           <el-form-item label="密码" prop="password">
-            <el-input 
-              v-model="registerForm.password" 
-              type="password" 
+            <el-input
+              v-model="registerForm.password"
+              type="password"
               placeholder="请输入密码（至少6个字符）"
-              show-password 
+              show-password
             />
           </el-form-item>
-          
+
           <el-form-item label="确认密码" prop="confirmPassword">
-            <el-input 
-              v-model="registerForm.confirmPassword" 
-              type="password" 
+            <el-input
+              v-model="registerForm.confirmPassword"
+              type="password"
               placeholder="请确认密码"
-              show-password 
+              show-password
             />
           </el-form-item>
-          
+
           <el-button type="primary" class="full-width-button" @click="handleRegister">注册</el-button>
-          
+
           <div class="form-footer">
             <span>已有账号?</span>
             <el-button type="text" @click="switchForm('login')">立即登录</el-button>
           </div>
         </el-form>
       </el-card>
-      
+
       <!-- 找回密码表单 -->
       <el-card v-if="activeForm === 'reset'" class="auth-card">
         <template #header>
@@ -572,8 +570,8 @@ const switchForm = (formName) => {
             <span class="header-title">找回密码</span>
           </div>
         </template>
-        
-        <el-form 
+
+        <el-form
           ref="resetFormRef"
           :model="resetForm"
           :rules="resetRules"
@@ -583,45 +581,45 @@ const switchForm = (formName) => {
           <el-form-item label="邮箱" prop="email">
             <el-input v-model="resetForm.email" placeholder="请输入注册邮箱" />
           </el-form-item>
-          
+
           <el-form-item label="验证码" prop="code">
             <div class="code-input-group">
               <el-input v-model="resetForm.code" placeholder="请输入验证码" />
-              <el-button 
-                :disabled="codeSending || countdown > 0" 
+              <el-button
+                :disabled="codeSending || countdown > 0"
                 @click="sendCode('reset')"
               >
                 {{ countdown > 0 ? `${countdown}秒` : '获取验证码' }}
               </el-button>
             </div>
           </el-form-item>
-          
+
           <el-form-item label="新密码" prop="password">
-            <el-input 
-              v-model="resetForm.password" 
-              type="password" 
+            <el-input
+              v-model="resetForm.password"
+              type="password"
               placeholder="请输入新密码（至少6个字符）"
-              show-password 
+              show-password
             />
           </el-form-item>
-          
+
           <el-form-item label="确认密码" prop="confirmPassword">
-            <el-input 
-              v-model="resetForm.confirmPassword" 
-              type="password" 
+            <el-input
+              v-model="resetForm.confirmPassword"
+              type="password"
               placeholder="请确认新密码"
-              show-password 
+              show-password
             />
           </el-form-item>
-          
+
           <el-button type="primary" class="full-width-button" @click="handleResetPassword">重置密码</el-button>
-          
+
           <div class="form-footer">
             <el-button type="text" @click="switchForm('login')">返回登录</el-button>
           </div>
         </el-form>
       </el-card>
-      
+
       <!-- 申诉表单 -->
       <el-card v-if="showAppealForm" class="auth-card">
         <template #header>
@@ -629,7 +627,7 @@ const switchForm = (formName) => {
             <span class="header-title">账号申诉</span>
           </div>
         </template>
-        
+
         <div class="appeal-info">
           <el-alert
             title="您的账号已被封禁，请提交申诉"
@@ -638,8 +636,8 @@ const switchForm = (formName) => {
             show-icon
           />
         </div>
-        
-        <el-form 
+
+        <el-form
           ref="appealFormRef"
           :model="appealForm"
           :rules="appealRules"
@@ -649,23 +647,33 @@ const switchForm = (formName) => {
           <el-form-item label="邮箱" prop="email">
             <el-input v-model="appealForm.email" placeholder="请输入邮箱地址" />
           </el-form-item>
-          
+
           <el-form-item label="申诉理由" prop="appealReason">
-            <el-input 
-              v-model="appealForm.appealReason" 
-              type="textarea" 
+            <el-input
+              v-model="appealForm.appealReason"
+              type="textarea"
               :rows="3"
-              placeholder="请详细描述您的申诉原因" 
+              placeholder="请详细描述您的申诉原因"
             />
           </el-form-item>
-          
+
           <el-button type="primary" class="full-width-button" @click="handleAppeal">提交申诉</el-button>
-          
+
           <div class="form-footer">
             <el-button type="text" @click="showAppealForm = false; switchForm('login')">返回登录</el-button>
           </div>
         </el-form>
       </el-card>
+
+      <!-- 验证码弹窗 -->
+      <el-dialog v-model="verifyDialogVisible" title="请完成安全验证" width="350px" :close-on-click-modal="false">
+        <div class="dialog-content">
+          <SlideVerify
+            ref="slideVerifyRef"
+            @verify="handleVerification"
+          />
+        </div>
+      </el-dialog>
     </div>
   </div>
 </template>

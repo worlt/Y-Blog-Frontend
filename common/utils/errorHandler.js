@@ -80,9 +80,8 @@ export function createErrorHandler(config = {}) {
       }
 
       // 优先使用后端返回的错误消息
-      const errorMessage = errorMsg || getHttpErrorMessage(status)
-      ElMessage.error(errorMessage)
-      return Promise.reject(error)
+      // 对于这类业务相关的HTTP错误，直接返回响应体，让业务代码处理
+      return responseData
     }
 
     const errorMessage = getHttpErrorMessage(status)
@@ -121,7 +120,8 @@ export function createErrorHandler(config = {}) {
 
     // 显示错误消息
     ElMessage.error(errorMessage)
-    return Promise.reject(data)
+    // 直接返回原始数据，让业务代码自行处理
+    return data
   }
 
   /**
