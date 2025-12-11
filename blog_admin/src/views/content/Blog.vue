@@ -1,7 +1,7 @@
 <script setup>
-import { ref, reactive, onMounted, nextTick, computed } from 'vue';
+import { ref, reactive, onMounted, nextTick } from 'vue';
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus';
-import { blogPage, addBlog, updateBlog, getBlogById, deleteBlog, setIsTop } from '@/api/blog.js';
+import { blogPage, addBlog, updateBlog, getBlogById, deleteBlog, deleteBlogsBatch, setIsTop } from '@/api/blog.js';
 import { uploadImage } from '@/api/common.js';
 import { listAllCategories } from '@/api/category.js';
 import { listAllTags } from '@/api/tag.js';
@@ -31,6 +31,9 @@ const customTagInputRef = ref(null);
 
 // 编辑器引用
 const contentEditor = ref(null);
+
+// 批量选择
+const selectedIds = ref([]);
 
 // 获取博客列表
 const getList = async () => {
@@ -302,6 +305,40 @@ const submitForm = async () => {
 };
 
 // 删除博客
+// 处理表格选择变化
+const handleSelectionChange = (selection) => {
+  selectedIds.value = selection.map(item => item.id);
+};
+
+// 批量删除
+const handleBatchDelete = () => {
+  if (selectedIds.value.length === 0) {
+    ElMessage.warning('请至少选择一项进行删除');
+    return;
+  }
+  
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 篇博客吗？`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      const res = await deleteBlogsBatch(selectedIds.value);
+      if (res.code === 0) {
+        ElMessage.success('批量删除成功');
+        getList();
+        selectedIds.value = []; // 清空选项
+      } else {
+        ElMessage.error(res.msg || '批量删除失败');
+      }
+    } catch (error) {
+      console.error('批量删除博客出错：', error);
+      ElMessage.error('批量删除失败，请稍后重试');
+    }
+  }).catch(() => {});
+};
+
+// 删除博客
 const handleDelete = (row) => {
   ElMessageBox.confirm(`确定要删除博客 "${row.title}" 吗？`, '提示', {
     confirmButtonText: '确定',
@@ -465,7 +502,10 @@ onMounted(() => {
   <div class="blog-container">
     <div class="page-header">
       <h2>博客管理</h2>
-      <el-button type="primary" @click="handleAdd">新增博客</el-button>
+      <div class="actions">
+        <el-button type="primary" @click="handleAdd">新增博客</el-button>
+        <el-button type="danger" @click="handleBatchDelete" :disabled="selectedIds.length === 0">批量删除</el-button>
+      </div>
     </div>
 
     <!-- 搜索表单 -->
@@ -495,10 +535,12 @@ onMounted(() => {
         :data="tableData" 
         style="width: 100%" 
         v-loading="loading"
+        @selection-change="handleSelectionChange"
         :header-cell-style="{ textAlign: 'center' }"
         :cell-style="{ textAlign: 'center' }"
         class="full-width-table"
       >
+        <el-table-column type="selection" width="55" align="center" />
         <el-table-column prop="id" label="ID" width="100" align="center" />
         <el-table-column prop="title" label="标题" width="200" :show-overflow-tooltip="true" align="center" />
         <el-table-column prop="userId" label="作者ID" width="100" align="center" />
@@ -840,6 +882,11 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+}
+
+.page-header .actions {
+  display: flex;
+  gap: 10px;
 }
 
 .search-card {
