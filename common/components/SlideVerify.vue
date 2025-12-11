@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { VERIFY_CONFIG } from '../utils/verifyConfig.js'
-import axios from 'axios'
+import { getCaptchaPuzzle, verifyCaptchaPuzzle } from '../api/captcha';
 
 const props = defineProps({
   // 模式: 'dev' 或 'prod'。如果未提供，则使用全局配置
@@ -68,12 +68,10 @@ const initPuzzle = async () => {
   try {
     // 尝试从后端获取拼图
     // 使用/api前缀，会自动通过vite.config.js中的proxy转发到后端
-    const response = await axios.get('/api/captcha/puzzle', {
-      params: { difficulty: props.difficulty }
-    })
+    const response = await getCaptchaPuzzle(props.difficulty)
     
-    if (response.data && response.data.data) {
-      const puzzle = response.data.data
+    if (response && response.data) {
+      const puzzle = response.data;
       puzzleData.backgroundImage = puzzle.backgroundImage
       puzzleData.puzzleImage = puzzle.puzzleImage
       puzzleData.puzzleId = puzzle.puzzleId
@@ -183,17 +181,17 @@ const verify = async () => {
     
     // 后端模式：调用后端验证
     if (verifyMode.value === 'backend') {
-      const result = await axios.post('/api/captcha/verify', {
+      const result = await verifyCaptchaPuzzle({
         puzzleId: puzzleData.puzzleId,
         offsetX: userOffsetX.value,
         offsetY: puzzleData.offsetY, // Y轴偏移量应与拼图块的Y轴一致
         difficulty: props.difficulty
       })
       
-      if (result.data && result.data.data && result.data.data.captchaToken) {
+      if (result && result.data && result.data.captchaToken) {
         isVerified.value = true
         verifyStatus.value = 'success'
-        captchaToken.value = result.data.data.captchaToken
+        captchaToken.value = result.data.captchaToken
         emit('verify', { success: true, captchaToken: captchaToken.value })
       } else {
         verifyStatus.value = 'failed'
