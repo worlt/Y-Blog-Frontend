@@ -22,9 +22,9 @@ const handleCommend = (commend) => {
           type: 'warning'
         }
     ).then(async () => {
+      await auditorLogout();
       tokenStore.removeToken();
       auditorInfo.removeInfo();
-      await auditorLogout();
       await router.push('/login');
 
       ElMessage.success('退出登录成功')

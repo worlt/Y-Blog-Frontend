@@ -10,6 +10,8 @@ export function useSlideVerify() {
   const verifyDialogVisible = ref(false)
   // 组件引用
   const slideVerifyRef = ref(null)
+  // 验证码token
+  const captchaToken = ref('')
   // 成功后的回调函数
   let submitCallback = null
 
@@ -30,10 +32,11 @@ export function useSlideVerify() {
 
   /**
    * @description 处理验证结果
-   * @param {boolean} isValid - 验证是否通过
+   * @param {Object} result - 验证结果对象 {success: boolean, captchaToken: string}
    */
-  const handleVerification = (isValid) => {
-    if (isValid) {
+  const handleVerification = (result) => {
+    if (result && result.success && result.captchaToken) {
+      captchaToken.value = result.captchaToken
       verifyDialogVisible.value = false
       if (submitCallback) {
         submitCallback()
@@ -44,10 +47,28 @@ export function useSlideVerify() {
     }
   }
 
+  /**
+   * @description 获取验证码token
+   * @returns {string} 验证码token
+   */
+  const getCaptchaToken = () => {
+    return captchaToken.value
+  }
+
+  /**
+   * @description 清除验证码token
+   */
+  const clearCaptchaToken = () => {
+    captchaToken.value = ''
+  }
+
   return {
     verifyDialogVisible,
     slideVerifyRef,
+    captchaToken,
     triggerVerification,
-    handleVerification
+    handleVerification,
+    getCaptchaToken,
+    clearCaptchaToken
   }
 }

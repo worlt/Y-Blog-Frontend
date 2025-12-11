@@ -50,7 +50,12 @@
 
   const submitLogin = async () => {
     try {
-      const result = await adminLogin(loginData.value);
+      // 添加captchaToken到登录请求
+      const loginPayload = {
+        ...loginData.value,
+        captchaToken: slideVerifyRef.value?.captchaToken || ''
+      };
+      const result = await adminLogin(loginPayload);
       if (result.code === 0) {
         ElMessage.success(result.msg || '登录成功');
         tokenStore.setToken(result.data.token);

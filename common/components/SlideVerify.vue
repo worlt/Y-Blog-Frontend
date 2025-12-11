@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { VERIFY_CONFIG } from '../utils/verifyConfig.js'
+import axios from 'axios'
 
 const props = defineProps({
   // 模式: 'dev' 或 'prod'。如果未提供，则使用全局配置
@@ -24,6 +25,8 @@ const isVerified = ref(false)
 const isVerifying = ref(false)
 const verifyStatus = ref('idle') // idle | verifying | success | failed
 const errorMessage = ref('')
+const verifyMode = ref('frontend') // frontend | backend
+const captchaToken = ref('')
 
 // 拼图数据
 const puzzleData = reactive({
@@ -31,7 +34,8 @@ const puzzleData = reactive({
   puzzleImage: '',
   offsetX: 0,
   offsetY: 0,
-  puzzleId: ''
+  puzzleId: '',
+  mode: 'frontend'
 })
 
 // 用户操作数据
@@ -59,10 +63,37 @@ const isDevMode = computed(() => {
   return currentMode === 'dev';
 })
 
-// 初始化拼图
-const initPuzzle = () => {
-  // 生成随机拼图数据
-  generateRandomPuzzle()
+// 初始化拼图 - 从后端获取
+const initPuzzle = async () => {
+  try {
+    // 尝试从后端获取拼图
+    // 使用/api前缀，会自动通过vite.config.js中的proxy转发到后端
+    const response = await axios.get('/api/captcha/puzzle', {
+      params: { difficulty: props.difficulty }
+    })
+    
+    if (response.data && response.data.data) {
+      const puzzle = response.data.data
+      puzzleData.backgroundImage = puzzle.backgroundImage
+      puzzleData.puzzleImage = puzzle.puzzleImage
+      puzzleData.puzzleId = puzzle.puzzleId
+      puzzleData.mode = puzzle.mode
+      puzzleData.offsetX = puzzle.offsetX
+      puzzleData.offsetY = puzzle.offsetY
+      verifyMode.value = puzzle.mode
+      
+      // 如果是前端模式，生成随机拼图块位置
+      if (puzzle.mode === 'frontend') {
+        generateRandomPuzzle()
+      }
+    }
+  } catch (error) {
+    console.warn('从后端获取拼图失败，降级到前端模式:', error)
+    // 降级到前端模式
+    verifyMode.value = 'frontend'
+    puzzleData.mode = 'frontend'
+    generateRandomPuzzle()
+  }
   
   // 重置用户操作
   userOffsetX.value = 0
@@ -104,6 +135,7 @@ const handleMouseDown = (e) => {
   
   isDragging.value = true
   dragStartX.value = e.clientX
+  sliderRef.value?.classList.add('is-dragging')
 }
 
 // 鼠标移动
@@ -122,6 +154,7 @@ const handleMouseUp = async () => {
   if (!isDragging.value) return
   
   isDragging.value = false
+  sliderRef.value?.classList.remove('is-dragging')
   
   // 验证拼图
   await verify()
@@ -143,36 +176,52 @@ const verify = async () => {
       
       isVerified.value = true
       verifyStatus.value = 'success'
-      emit('verify', true)
+      captchaToken.value = 'dev-token-' + Date.now()
+      emit('verify', { success: true, captchaToken: captchaToken.value })
       return
     }
     
-    // 生产模式：调用后端验证（暂未实现）
-    // const result = await verifyPuzzle({
-    //   puzzleId: puzzleData.puzzleId,
-    //   offsetX: userOffsetX.value,
-    //   offsetY: userOffsetY.value
-    // })
-    
-    // 根据当前难度获取对应的容差值
-    const tolerance = VERIFY_CONFIG.TOLERANCE[props.difficulty] || VERIFY_CONFIG.TOLERANCE['normal'];
-    const offsetDiff = Math.abs(userOffsetX.value - puzzleData.offsetX)
-    
-    // 如果误差在允许范围内，验证成功
-    if (offsetDiff <= tolerance) {
-      isVerified.value = true
-      verifyStatus.value = 'success'
-      emit('verify', true)
+    // 后端模式：调用后端验证
+    if (verifyMode.value === 'backend') {
+      const result = await axios.post('/api/captcha/verify', {
+        puzzleId: puzzleData.puzzleId,
+        offsetX: userOffsetX.value,
+        offsetY: puzzleData.offsetY, // Y轴偏移量应与拼图块的Y轴一致
+        difficulty: props.difficulty
+      })
+      
+      if (result.data && result.data.data && result.data.data.captchaToken) {
+        isVerified.value = true
+        verifyStatus.value = 'success'
+        captchaToken.value = result.data.data.captchaToken
+        emit('verify', { success: true, captchaToken: captchaToken.value })
+      } else {
+        verifyStatus.value = 'failed'
+        errorMessage.value = '拼图位置不正确，请重试'
+        emit('verify', { success: false, captchaToken: null })
+      }
     } else {
-      verifyStatus.value = 'failed'
-      errorMessage.value = '拼图位置不正确，请重试'
-      emit('verify', false)
+      // 前端模式：本地验证
+      const tolerance = VERIFY_CONFIG.TOLERANCE[props.difficulty] || VERIFY_CONFIG.TOLERANCE['normal'];
+      const offsetDiff = Math.abs(userOffsetX.value - puzzleData.offsetX)
+      
+      // 如果误差在允许范围内，验证成功
+      if (offsetDiff <= tolerance) {
+        isVerified.value = true
+        verifyStatus.value = 'success'
+        captchaToken.value = 'frontend-token-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
+        emit('verify', { success: true, captchaToken: captchaToken.value })
+      } else {
+        verifyStatus.value = 'failed'
+        errorMessage.value = '拼图位置不正确，请重试'
+        emit('verify', { success: false, captchaToken: null })
+      }
     }
   } catch (error) {
     console.error('验证失败:', error)
     verifyStatus.value = 'failed'
     errorMessage.value = '验证失败，请重试'
-    emit('verify', false)
+    emit('verify', { success: false, captchaToken: null })
   } finally {
     isVerifying.value = false
   }
@@ -387,7 +436,10 @@ defineExpose({
 .puzzle-area {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
+  width: 300px; /* 与拼图背景宽度一致 */
+  margin: 0 auto; /* 在 dialog 中水平居中 */
 }
 
 .puzzle-container {
@@ -444,6 +496,10 @@ defineExpose({
   border-radius: 4px;
   transition: all 0.2s ease;
   user-select: none;
+}
+
+.slider-button.is-dragging {
+  transition: none;
 }
 
 .slider-button:hover:not(:disabled) {

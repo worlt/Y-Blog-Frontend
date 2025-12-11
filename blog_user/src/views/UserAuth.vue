@@ -239,7 +239,8 @@ const submitPasswordLogin = async () => {
   try {
     const response = await userApi.loginByPassword({
       email: loginForm.email,
-      password: loginForm.password
+      password: loginForm.password,
+      captchaToken: slideVerifyRef.value?.captchaToken || ''
     })
     if (response.code === 0) {
       handleLoginSuccess(response.data)
@@ -256,7 +257,8 @@ const submitCodeLogin = async () => {
   try {
     const response = await userApi.loginByCode({
       email: codeLoginForm.email,
-      code: codeLoginForm.code
+      code: codeLoginForm.code,
+      captchaToken: slideVerifyRef.value?.captchaToken || ''
     })
     if (response.code === 0) {
       handleLoginSuccess(response.data)
@@ -275,7 +277,8 @@ const submitRegister = async () => {
       email: registerForm.email,
       username: registerForm.username,
       password: registerForm.password,
-      code: registerForm.code
+      code: registerForm.code,
+      captchaToken: slideVerifyRef.value?.captchaToken || ''
     })
     if (response.code === 0) {
       ElMessage.success('注册成功，请登录')
@@ -295,7 +298,8 @@ const submitResetPassword = async () => {
     const response = await userApi.resetPassword({
       email: resetForm.email,
       code: resetForm.code,
-      password: resetForm.password
+      password: resetForm.password,
+      captchaToken: slideVerifyRef.value?.captchaToken || ''
     })
     if (response.code === 0) {
       ElMessage.success('密码重置成功，请使用新密码登录')

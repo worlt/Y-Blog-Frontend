@@ -43,7 +43,11 @@ const login = () => {
 
 const submitLogin = async () => {
   try {
-    const result = await auditorLogin(loginData.value);
+    const loginPayload = {
+      ...loginData.value,
+      captchaToken: slideVerifyRef.value?.captchaToken || ''
+    };
+    const result = await auditorLogin(loginPayload);
     if (result.code === 0) {
       ElMessage.success(result.msg || '登录成功');
       tokenStore.setToken(result.data.token);
