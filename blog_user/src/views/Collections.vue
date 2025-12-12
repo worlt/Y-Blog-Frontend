@@ -176,9 +176,9 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('zh-CN')
 }
 
-// 跳转到博客详情
+// 跳转到博客详情（新标签页打开，保留收藏列表浏览位置）
 const goToBlogDetail = (blogId) => {
-  router.push(`/blog/${blogId}`)
+  window.open(`/blog/${blogId}`, '_blank')
 }
 
 // 检查图片是否有效

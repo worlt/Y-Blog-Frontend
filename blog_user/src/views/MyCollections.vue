@@ -138,11 +138,11 @@ const handleCancelCollection = async (blog) => {
   }
 }
 
-// 查看博客
+// 查看博客（新标签页打开，保留收藏列表浏览位置）
 const handleView = (blog) => {
   // 使用正确的博客ID字段
   const blogId = blog.blogId || blog.id
-  router.push(`/blog/${blogId}`)
+  window.open(`/blog/${blogId}`, '_blank')
 }
 
 // 格式化日期

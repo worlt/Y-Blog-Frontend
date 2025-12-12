@@ -103,9 +103,9 @@ const handleCancelDislike = async (blog) => {
   }
 }
 
-// 查看博客
+// 查看博客（新标签页打开，保留点踩列表浏览位置）
 const handleView = (blog) => {
-  router.push(`/blog/${blog.id}`)
+  window.open(`/blog/${blog.id}`, '_blank')
 }
 
 // 格式化日期

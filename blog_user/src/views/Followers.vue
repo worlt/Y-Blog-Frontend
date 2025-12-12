@@ -96,10 +96,10 @@ const handleToggleFollow = async (user) => {
   }
 }
 
-// 查看用户
+// 查看用户（新标签页打开）
 const handleViewUser = (user) => {
-  // 跳转到用户主页或个人资料页
-  router.push(`/user/${user.userId || user.id}`)
+  // 在新标签页打开用户主页
+  window.open(`/user/${user.userId || user.id}`, '_blank')
 }
 
 // 格式化时间

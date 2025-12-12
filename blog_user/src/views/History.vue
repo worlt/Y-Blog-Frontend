@@ -266,9 +266,9 @@ const loadMore = () => {
   loadHistory(false, nextPage)
 }
 
-// 查看博客详情
+// 查看博客详情（新标签页打开，保留历史列表浏览位置）
 const viewBlog = (blogId) => {
-  router.push(`/blog/${blogId}`)
+  window.open(`/blog/${blogId}`, '_blank')
 }
 
 // 从历史记录中移除

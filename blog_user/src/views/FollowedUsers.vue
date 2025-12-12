@@ -106,7 +106,7 @@ const handleCancelFollow = async (user) => {
   }
 }
 
-// 查看用户
+// 查看用户（新标签页打开）
 const handleViewUser = (user) => {
   const userId = user.userId || user.id
   if (!userId) {
@@ -114,9 +114,9 @@ const handleViewUser = (user) => {
     return
   }
   
-  // 跳转到用户主页
+  // 在新标签页打开用户主页
   try {
-    router.push(`/user/${userId}`)
+    window.open(`/user/${userId}`, '_blank')
   } catch (error) {
     console.error('导航失败:', error)
     ElMessage.warning('暂不支持查看用户详情')

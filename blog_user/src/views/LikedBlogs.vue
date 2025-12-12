@@ -224,9 +224,9 @@ const handleCancelLike = async (blog) => {
   }
 }
 
-// 查看博客详情
+// 查看博客详情（新标签页打开，保留点赞列表浏览位置）
 const viewBlog = (blog) => {
-  router.push(`/blog/${blog.id}`)
+  window.open(`/blog/${blog.id}`, '_blank')
 }
 
 // 格式化日期

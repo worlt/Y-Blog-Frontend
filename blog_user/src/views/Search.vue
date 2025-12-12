@@ -329,14 +329,14 @@ const handlePageChange = (page) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// 跳转到博客详情
+// 跳转到博客详情（新标签页打开，保留搜索结果列表）
 const goBlogDetail = (blogId) => {
-  router.push(`/blog/${blogId}`)
+  window.open(`/blog/${blogId}`, '_blank')
 }
 
-// 跳转到用户页面
+// 跳转到用户页面（新标签页打开）
 const goUserProfile = (userId) => {
-  router.push(`/user/${userId}`)
+  window.open(`/user/${userId}`, '_blank')
 }
 
 // 搜索指定用户的博客
