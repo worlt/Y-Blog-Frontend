@@ -186,6 +186,28 @@ const hasValidCover = (cover) => {
   return cover && cover.trim() && cover !== 'null' && cover !== 'undefined'
 }
 
+// 随机渐变背景数组（多色系协调配色）
+const gradients = [
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',  // 紫色
+  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',  // 粉红
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',  // 天蓝
+  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',  // 青绿
+  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',  // 橙粉
+  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',  // 青紫
+  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',  // 草绿
+  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',  // 橙红
+  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',  // 蓝紫
+  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',  // 蓝绿
+  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',  // 橙黄
+  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'   // 紫粉
+]
+
+// 根据博客ID获取固定的渐变背景
+const getRandomGradient = (blogId) => {
+  const index = blogId % gradients.length
+  return gradients[index]
+}
+
 // 图片加载错误处理
 const handleImageError = (event) => {
   event.target.style.display = 'none'
@@ -291,6 +313,14 @@ onUnmounted(() => {
             <!-- 文章配图 -->
             <div class="article-image" v-if="hasValidCover(blog.cover)">
               <img :src="blog.cover" :alt="blog.title" @error="handleImageError">
+            </div>
+            <!-- 无封面时显示分类标签渐变背景 -->
+            <div 
+              v-else 
+              class="article-image article-placeholder"
+              :style="{ background: getRandomGradient(blog.id) }"
+            >
+              <span class="placeholder-text">#{{ blog.categoryName || '文章' }}</span>
             </div>
           </div>
         </div>
@@ -474,6 +504,21 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 文章封面占位图样式 */
+.article-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-text {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
 }
 
 .load-more-container {

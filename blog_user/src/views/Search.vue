@@ -4,6 +4,10 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import * as blogApi from '@/api/blog.js'
 import * as categoryApi from '@/api/category.js'
+import { Icon } from '@iconify/vue'
+import eyeIcon from '@iconify/icons-mdi/eye'
+import heartIcon from '@iconify/icons-mdi/heart'
+import starIcon from '@iconify/icons-mdi/star'
 
 const router = useRouter()
 const route = useRoute()
@@ -540,48 +544,49 @@ const getCategoryName = (categoryId) => {
                 <span class="author-name">{{ blog.username || '匿名用户' }}</span>
               </div>
               
-              <div class="blog-category" v-if="blog.categoryId">
+              <div class="blog-date">{{ formatDate(blog.createTime) }}</div>
+              
+              <!-- 分类标签 -->
+              <el-tag 
+                v-if="blog.category"
+                size="small" 
+                effect="plain"
+                class="category-tag"
+                @click.stop="searchCategoryBlogs(blog.categoryId)"
+              >
+                {{ blog.category }}
+              </el-tag>
+              
+              <!-- 标签列表 -->
+              <template v-if="blog.tagList && blog.tagList.length > 0">
                 <el-tag 
+                  v-for="tag in blog.tagList.slice(0, 3)" 
+                  :key="tag" 
                   size="small" 
                   effect="plain"
-                  @click.stop="searchCategoryBlogs(blog.categoryId)"
+                  class="blog-tag"
                 >
-                  {{ getCategoryName(blog.categoryId) }}
+                  {{ tag }}
                 </el-tag>
-              </div>
-              
-              <div class="blog-date">{{ formatDate(blog.createTime) }}</div>
+                <span v-if="blog.tagList.length > 3" class="more-tags">
+                  +{{ blog.tagList.length - 3 }}
+                </span>
+              </template>
               
               <div class="blog-stats">
                 <span class="stat-item">
-                  <i class="el-icon-view"></i>
-                  {{ blog.viewCount || 0 }}
+                  <Icon :icon="eyeIcon" />
+                  {{ blog.views || 0 }}
                 </span>
                 <span class="stat-item">
-                  <i class="el-icon-star-off"></i>
-                  {{ blog.likeCount || 0 }}
+                  <Icon :icon="heartIcon" />
+                  {{ blog.likes || 0 }}
                 </span>
                 <span class="stat-item">
-                  <i class="el-icon-chat-dot-round"></i>
-                  {{ blog.commentCount || 0 }}
+                  <Icon :icon="starIcon" />
+                  {{ blog.collections || 0 }}
                 </span>
               </div>
-            </div>
-            
-            <!-- 标签 -->
-            <div class="blog-tags" v-if="blog.tagList && blog.tagList.length > 0">
-              <el-tag 
-                v-for="tag in blog.tagList.slice(0, 3)" 
-                :key="tag" 
-                size="small" 
-                effect="plain"
-                class="blog-tag"
-              >
-                {{ tag }}
-              </el-tag>
-              <span v-if="blog.tagList.length > 3" class="more-tags">
-                +{{ blog.tagList.length - 3 }}
-              </span>
             </div>
           </div>
           
@@ -848,15 +853,24 @@ const getCategoryName = (categoryId) => {
   font-size: 12px;
 }
 
-.stat-item i {
+.stat-item svg {
   font-size: 14px;
+  width: 14px;
+  height: 14px;
 }
 
-.blog-tags {
+.blog-tags-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.category-tag {
+  cursor: pointer;
+  background-color: #ecf5ff;
+  border-color: #d9ecff;
+  color: #409eff;
 }
 
 .blog-tag {
