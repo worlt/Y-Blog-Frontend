@@ -5,6 +5,8 @@ import * as appealApi from '@/api/appeal.js'
 import {ElMessage} from 'element-plus'
 import {useTokenStore} from '@/stores/token.js'
 import {useUserInfoStore} from '@/stores/userInfo.js'
+import SlideVerify from '@common/components/SlideVerify.vue'
+import {useSlideVerify} from '@common/composables/useSlideVerify.js'
 
 // 定义props和emits
 const props = defineProps({
@@ -181,6 +183,14 @@ const registerFormRef = ref(null)
 const resetFormRef = ref(null)
 const appealFormRef = ref(null)
 
+// 滑动验证相关
+const {
+  verifyDialogVisible,
+  slideVerifyRef,
+  triggerVerification,
+  handleVerification
+} = useSlideVerify()
+
 // 计算属性控制弹窗显示
 const dialogVisible = computed({
   get: () => props.modelValue,
@@ -191,28 +201,9 @@ const dialogVisible = computed({
 const handleLogin = async () => {
   if (!loginFormRef.value) return
 
-  await loginFormRef.value.validate(async (valid) => {
+  await loginFormRef.value.validate((valid) => {
     if (valid) {
-      try {
-        const response = await userApi.loginByPassword({
-          email: loginForm.email,
-          password: loginForm.password
-        })
-
-        if (response.code === 0) {
-          handleLoginSuccess(response.data)
-        } else {
-          if (response.msg && response.msg.includes('已被封禁')) {
-            showAppealForm.value = true
-            appealForm.email = loginForm.email
-          } else {
-            ElMessage.error(response.msg || '登录失败，请稍后重试')
-          }
-        }
-      } catch (error) {
-        console.error('登录异常:', error)
-        ElMessage.error('登录异常，请稍后重试')
-      }
+      triggerVerification(submitPasswordLogin)
     }
   })
 }
@@ -221,30 +212,63 @@ const handleLogin = async () => {
 const handleCodeLogin = async () => {
   if (!codeLoginFormRef.value) return
 
-  await codeLoginFormRef.value.validate(async (valid) => {
+  await codeLoginFormRef.value.validate((valid) => {
     if (valid) {
-      try {
-        const response = await userApi.loginByCode({
-          email: codeLoginForm.email,
-          code: codeLoginForm.code
-        })
-
-        if (response.code === 0) {
-          handleLoginSuccess(response.data)
-        } else {
-          if (response.msg && response.msg.includes('已被封禁')) {
-            showAppealForm.value = true
-            appealForm.email = codeLoginForm.email
-          } else {
-            ElMessage.error(response.msg || '登录失败，请稍后重试')
-          }
-        }
-      } catch (error) {
-        console.error('验证码登录异常:', error)
-        ElMessage.error('验证码登录异常，请稍后重试')
-      }
+      triggerVerification(submitCodeLogin)
     }
   })
+}
+
+// 实际提交密码登录
+const submitPasswordLogin = async () => {
+  try {
+    const response = await userApi.loginByPassword({
+      email: loginForm.email,
+      password: loginForm.password,
+      captchaToken: slideVerifyRef.value?.captchaToken || ''
+    })
+
+    if (response.code === 0) {
+      handleLoginSuccess(response.data)
+    } else {
+      if (response.msg && response.msg.includes('已被封禁')) {
+        showAppealForm.value = true
+        appealForm.email = loginForm.email
+      } else {
+        ElMessage.error(response.msg || '登录失败，请稍后重试')
+      }
+      slideVerifyRef.value?.reset()
+    }
+  } catch (error) {
+    console.error('登录异常:', error)
+    ElMessage.error('登录异常，请稍后重试')
+  }
+}
+
+// 实际提交验证码登录
+const submitCodeLogin = async () => {
+  try {
+    const response = await userApi.loginByCode({
+      email: codeLoginForm.email,
+      code: codeLoginForm.code,
+      captchaToken: slideVerifyRef.value?.captchaToken || ''
+    })
+
+    if (response.code === 0) {
+      handleLoginSuccess(response.data)
+    } else {
+      if (response.msg && response.msg.includes('已被封禁')) {
+        showAppealForm.value = true
+        appealForm.email = codeLoginForm.email
+      } else {
+        ElMessage.error(response.msg || '登录失败，请稍后重试')
+      }
+      slideVerifyRef.value?.reset()
+    }
+  } catch (error) {
+    console.error('验证码登录异常:', error)
+    ElMessage.error('验证码登录异常，请稍后重试')
+  }
 }
 
 // 处理登录成功
@@ -269,27 +293,9 @@ const handleLoginSuccess = (userData) => {
 const handleRegister = async () => {
   if (!registerFormRef.value) return
 
-  await registerFormRef.value.validate(async (valid) => {
+  await registerFormRef.value.validate((valid) => {
     if (valid) {
-      try {
-        const response = await userApi.register({
-          email: registerForm.email,
-          username: registerForm.username,
-          password: registerForm.password,
-          code: registerForm.code
-        })
-
-        if (response.code === 0) {
-          ElMessage.success('注册成功，请登录')
-          activeForm.value = 'login'
-          registerFormRef.value.resetFields()
-        } else {
-          ElMessage.error(response.msg || '注册失败，请稍后重试')
-        }
-      } catch (error) {
-        console.error('注册异常:', error)
-        ElMessage.error('注册异常，请稍后重试')
-      }
+      triggerVerification(submitRegister)
     }
   })
 }
@@ -298,28 +304,60 @@ const handleRegister = async () => {
 const handleResetPassword = async () => {
   if (!resetFormRef.value) return
 
-  await resetFormRef.value.validate(async (valid) => {
+  await resetFormRef.value.validate((valid) => {
     if (valid) {
-      try {
-        const response = await userApi.resetPassword({
-          email: resetForm.email,
-          code: resetForm.code,
-          password: resetForm.password
-        })
-
-        if (response.code === 0) {
-          ElMessage.success('密码重置成功，请使用新密码登录')
-          activeForm.value = 'login'
-          resetFormRef.value.resetFields()
-        } else {
-          ElMessage.error(response.msg || '密码重置失败，请稍后重试')
-        }
-      } catch (error) {
-        console.error('密码重置异常:', error)
-        ElMessage.error('密码重置异常，请稍后重试')
-      }
+      triggerVerification(submitResetPassword)
     }
   })
+}
+
+// 实际提交注册
+const submitRegister = async () => {
+  try {
+    const response = await userApi.register({
+      email: registerForm.email,
+      username: registerForm.username,
+      password: registerForm.password,
+      code: registerForm.code,
+      captchaToken: slideVerifyRef.value?.captchaToken || ''
+    })
+
+    if (response.code === 0) {
+      ElMessage.success('注册成功，请登录')
+      activeForm.value = 'login'
+      registerFormRef.value.resetFields()
+    } else {
+      ElMessage.error(response.msg || '注册失败，请稍后重试')
+      slideVerifyRef.value?.reset()
+    }
+  } catch (error) {
+    console.error('注册异常:', error)
+    ElMessage.error('注册异常，请稍后重试')
+  }
+}
+
+// 实际提交重置密码
+const submitResetPassword = async () => {
+  try {
+    const response = await userApi.resetPassword({
+      email: resetForm.email,
+      code: resetForm.code,
+      password: resetForm.password,
+      captchaToken: slideVerifyRef.value?.captchaToken || ''
+    })
+
+    if (response.code === 0) {
+      ElMessage.success('密码重置成功，请使用新密码登录')
+      activeForm.value = 'login'
+      resetFormRef.value.resetFields()
+    } else {
+      ElMessage.error(response.msg || '密码重置失败，请稍后重试')
+      slideVerifyRef.value?.reset()
+    }
+  } catch (error) {
+    console.error('密码重置异常:', error)
+    ElMessage.error('密码重置异常，请稍后重试')
+  }
 }
 
 // 提交申诉处理
@@ -701,6 +739,22 @@ watch(dialogVisible, (newVal) => {
         </div>
       </el-form>
     </div>
+
+    <!-- 滑动验证弹窗 -->
+    <el-dialog
+        v-model="verifyDialogVisible"
+        :close-on-click-modal="false"
+        title="请完成安全验证"
+        width="350px"
+        append-to-body
+    >
+      <div class="dialog-content">
+        <SlideVerify
+            ref="slideVerifyRef"
+            @verify="handleVerification"
+        />
+      </div>
+    </el-dialog>
   </el-dialog>
 </template>
 
@@ -775,5 +829,12 @@ watch(dialogVisible, (newVal) => {
 
 :deep(.el-tabs__item:hover) {
   color: #aa9ef5;
+}
+
+.dialog-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
 }
 </style> 
