@@ -11,6 +11,7 @@ import eyeIcon from '@iconify/icons-mdi/eye'
 import heartIcon from '@iconify/icons-mdi/heart'
 import starIcon from '@iconify/icons-mdi/star'
 import loadingIcon from '@iconify/icons-mdi/loading'
+import UserCenterSidebar from '@/components/UserCenterSidebar.vue'
 
 const router = useRouter()
 const tokenStore = useTokenStore()
@@ -271,7 +272,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="liked-blogs-container">
+  <div class="page-with-sidebar">
+    <!-- 左侧边栏 -->
+    <UserCenterSidebar />
+    
+    <!-- 右侧主内容区 -->
+    <div class="liked-blogs-container">
     <div class="liked-blogs-header">
       <h2 class="page-title">我的点赞</h2>
       
@@ -400,13 +406,21 @@ onUnmounted(() => {
         </div>
       </template>
     </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* 带侧边栏的页面布局 */
+.page-with-sidebar {
+  display: flex;
+  min-height: calc(100vh - 80px);
+  background-color: #f5f7fa;
+}
+
 .liked-blogs-container {
-  max-width: 800px;
-  margin: 0 auto;
+  flex: 1;
+  max-width: 900px;
   padding: 20px;
 }
 

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Icon } from '@iconify/vue'
 import * as blogApi from '@/api/blog.js'
+import UserCenterSidebar from '@/components/UserCenterSidebar.vue'
 
 const router = useRouter()
 
@@ -202,7 +203,12 @@ const getStatusType = (status) => {
 </script>
 
 <template>
-  <div class="my-blogs-page">
+  <div class="page-with-sidebar">
+    <!-- 左侧边栏 -->
+    <UserCenterSidebar />
+    
+    <!-- 右侧主内容区 -->
+    <div class="my-blogs-page">
     <div class="page-header">
       <h2 class="page-title">我的博客</h2>
       <el-button 
@@ -353,13 +359,22 @@ const getStatusType = (status) => {
         />
       </div>
     </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* 带侧边栏的页面布局 */
+.page-with-sidebar {
+  display: flex;
+  min-height: calc(100vh - 80px);
+  background-color: #f5f7fa;
+}
+
 .my-blogs-page {
-  max-width: 1200px;
-  margin: 0 auto;
+  flex: 1;
+  max-width: 1100px;
+  padding: 20px;
 }
 
 .page-header {

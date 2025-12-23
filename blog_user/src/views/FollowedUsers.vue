@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { User, Close } from '@element-plus/icons-vue'
 import * as userApi from '@/api/user.js'
+import UserCenterSidebar from '@/components/UserCenterSidebar.vue'
 
 const router = useRouter()
 
@@ -156,7 +157,12 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
-  <div class="followed-users-page">
+  <div class="page-with-sidebar">
+    <!-- 左侧边栏 -->
+    <UserCenterSidebar />
+    
+    <!-- 右侧主内容区 -->
+    <div class="followed-users-page">
     <div class="page-header">
       <h2 class="page-title">我的关注</h2>
     </div>
@@ -237,13 +243,21 @@ const formatDate = (dateString) => {
         </div>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* 带侧边栏的页面布局 */
+.page-with-sidebar {
+  display: flex;
+  min-height: calc(100vh - 80px);
+  background-color: #f5f7fa;
+}
+
 .followed-users-page {
-  max-width: 800px;
-  margin: 0 auto;
+  flex: 1;
+  max-width: 900px;
   padding: 20px;
 }
 

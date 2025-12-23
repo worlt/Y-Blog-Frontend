@@ -2,8 +2,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, View } from '@element-plus/icons-vue'
+import { StarFilled } from '@element-plus/icons-vue'
 import * as blogApi from '@/api/blog.js'
+import UserCenterSidebar from '@/components/UserCenterSidebar.vue'
 
 const router = useRouter()
 
@@ -172,33 +173,39 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
 </script>
 
 <template>
-  <div class="my-collections-page">
-    <div class="page-header">
-      <h2 class="page-title">我的收藏</h2>
-    </div>
+  <div class="page-with-sidebar">
+    <!-- 左侧边栏 -->
+    <UserCenterSidebar />
     
-    <!-- 筛选工具栏 -->
-    <div class="filter-toolbar">
-      <!-- 右侧排序选择 -->
-      <div class="sort-selector">
-        <span class="sort-label">排序:</span>
-        <el-select 
-          v-model="currentSort"
-          size="small"
-          @change="handleSortChange"
-        >
-          <el-option
-            v-for="option in sortOptions"
-            :key="option.value"
-            :label="option.label"
-            :value="option.value"
-          />
-        </el-select>
-      </div>
-    </div>
-    
-    <!-- 收藏列表 -->
+    <!-- 右侧主内容区 -->
+    <div class="my-collections-page">
+    <!-- 收藏列表容器 -->
     <div class="collection-list-container">
+      <!-- 页面头部：标题和筛选工具栏在同一行 -->
+      <div class="page-header">
+        <h2 class="page-title">我的收藏</h2>
+        
+        <!-- 右侧排序选择（横排布局） -->
+        <div class="sort-selector">
+          <span class="sort-label">排序:</span>
+          <el-select 
+            v-model="currentSort"
+            size="default"
+            style="width: 180px;"
+            @change="handleSortChange"
+          >
+            <el-option
+              v-for="option in sortOptions"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </el-select>
+        </div>
+      </div>
+      
+      <!-- 分割线 -->
+      <div class="header-divider"></div>
       <!-- 加载中 -->
       <div v-if="loading" class="loading-container">
         <el-skeleton :rows="10" animated />
@@ -263,8 +270,8 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
 <!--              @click="handleView(blog)"-->
 <!--            />-->
             <el-button 
-              :icon="Delete" 
-              type="danger" 
+              :icon="StarFilled" 
+              type="warning" 
               circle
               title="取消收藏"
               :loading="cancelingCollection === (blog.id || blog.blogId)"
@@ -286,48 +293,56 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
         />
       </div>
     </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* 带侧边栏的页面布局 */
+.page-with-sidebar {
+  display: flex;
+  min-height: calc(100vh - 80px);
+  background-color: #f5f7fa;
+}
+
 .my-collections-page {
-  max-width: 1200px;
-  margin: 0 auto;
+  flex: 1;
+  max-width: 1100px;
+  padding: 20px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: 22px;
   margin: 0;
   font-weight: 600;
-}
-
-.filter-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 20px;
-  background-color: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  color: #303133;
 }
 
 .sort-selector {
   display: flex;
+  flex-direction: row;
   align-items: center;
+  gap: 10px;
 }
 
 .sort-label {
-  margin-right: 8px;
   color: #606266;
   font-size: 14px;
+  white-space: nowrap;
+}
+
+.header-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e4e7ed, transparent);
+  margin: 15px 0;
 }
 
 .collection-list-container {

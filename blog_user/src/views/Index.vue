@@ -277,7 +277,7 @@ const sideMenuItems = ref([
   { name: '首页', icon: homeIcon, path: '/index', active: true, requireAuth: false },
   { name: '关注', icon: accountHeartIcon, path: '/my-follows', requireAuth: true },
   { name: '点赞', icon: thumbUpIcon, path: '/liked', requireAuth: true },
-  { name: '收藏', icon: bookmarkIcon, path: '/collections', requireAuth: true },
+  { name: '收藏', icon: bookmarkIcon, path: '/my-collections', requireAuth: true },
   { name: '历史', icon: historyIcon, path: '/history', requireAuth: true }
 ]);
 

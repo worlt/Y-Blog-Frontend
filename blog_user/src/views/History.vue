@@ -1,5 +1,10 @@
 <template>
-  <div class="history-container">
+  <div class="page-with-sidebar">
+    <!-- 左侧边栏 -->
+    <UserCenterSidebar />
+    
+    <!-- 右侧主内容区 -->
+    <div class="history-container">
     <div class="history-header">
       <h2 class="page-title">浏览历史</h2>
       <el-button 
@@ -108,6 +113,7 @@
         </div>
       </template>
     </div>
+    </div>
   </div>
 </template>
 
@@ -118,6 +124,7 @@ import { useTokenStore } from '@/stores/token.js'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Icon } from '@iconify/vue'
 import * as blogApi from '@/api/blog.js'
+import UserCenterSidebar from '@/components/UserCenterSidebar.vue'
 
 const router = useRouter()
 const tokenStore = useTokenStore()
@@ -374,9 +381,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* 带侧边栏的页面布局 */
+.page-with-sidebar {
+  display: flex;
+  min-height: calc(100vh - 80px);
+  background-color: #f5f7fa;
+}
+
 .history-container {
-  max-width: 800px;
-  margin: 0 auto;
+  flex: 1;
+  max-width: 900px;
   padding: 20px;
 }
 
