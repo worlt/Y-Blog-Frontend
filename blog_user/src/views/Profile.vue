@@ -834,6 +834,7 @@ const formatDate = (dateString) => {
   flex: 1;
   max-width: 900px;
   padding: 20px;
+  margin: 0 auto;
 }
 
 .profile-card {

@@ -189,14 +189,14 @@ const formatDate = (dateString) => {
           class="user-item"
         >
           <!-- 用户头像 -->
-          <div class="user-avatar">
+          <div class="user-avatar" @click="handleViewUser(user)">
             <el-avatar :size="60" :src="user.avatar">
               {{ (user.username || 'User').charAt(0).toUpperCase() }}
             </el-avatar>
           </div>
           
           <!-- 用户信息 -->
-          <div class="user-info">
+          <div class="user-info" @click="handleViewUser(user)">
             <h3 class="user-name">{{ user.username || '未知用户' }}</h3>
             <div class="user-meta">
               <!-- <div class="follow-count">
@@ -259,6 +259,7 @@ const formatDate = (dateString) => {
   flex: 1;
   max-width: 900px;
   padding: 20px;
+  margin: 0 auto;
 }
 
 .page-header {
@@ -303,11 +304,13 @@ const formatDate = (dateString) => {
 
 .user-avatar {
   margin-right: 16px;
+  cursor: pointer;
 }
 
 .user-info {
   flex: 1;
   min-width: 0;
+  cursor: pointer;
 }
 
 .user-name {

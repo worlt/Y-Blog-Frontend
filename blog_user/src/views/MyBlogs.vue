@@ -373,7 +373,6 @@ const getStatusType = (status) => {
 
 .my-blogs-page {
   flex: 1;
-  max-width: 1100px;
   padding: 20px;
 }
 

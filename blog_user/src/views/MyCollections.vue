@@ -311,8 +311,9 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
 
 .my-collections-page {
   flex: 1;
-  max-width: 1100px;
+  max-width: 1000px;
   padding: 20px;
+  margin: 0 auto;
 }
 
 .page-header {
