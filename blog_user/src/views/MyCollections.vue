@@ -45,10 +45,19 @@ const loadMyCollections = async () => {
     const result = await blogApi.getMyCollections()
     
     if (result.code === 0 && result.data) {
-      // 后端返回List<CollectionVO>，需要适配前端分页结构
-      const collections = result.data || []
+      // 后端返回 PageResult 对象，包含 total 和 records 字段
+      // 从 records 中获取收藏列表数组
+      const collections = result.data.records || result.data || []
       
-      // 客户端排序和分页
+      // 如果后端返回的是 PageResult，使用后端分页；否则使用客户端分页
+      if (result.data.total !== undefined && result.data.records) {
+        // 后端已分页，直接使用后端返回的数据
+        pagination.total = result.data.total
+        collectionList.value = result.data.records
+        return // 提前返回，不需要客户端排序和分页
+      }
+      
+      // 兼容后端返回 List 的情况：客户端排序和分页
       let sortedCollections = [...collections]
       
       // 根据当前排序进行排序
@@ -215,9 +224,9 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
               {{ blog.title }}
             </h3>
             
-            <div class="blog-summary">
-              {{ blog.summary || blog.content?.substring(0, 150) || '暂无摘要' }}
-            </div>
+<!--            <div class="blog-summary">-->
+<!--              {{ blog.summary || blog.content?.substring(0, 150) || '暂无摘要' }}-->
+<!--            </div>-->
             
             <div class="blog-meta">
               <div class="blog-author">{{ blog.username || blog.author || '未知作者' }}</div>
@@ -227,7 +236,7 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
               <div class="blog-date">{{ formatDate(blog.createTime || blog.publishTime) }}</div>
               <div class="blog-stats">
                 <span class="stat-item">
-                  <i class="el-icon-view"></i> 
+                  <i class="el-icon-view"></i>
                   {{ getBlogStat(blog, 'views') || getBlogStat(blog, 'viewCount') }}
                 </span>
                 <span class="stat-item">
@@ -247,12 +256,12 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
           
           <!-- 博客操作 -->
           <div class="blog-actions">
-            <el-button 
-              :icon="View" 
-              circle
-              title="阅读"
-              @click="handleView(blog)"
-            />
+<!--            <el-button -->
+<!--              :icon="View" -->
+<!--              circle-->
+<!--              title="阅读"-->
+<!--              @click="handleView(blog)"-->
+<!--            />-->
             <el-button 
               :icon="Delete" 
               type="danger" 
