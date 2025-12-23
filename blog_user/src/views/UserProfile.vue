@@ -243,12 +243,14 @@ const formatDate = (dateString) => {
           <div class="stat-label">博客</div>
         </div>
         
-        <div class="stat-item" @click="viewUserFollows">
+<!--        <div class="stat-item" @click="viewUserFollows">-->
+        <div class="stat-item">
           <div class="stat-value">{{ userStats.followCount }}</div>
           <div class="stat-label">关注</div>
         </div>
         
-        <div class="stat-item" @click="viewUserFans">
+<!--        <div class="stat-item" @click="viewUserFans">-->
+        <div class="stat-item">
           <div class="stat-value">{{ userStats.fansCount }}</div>
           <div class="stat-label">粉丝</div>
         </div>
@@ -271,7 +273,7 @@ const formatDate = (dateString) => {
         <div class="detail-content">
           <div class="detail-row">
             <div class="detail-label">邮箱</div>
-            <div class="detail-value">{{ userForm.email ? '已设置（不可见）' : '未设置' }}</div>
+            <div class="detail-value">{{ userForm.email || '未设置' }}</div>
           </div>
           
           <div class="detail-row">

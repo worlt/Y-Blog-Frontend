@@ -346,16 +346,20 @@ onUnmounted(() => {
                 
                 <div class="blog-stats">
                   <span class="stat-item">
-                    <el-icon><View /></el-icon> 
-                    {{ getBlogStat(blog, 'views') }}
+                    <Icon :icon="eyeIcon" />
+                    {{ getBlogStat(blog, 'views') || 0 }}
                   </span>
-                  <span class="stat-item liked">
-                    <el-icon><StarFilled /></el-icon> 
-                    {{ getBlogStat(blog, 'likes') }}
+                  <span 
+                    class="stat-item liked clickable" 
+                    @click.stop="handleCancelLike(blog)"
+                    title="取消点赞"
+                  >
+                    <Icon :icon="heartIcon" :class="{ 'loading': cancelingLike === blog.id }" />
+                    {{ getBlogStat(blog, 'likes') || 0 }}
                   </span>
                   <span class="stat-item">
-                    <el-icon><Collection /></el-icon> 
-                    {{ getBlogStat(blog, 'collections') }}
+                    <Icon :icon="starIcon" />
+                    {{ getBlogStat(blog, 'collections') || 0 }}
                   </span>
                 </div>
               </div>
@@ -549,6 +553,26 @@ onUnmounted(() => {
 
 .stat-item.liked {
   color: #f56c6c;
+}
+
+/* 可点击的统计项 */
+.stat-item.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stat-item.clickable:hover {
+  color: #409eff;
+  transform: scale(1.1);
+}
+
+.stat-item.clickable .loading {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .blog-actions {

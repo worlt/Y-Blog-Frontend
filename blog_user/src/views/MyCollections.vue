@@ -5,6 +5,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { StarFilled } from '@element-plus/icons-vue'
 import * as blogApi from '@/api/blog.js'
 import UserCenterSidebar from '@/components/UserCenterSidebar.vue'
+import { Icon } from '@iconify/vue'
+import eyeIcon from '@iconify/icons-mdi/eye'
+import heartIcon from '@iconify/icons-mdi/heart'
+import starIcon from '@iconify/icons-mdi/star'
 
 const router = useRouter()
 
@@ -243,16 +247,16 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
               <div class="blog-date">{{ formatDate(blog.createTime || blog.publishTime) }}</div>
               <div class="blog-stats">
                 <span class="stat-item">
-                  <i class="el-icon-view"></i>
-                  {{ getBlogStat(blog, 'views') || getBlogStat(blog, 'viewCount') }}
+                  <Icon :icon="eyeIcon" />
+                  {{ getBlogStat(blog, 'views') || getBlogStat(blog, 'viewCount') || 0 }}
                 </span>
                 <span class="stat-item">
-                  <i class="el-icon-thumb"></i> 
-                  {{ getBlogStat(blog, 'likes') || getBlogStat(blog, 'likeCount') }}
+                  <Icon :icon="heartIcon" />
+                  {{ getBlogStat(blog, 'likes') || getBlogStat(blog, 'likeCount') || 0 }}
                 </span>
                 <span class="stat-item">
-                  <i class="el-icon-chat-dot-round"></i> 
-                  {{ getBlogStat(blog, 'comments') || getBlogStat(blog, 'commentCount') }}
+                  <Icon :icon="starIcon" />
+                  {{ getBlogStat(blog, 'collections') || getBlogStat(blog, 'collectionCount') || 0 }}
                 </span>
               </div>
               <div class="collect-time" v-if="blog.collectTime">
