@@ -169,13 +169,9 @@ const formatDate = (dateString) => {
           <div class="user-info" @click="handleViewUser(user)">
             <h3 class="user-name">{{ user.username }}</h3>
             <div class="user-meta">
-              <div class="follow-count">
-                <span class="count-label">关注：</span>
-                <span class="count-value">{{ user.followCount || '--' }}</span>
-              </div>
               <div class="fans-count">
                 <span class="count-label">粉丝：</span>
-                <span class="count-value">{{ user.fansCount || '--' }}</span>
+                <span class="count-value">{{ user.fans !== undefined ? user.fans : '--' }}</span>
               </div>
               <div class="follow-time" v-if="user.followTime">
                 关注于 {{ formatDate(user.followTime) }}
@@ -188,24 +184,24 @@ const formatDate = (dateString) => {
           <div class="user-actions">
             <el-button 
               type="primary"
-              icon="User"
               size="small"
               @click="handleViewUser(user)"
               title="查看用户"
               plain
             >
+              <el-icon><User /></el-icon>
               查看
             </el-button>
             
             <el-button 
-              :type="followingStatus[user.userId || user.id]?.followed ? 'info' : 'success'"
-              icon="User"
+              :type="(user.isFollowed || followingStatus[user.userId || user.id]?.followed) ? 'info' : 'success'"
               size="small"
               @click="handleToggleFollow(user)"
               :loading="followingStatus[user.userId || user.id]?.loading"
               plain
             >
-              {{ followingStatus[user.userId || user.id]?.followed ? '已关注' : '关注' }}
+              <el-icon><User /></el-icon>
+              {{ (user.isFollowed || followingStatus[user.userId || user.id]?.followed) ? '已关注' : '关注' }}
             </el-button>
           </div>
         </div>
@@ -312,5 +308,15 @@ const formatDate = (dateString) => {
   flex-direction: column;
   gap: 8px;
   margin-left: 16px;
+}
+
+.el-button+.el-button {
+  margin-left: 0
+}
+
+/* 统一按钮宽度 */
+.user-actions .el-button {
+  width: 90px;
+  justify-content: center;
 }
 </style> 
