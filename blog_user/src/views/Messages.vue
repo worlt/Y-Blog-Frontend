@@ -45,13 +45,15 @@ let pollingTimer = null
 const messagesContentRef = ref(null)
 
 // 获取当前登录用户ID
-onMounted(() => {
+onMounted(async () => {
   // 从store获取用户信息
   const userInfo = userInfoStore.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}')
   currentUserId.value = userInfo.id
 
-  // 加载会话列表
-  loadConversations()
+  // 加载会话列表，完成后同步更新顶栏未读数
+  await loadConversations()
+  // 通知顶栏更新未读消息总数
+  eventBus.emit('unread-count-update', totalUnreadCount.value)
   
   // 启动轮询
   startPolling()
@@ -230,6 +232,8 @@ const markConversationAsRead = async (conversationId) => {
     if (conversation) {
       conversation.unreadCount = 0
     }
+    // 通知顶栏同步更新未读消息总数
+    eventBus.emit('unread-count-update', totalUnreadCount.value)
   } catch (error) {
     console.error('标记会话为已读失败:', error)
   }
@@ -244,6 +248,8 @@ const markAllAsRead = async () => {
       conversationList.value.forEach(conversation => {
         conversation.unreadCount = 0
       })
+      // 通知顶栏未读数归零
+      eventBus.emit('unread-count-update', 0)
       ElMessage.success('已将所有消息标记为已读')
     }
   } catch (error) {
