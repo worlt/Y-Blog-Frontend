@@ -27,27 +27,27 @@ export const searchBlogs = (params) => {
     page: params.page || 1,
     pageSize: params.pageSize || 10
   };
-  
+
   // 如果有关键词，添加title参数
   if (params.keyword) {
     searchParams.title = params.keyword;
   }
-  
+
   // 如果有分类ID，添加categoryId参数
   if (params.categoryId) {
     searchParams.categoryId = params.categoryId;
   }
-  
+
   // 如果有用户名，添加username参数
   if (params.username) {
     searchParams.username = params.username;
   }
-  
+
   // 排除指定ID的博客（用于相关推荐）
   if (params.excludeId) {
     searchParams.excludeId = params.excludeId;
   }
-  
+
   return request.get(`${URL}/page`, { params: searchParams });
 };
 
@@ -237,4 +237,38 @@ export const getLikedBlogs = (params = {}) => {
  */
 export const getDislikedBlogs = (params = {}) => {
   return request.get(`${URL}/getDislikedBlogs`, { params });
-}; 
+};
+
+/**
+ * 获取热门博客列表（按浏览量排序，不考虑置顶）
+ * @param {Object} params - 查询参数
+ * @param {number} params.page - 页码
+ * @param {number} params.pageSize - 每页数量
+ * @returns {Promise} - 返回热门博客列表的Promise
+ */
+export const getHotBlogs = (params = {}) => {
+  return request.get(`${URL}/page`, {
+    params: {
+      ...params,
+      sortField: 'views',
+      sortOrder: 'desc',
+      ignoreTop: true
+    }
+  });
+};
+
+/**
+ * 获取推荐阅读列表（仅置顶博客）
+ * @param {Object} params - 查询参数
+ * @param {number} params.page - 页码
+ * @param {number} params.pageSize - 每页数量
+ * @returns {Promise} - 返回推荐阅读（置顶博客）列表的Promise
+ */
+export const getRecommendedBlogs = (params = {}) => {
+  return request.get(`${URL}/page`, {
+    params: {
+      ...params,
+      isTop: 1
+    }
+  });
+};

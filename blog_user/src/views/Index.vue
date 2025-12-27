@@ -2,7 +2,7 @@
 import { ref, reactive, onMounted, nextTick, onUnmounted, watch, onBeforeUnmount } from 'vue'
 import router from '@/router/index.js'
 import { getAllCategories } from '@/api/category.js'
-import { getBlogPage } from '@/api/blog.js'
+import { getBlogPage, getHotBlogs, getRecommendedBlogs } from '@/api/blog.js'
 import { Icon } from '@iconify/vue'
 import AuthDialog from '@/components/AuthDialog.vue'
 import { useTokenStore } from '@/stores/token.js'
@@ -31,9 +31,15 @@ const showAuthDialog = ref(false);
 // token store
 const tokenStore = useTokenStore();
 
-// 博客列表数据
+// 博客列表数据（最新文章）
 const blogList = ref([]);
 const loading = ref(false);
+
+// 热门博客列表（按浏览量排序）
+const hotBlogList = ref([]);
+
+// 推荐阅读列表（置顶文章）
+const recommendList = ref([]);
 
 // 是否还有更多数据
 const hasMore = ref(true);
@@ -114,7 +120,8 @@ const fetchBlogList = async (reset = false, isLoadMore = false) => {
 
     const params = {
       ...queryParams,
-      page: currentPage
+      page: currentPage,
+      ignoreTop: true  // 最新文章不按置顶优先排序
     };
 
     const result = await getBlogPage(params);
@@ -154,6 +161,30 @@ const fetchBlogList = async (reset = false, isLoadMore = false) => {
     console.error('获取博客列表失败');
   } finally {
     loading.value = false;
+  }
+};
+
+// 获取热门博客列表（按浏览量排序）
+const fetchHotBlogs = async () => {
+  try {
+    const result = await getHotBlogs({ page: 1, pageSize: 5 });
+    if (result.code === 0) {
+      hotBlogList.value = result.data.records || [];
+    }
+  } catch (error) {
+    console.error('获取热门博客失败');
+  }
+};
+
+// 获取推荐阅读列表（置顶博客）
+const fetchRecommendedBlogs = async () => {
+  try {
+    const result = await getRecommendedBlogs({ page: 1, pageSize: 8 });
+    if (result.code === 0) {
+      recommendList.value = result.data.records || [];
+    }
+  } catch (error) {
+    console.error('获取推荐阅读失败');
   }
 };
 
@@ -356,6 +387,9 @@ const handleShowAuthDialog = () => {
 onMounted(async () => {
   await fetchAllCategories();
   await fetchBlogList(true);
+  // 获取热门博客和推荐阅读
+  fetchHotBlogs();
+  fetchRecommendedBlogs();
   
   // 初始化活跃菜单项
   initActiveMenuItem();
@@ -396,6 +430,9 @@ const handleRouterChange = (event) => {
   if (to.path === '/index') {
     fetchAllCategories();
     fetchBlogList(true);
+    // 刷新热门博客和推荐阅读
+    fetchHotBlogs();
+    fetchRecommendedBlogs();
     // 确保首页菜单项激活
     sideMenuItems.value.forEach(item => {
       item.active = item.path === '/index';
@@ -505,10 +542,10 @@ onUnmounted(() => {
           </ul>
         </div>
         
-        <!-- 最新文章区域 -->
+        <!-- 最新博客区域 -->
         <div class="article-section">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 class="section-title" style="margin: 0;">最新文章</h2>
+            <h2 class="section-title" style="margin: 0;">最新博客</h2>
           </div>
           
           <!-- 文章列表 -->
@@ -580,10 +617,10 @@ onUnmounted(() => {
           <div class="sidebar-content right-sidebar-content">
             <!-- 热门文章区域 -->
             <div class="sidebar-card hot-articles">
-              <h3 class="card-title">热门文章</h3>
+              <h3 class="card-title">热门博客</h3>
               
-              <ul class="hot-article-list">
-                <li v-for="(blog, index) in blogList.slice(0, 5)" :key="blog.id">
+              <ul class="hot-article-list" v-if="hotBlogList.length > 0">
+                <li v-for="(blog, index) in hotBlogList" :key="blog.id">
                   <div class="hot-article-index">{{ index + 1 }}</div>
                   <div class="hot-article-info" @click="goToBlogDetail(blog.id)">
                     <h4 class="hot-article-title">{{ blog.title }}</h4>
@@ -594,16 +631,17 @@ onUnmounted(() => {
                   </div>
                 </li>
               </ul>
+              <div v-else class="no-recommend">暂无热门博客</div>
             </div>
             
             <!-- 推荐阅读区域 -->
             <div class="sidebar-card recommended">
               <h3 class="card-title">推荐阅读</h3>
               
-              <div class="recommend-scroll-container">
+              <div class="recommend-scroll-container" v-if="recommendList.length > 0">
                 <div class="recommend-list">
                   <div 
-                    v-for="blog in blogList.slice(0, 8)" 
+                    v-for="blog in recommendList" 
                     :key="`recommend-${blog.id}`"
                     class="recommend-item"
                     @click="goToBlogDetail(blog.id)"
@@ -623,6 +661,7 @@ onUnmounted(() => {
                   </div>
                 </div>
               </div>
+              <div v-else class="no-recommend">暂无推荐阅读的博客</div>
             </div>
           </div>
         </el-affix>
@@ -1364,6 +1403,16 @@ onUnmounted(() => {
 .no-data p {
   font-size: 16px;
   margin: 0;
+}
+
+/* 推荐阅读/热门博客空数据提示样式 */
+.no-recommend {
+  text-align: center;
+  padding: 30px 15px;
+  color: #999;
+  font-size: 14px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
 }
 
 .hot-article-info {

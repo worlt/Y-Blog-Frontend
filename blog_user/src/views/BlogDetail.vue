@@ -337,7 +337,7 @@ const loadComments = async () => {
 // 加载相关推荐
 const loadRelated = async () => {
   try {
-    // 这里可以根据标签、分类等推荐相关文章
+    // 这里可以根据标签、分类等推荐相关博客
     // 示例中简单使用获取最新文章作为推荐
     const result = await blogApi.getBlogPage({
       pageSize: 5,

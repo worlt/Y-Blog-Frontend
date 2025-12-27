@@ -493,7 +493,7 @@ watch(editorRef, (newEditor) => {
     <el-form ref="formRef" :model="blogForm" :rules="rules" label-width="100px">
       <!-- 顶部操作栏 -->
       <div class="top-actions">
-        <div class="title">{{ isEdit ? '编辑博客' : '写博客' }}</div>
+        <div class="title">{{ isEdit ? '编辑博客' : '新建博客' }}</div>
         <div class="buttons">
           <el-button @click="cancelEdit">取消</el-button>
           <el-button type="success" @click="saveDraft" :loading="saving">保存草稿</el-button>
@@ -618,7 +618,7 @@ watch(editorRef, (newEditor) => {
                     <el-icon><Plus /></el-icon> 添加自定义标签
                   </el-button>
                 </div>
-                <div class="tag-tips">最多添加5个自定义标签，按Enter键确认</div>
+                <div class="tag-tips">最多添加5个自定义标签，Enter键确认</div>
               </el-form-item>
               
               <!-- 封面上传 -->

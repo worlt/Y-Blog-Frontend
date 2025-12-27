@@ -274,7 +274,7 @@ onUnmounted(() => {
       
       <!-- 没有收藏博客时的空状态 -->
       <div v-else-if="collectedBlogs.length === 0" class="empty-state">
-        <el-empty description="你还没有收藏任何文章">
+        <el-empty description="你还没有收藏任何博客">
           <el-button type="primary" @click="router.push('/index')">去浏览文章</el-button>
         </el-empty>
       </div>
