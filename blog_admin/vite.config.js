@@ -19,7 +19,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 2000,
-    allowedHosts: ['admin.yb.worlt.asia.worlt.asia'],
+    allowedHosts: ['admin.yb.worlt.asia'],
     proxy: {
       '/api': {
         // 获取路径中包含/api的请求

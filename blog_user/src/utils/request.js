@@ -35,6 +35,10 @@ export const eventBus = {
 
 // 创建事件总线，用于控制登录弹窗显示
 export const showLoginDialog = () => {
+  // 如果当前在登录/注册页面，则不弹出登录对话框
+  if (window.location.pathname === '/auth') {
+    return;
+  }
   // 触发自定义事件，通知需要显示登录弹窗
   window.dispatchEvent(new CustomEvent('show-auth-dialog'));
 }
