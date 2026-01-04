@@ -19,10 +19,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 2000,
+    allowedHosts: ['admin.yb.worlt.asia.worlt.asia'],
     proxy: {
       '/api': {
         // 获取路径中包含/api的请求
-        target: 'http://localhost:8888',
+        target: 'http://localhost:8088',
         changeOrigin: true,
         // api替换为''
         rewrite: (path) => path.replace(/^\/api/, '')

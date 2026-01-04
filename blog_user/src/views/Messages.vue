@@ -7,7 +7,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
 import { messageState, eventBus } from '@/utils/request.js'
-import {Delete, Loading} from "@element-plus/icons-vue";
+import {Delete, Loading, Plus} from "@element-plus/icons-vue";
 
 // 配置dayjs
 dayjs.extend(relativeTime)

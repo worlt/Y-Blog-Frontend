@@ -19,9 +19,10 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 2002,
+    allowedHosts: ['yblog.worlt.asia'],
     proxy: {
       '/api': {
-        target: 'http://localhost:8888',
+        target: 'http://localhost:8088',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }

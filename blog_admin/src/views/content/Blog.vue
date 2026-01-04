@@ -137,8 +137,30 @@ const formData = reactive({
   tagIdList: [], // 系统标签ID列表
   customTagList: [], // 自定义标签列表
   status: 5, // 默认为草稿状态
+  statusMessage: '', // 状态变更原因
   isTop: 0 // 默认不置顶
 });
+
+// 保存编辑时的原始状态，用于检测状态变更
+const originalStatus = ref(null);
+
+// 需要填写原因的状态列表
+const statusNeedReason = [2, 3, 4]; // 已拒绝、整改中、已封禁
+
+// 状态变更原因对话框
+const reasonDialogVisible = ref(false);
+const reasonFormRef = ref(null);
+const reasonForm = reactive({
+  statusMessage: ''
+});
+const reasonRules = {
+  statusMessage: [
+    { required: true, message: '请输入状态变更原因', trigger: 'blur' }
+  ]
+};
+
+// 临时保存提交数据，用于原因对话框确认后提交
+let pendingSubmitData = null;
 
 // 表单校验规则
 const formRules = {
@@ -178,7 +200,9 @@ const resetForm = () => {
   formData.tagIdList = [];
   formData.customTagList = [];
   formData.status = 5; // 默认为草稿状态
+  formData.statusMessage = '';
   formData.isTop = 0;
+  originalStatus.value = null;
   if (formRef.value) {
     formRef.value.resetFields();
   }
@@ -210,6 +234,9 @@ const handleEdit = async (row) => {
       formData.categoryId = blogData.categoryId;
       formData.status = blogData.status;
       formData.isTop = blogData.isTop;
+      
+      // 保存原始状态，用于检测状态变更
+      originalStatus.value = blogData.status;
       
       // 处理标签数据
       if (blogData.tagList && blogData.tagList.length > 0) {
@@ -247,61 +274,87 @@ const submitForm = async () => {
   
   await formRef.value.validate(async (valid) => {
     if (valid) {
-      dialogLoading.value = true;
-      try {
-        // 确保从编辑器获取最新内容
-        if (contentEditor.value) {
-          formData.content = contentEditor.value.getContent();
-        }
-
-        // 准备提交数据
-        const submitData = {
-          ...formData,
-          // 确保isTop是数字类型
-          isTop: Number(formData.isTop)
-        };
-        
-        // 处理自定义标签数据
-        if (typeof formData.customTagList === 'string') {
-          // 如果是字符串（用户直接输入的逗号分隔文本），则拆分为数组
-          submitData.customTagList = formData.customTagList
-            .split(',')
-            .map(tag => tag.trim())
-            .filter(tag => tag);
-        } else if (Array.isArray(formData.customTagList)) {
-          // 如果已经是数组，确保每个标签都是处理过的
-          submitData.customTagList = formData.customTagList
-            .map(tag => tag.trim())
-            .filter(tag => tag);
-        } else {
-          // 如果为空或其他类型，设为空数组
-          submitData.customTagList = [];
-        }
-        
-        let res;
-        if (submitData.id) {
-          // 更新博客
-          res = await updateBlog(submitData);
-        } else {
-          // 新增博客
-          res = await addBlog(submitData);
-        }
-        
-        if (res.code === 0) {
-          ElMessage.success(`${submitData.id ? '更新' : '新增'}博客成功`);
-          dialogVisible.value = false;
-          getList();
-        } else {
-          ElMessage.error(res.msg || `${submitData.id ? '更新' : '新增'}博客失败`);
-        }
-      } catch (error) {
-        console.error(`${formData.id ? '更新' : '新增'}博客出错：`, error);
-        ElMessage.error(`${formData.id ? '更新' : '新增'}博客失败，请稍后重试`);
-      } finally {
-        dialogLoading.value = false;
+      // 确保从编辑器获取最新内容
+      if (contentEditor.value) {
+        formData.content = contentEditor.value.getContent();
       }
+
+      // 准备提交数据
+      const submitData = {
+        ...formData,
+        // 确保isTop是数字类型
+        isTop: Number(formData.isTop)
+      };
+      
+      // 处理自定义标签数据
+      if (typeof formData.customTagList === 'string') {
+        submitData.customTagList = formData.customTagList
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(tag => tag);
+      } else if (Array.isArray(formData.customTagList)) {
+        submitData.customTagList = formData.customTagList
+          .map(tag => tag.trim())
+          .filter(tag => tag);
+      } else {
+        submitData.customTagList = [];
+      }
+      
+      // 检测是否需要填写状态变更原因（编辑时状态变为拒绝、整改、封禁）
+      if (submitData.id && 
+          originalStatus.value !== submitData.status && 
+          statusNeedReason.includes(submitData.status)) {
+        // 需要填写原因，打开原因对话框
+        pendingSubmitData = submitData;
+        reasonForm.statusMessage = '';
+        reasonDialogVisible.value = true;
+        return;
+      }
+      
+      // 直接提交
+      await doSubmit(submitData);
     }
   });
+};
+
+// 状态变更原因确认提交
+const confirmReasonSubmit = async () => {
+  if (!reasonFormRef.value) return;
+  
+  await reasonFormRef.value.validate(async (valid) => {
+    if (valid && pendingSubmitData) {
+      pendingSubmitData.statusMessage = reasonForm.statusMessage;
+      reasonDialogVisible.value = false;
+      await doSubmit(pendingSubmitData);
+      pendingSubmitData = null;
+    }
+  });
+};
+
+// 执行提交操作
+const doSubmit = async (submitData) => {
+  dialogLoading.value = true;
+  try {
+    let res;
+    if (submitData.id) {
+      res = await updateBlog(submitData);
+    } else {
+      res = await addBlog(submitData);
+    }
+    
+    if (res.code === 0) {
+      ElMessage.success(`${submitData.id ? '更新' : '新增'}博客成功`);
+      dialogVisible.value = false;
+      getList();
+    } else {
+      ElMessage.error(res.msg || `${submitData.id ? '更新' : '新增'}博客失败`);
+    }
+  } catch (error) {
+    console.error(`${submitData.id ? '更新' : '新增'}博客出错：`, error);
+    ElMessage.error(`${submitData.id ? '更新' : '新增'}博客失败，请稍后重试`);
+  } finally {
+    dialogLoading.value = false;
+  }
 };
 
 // 删除博客
@@ -865,6 +918,37 @@ onMounted(() => {
           <el-button type="primary" @click="submitForm" :loading="dialogLoading">
             确定
           </el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 状态变更原因对话框 -->
+    <el-dialog
+      v-model="reasonDialogVisible"
+      title="请填写原因"
+      width="500px"
+      :close-on-click-modal="false"
+      destroy-on-close
+    >
+      <el-form
+        ref="reasonFormRef"
+        :model="reasonForm"
+        :rules="reasonRules"
+        label-width="100px"
+      >
+        <el-form-item label="变更原因" prop="statusMessage">
+          <el-input
+            v-model="reasonForm.statusMessage"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入状态变更的原因，将发送给博客作者"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="reasonDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmReasonSubmit">确认提交</el-button>
         </div>
       </template>
     </el-dialog>
