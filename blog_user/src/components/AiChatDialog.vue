@@ -1,9 +1,10 @@
 <template>
-  <div class="ai-chat-container">
+  <div class="ai-chat-container" :style="containerStyle" :class="{ dragging: isDragging }">
     <!-- 悬浮按钮 -->
     <div 
       class="ai-fab" 
-      @click="toggleChat" 
+      @click="handleClick"
+      @mousedown="startDrag" 
       v-show="!visible"
       title="AI 智能助手"
     >
@@ -13,7 +14,14 @@
 
     <!-- 聊天窗口 -->
     <transition name="chat-fade">
-      <div class="chat-window" v-show="visible">
+      <div 
+        class="chat-window" 
+        v-show="visible"
+        :style="{ width: windowSize.width + 'px', height: windowSize.height + 'px' }"
+      >
+        <!-- 缩放手柄 (左上角) -->
+        <div class="resize-handle" @mousedown="startResize" title="拖动缩放"></div>
+
         <!-- 头部 -->
         <div class="chat-header">
           <div class="header-left">
@@ -145,8 +153,130 @@ const saveHistory = () => {
   }))
 }
 
+// 拖拽相关状态
+const isDragging = ref(false)
+const hasMoved = ref(false)
+const containerStyle = reactive({
+  right: '30px',
+  bottom: '30px'
+})
+const dragOffset = { x: 0, y: 0 }
+
+// 开始拖拽
+const startDrag = (e) => {
+  // 如果是点击了 FAB 内部的图标文字等，由于事件冒泡，也会触发
+  // 仅左键点击允许拖拽
+  if (e.button !== 0) return
+
+  const container = document.querySelector('.ai-chat-container')
+  if (!container) return
+
+  const rect = container.getBoundingClientRect()
+  
+  // 记录鼠标相对元素的偏移量
+  dragOffset.x = e.clientX - rect.left
+  dragOffset.y = e.clientY - rect.top
+  
+  hasMoved.value = false
+  isDragging.value = true
+  
+  // 切换为 left/top 定位，防止 resize 时的怪异行为，并准备拖拽
+  // 注意：需要先计算当前的 left/top 并固定
+  containerStyle.right = 'auto'
+  containerStyle.bottom = 'auto'
+  containerStyle.left = `${rect.left}px`
+  containerStyle.top = `${rect.top}px`
+
+  // 添加全局监听
+  window.addEventListener('mousemove', onDrag)
+  window.addEventListener('mouseup', stopDrag)
+}
+
+// 拖拽中
+const onDrag = (e) => {
+  if (!isDragging.value) return
+  
+  hasMoved.value = true
+  e.preventDefault()
+
+  let newLeft = e.clientX - dragOffset.x
+  let newTop = e.clientY - dragOffset.y
+
+  // 边界检查
+  const windowWidth = window.innerWidth
+  const windowHeight = window.innerHeight
+  const elementWidth = 60 // FAB 宽度 approximate (container width depends on child)
+  const elementHeight = 60
+
+  // 限制在屏幕内
+  // 左边界
+  if (newLeft < 0) newLeft = 0
+  // 右边界
+  if (newLeft > windowWidth - elementWidth) newLeft = windowWidth - elementWidth
+  // 上边界
+  if (newTop < 0) newTop = 0
+  // 下边界
+  if (newTop > windowHeight - elementHeight) newTop = windowHeight - elementHeight
+
+  containerStyle.left = `${newLeft}px`
+  containerStyle.top = `${newTop}px`
+}
+
+// 停止拖拽
+const stopDrag = () => {
+  if (!isDragging.value) return
+  isDragging.value = false
+  window.removeEventListener('mousemove', onDrag)
+  window.removeEventListener('mouseup', stopDrag)
+
+  // 只要移动过，就执行吸附
+  if (hasMoved.value) {
+    const windowWidth = window.innerWidth
+    const elementWidth = 60
+    const margin = 30
+    
+    // 获取当前 left 值（去掉 px）
+    const currentLeft = parseInt(containerStyle.left) || 0
+    
+    // 判断离哪边近
+    if (currentLeft + elementWidth / 2 < windowWidth / 2) {
+      // 吸附到左边
+      containerStyle.left = `${margin}px`
+      containerStyle.right = 'auto'
+    } else {
+      // 吸附到右边
+      // 先用 left 动画过去
+      const targetLeft = windowWidth - elementWidth - margin
+      containerStyle.left = `${targetLeft}px`
+      containerStyle.right = 'auto'
+      
+      // 动画结束后，切换为 right 定位以适应窗口缩放
+      setTimeout(() => {
+        containerStyle.left = 'auto'
+        containerStyle.right = `${margin}px`
+      }, 300)
+    }
+  }
+}
+
+// 处理点击
+const handleClick = () => {
+  // 只有未发生移动时才视为点击
+  if (!hasMoved.value) {
+    toggleChat()
+  }
+}
+
 // 切换聊天窗口显示状态
 const toggleChat = () => {
+  if (!visible.value) {
+     // 打开时强制归位，确保窗口内容不被遮挡
+     containerStyle.left = 'auto'
+     containerStyle.top = 'auto'
+     containerStyle.right = '30px'
+     containerStyle.bottom = '30px'
+  }
+
   visible.value = !visible.value
   if (visible.value) {
     scrollToBottom()
@@ -212,6 +342,7 @@ const sendMessage = async () => {
 
   try {
       abortController.value = await sendStreamChatMessage(
+
         {
           message: content,
           conversationId: conversationId.value
@@ -223,7 +354,6 @@ const sendMessage = async () => {
             } else if (event.type === 'thinking') {
                 if (event.text) {
                     aiMsg.thinking = (aiMsg.thinking || '') + event.text;
-                    // 有思考内容时保持展开
                     if (!aiMsg.showThinking) aiMsg.showThinking = true;
                 }
             } else if (event.type === 'content') {
@@ -260,10 +390,70 @@ const sendMessage = async () => {
   }
 }
 
+// 缩放相关状态
+const isResizing = ref(false)
+const windowSize = reactive({
+  width: 380,
+  height: 550
+})
+const resizeStart = { x: 0, y: 0, width: 0, height: 0 }
+
+// 开始缩放
+const startResize = (e) => {
+  e.preventDefault()
+  e.stopPropagation() // 防止触发拖拽
+  
+  isResizing.value = true
+  resizeStart.x = e.clientX
+  resizeStart.y = e.clientY
+  resizeStart.width = windowSize.width
+  resizeStart.height = windowSize.height
+  
+  window.addEventListener('mousemove', onResize)
+  window.addEventListener('mouseup', stopResize)
+}
+
+// 缩放中
+const onResize = (e) => {
+  if (!isResizing.value) return
+  e.preventDefault()
+  
+  // 向左上角拖动增加宽高
+  const deltaX = resizeStart.x - e.clientX
+  const deltaY = resizeStart.y - e.clientY
+  
+  let newWidth = resizeStart.width + deltaX
+  let newHeight = resizeStart.height + deltaY
+  
+  // 限制最小/最大尺寸
+  // 最小尺寸
+  if (newWidth < 300) newWidth = 300
+  if (newHeight < 400) newHeight = 400
+  
+  // 最大尺寸（屏幕宽度的 90%，高度的 90%）
+  const maxWidth = window.innerWidth * 0.9
+  const maxHeight = window.innerHeight * 0.9
+  
+  if (newWidth > maxWidth) newWidth = maxWidth
+  if (newHeight > maxHeight) newHeight = maxHeight
+  
+  windowSize.width = newWidth
+  windowSize.height = newHeight
+}
+
+// 停止缩放
+const stopResize = () => {
+  isResizing.value = false
+  window.removeEventListener('mousemove', onResize)
+  window.removeEventListener('mouseup', stopResize)
+}
+
 onBeforeUnmount(() => {
   if (abortController.value) {
     abortController.value.abort();
   }
+  window.removeEventListener('mousemove', onResize)
+  window.removeEventListener('mouseup', stopResize)
 })
 
 // 初始化
@@ -285,6 +475,11 @@ watch(messages, () => {
   right: 30px;
   z-index: 2000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.ai-chat-container.dragging {
+  transition: none !important;
 }
 
 /* 悬浮按钮样式 */
@@ -324,7 +519,7 @@ watch(messages, () => {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 380px;
+  width: 380px; /* Default handled by inline style, but kept as fallback */
   height: 550px;
   background: white;
   border-radius: 16px;
@@ -334,6 +529,34 @@ watch(messages, () => {
   overflow: hidden;
   border: 1px solid rgba(0,0,0,0.05);
   transform-origin: bottom right;
+}
+
+/* 缩放手柄样式 */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  z-index: 100;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #cbd5e1;
+  border-left: 2px solid #cbd5e1;
+  border-top-left-radius: 2px;
+  transition: border-color 0.2s;
+}
+
+.resize-handle:hover::before {
+  border-color: #667eea;
 }
 
 /* 头部样式 */
