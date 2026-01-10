@@ -58,6 +58,10 @@
               <Icon v-else icon="mdi:account-circle-outline" />
             </div>
             <div class="message-content">
+              <!-- 当存在图片时显示图片 -->
+              <div v-if="msg.image" class="message-image">
+                <img :src="msg.image" alt="Uploaded Image" @click="previewImage(msg.image)" />
+              </div>
               <div v-if="msg.thinking" class="thinking-section">
                 <div class="thinking-header" @click="msg.showThinking = !msg.showThinking">
                   <Icon :icon="msg.showThinking ? 'mdi:chevron-down' : 'mdi:chevron-right'" />
@@ -90,18 +94,40 @@
 
         <!-- 输入区域 -->
         <div class="chat-input-area">
+          <!-- 图片预览 -->
+          <div v-if="selectedImage" class="image-preview">
+            <img :src="selectedImage" alt="Preview"/>
+            <button class="remove-image-btn" @click="clearImage">
+              <Icon icon="mdi:close" />
+            </button>
+          </div>
+          
+          <div class="input-controls">
+            <input 
+              type="file" 
+              ref="fileInputRef" 
+              accept="image/*" 
+              style="display: none" 
+              @change="handleFileSelect"
+            />
+            <button class="icon-btn" @click="triggerFileUpload" title="上传图片">
+              <Icon icon="mdi:image-outline" />
+            </button>
+          </div>
+
           <textarea
             v-model="inputMessage"
             class="chat-input"
-            placeholder="请输入您的问题..."
+            placeholder="请输入您的问题... (可粘贴图片)"
             @keydown.enter.prevent="handleEnter"
+            @paste="handlePaste"
             :disabled="loading"
             rows="3"
           ></textarea>
           <button 
             class="send-btn" 
             @click="sendMessage"
-            :disabled="!inputMessage.trim() || loading"
+            :disabled="(!inputMessage.trim() && !selectedImage) || loading"
           >
             <Icon icon="mdi:send" />
           </button>
@@ -123,6 +149,61 @@ const loading = ref(false)
 const messages = ref([])
 const messagesRef = ref(null)
 const conversationId = ref(null)
+const selectedImage = ref(null)
+const fileInputRef = ref(null)
+
+// 触发文件选择
+const triggerFileUpload = () => {
+  fileInputRef.value.click()
+}
+
+// 处理文件选择
+const handleFileSelect = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    processFile(file)
+  }
+  // 清空 value 允许重复选择同一文件
+  event.target.value = ''
+}
+
+// 处理粘贴
+const handlePaste = (event) => {
+  const items = event.clipboardData.items
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      const blob = items[i].getAsFile()
+      processFile(blob)
+      event.preventDefault() // 阻止默认粘贴行为（防止文件名粘贴到文本框）
+      break
+    }
+  }
+}
+
+// 处理文件转 Base64
+const processFile = (file) => {
+  if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    ElMessage.warning('图片大小不能超过 5MB')
+    return
+  }
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    selectedImage.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+// 清除选中图片
+const clearImage = () => {
+  selectedImage.value = null
+}
+
+// 预览大图（简单实现，后续可优化）
+const previewImage = (src) => {
+  // 可以使用 Element Plus 的 preview 组件，或者简单 window open
+  // 这里暂时不做复杂处理
+}
 
 // 判断是否正在生成内容（已有部分输出）
 const isGenerating = computed(() => {
@@ -317,16 +398,20 @@ const abortController = ref(null)
 // 发送消息
 const sendMessage = async () => {
   const content = inputMessage.value.trim()
-  if (!content || loading.value) return
+  const image = selectedImage.value
+  
+  if ((!content && !image) || loading.value) return
 
   // 添加用户消息
   messages.value.push({
     role: 'user',
     content: content,
+    image: image,
     timestamp: Date.now()
   })
   
   inputMessage.value = ''
+  selectedImage.value = null
   loading.value = true
   scrollToBottom()
 
@@ -342,9 +427,9 @@ const sendMessage = async () => {
 
   try {
       abortController.value = await sendStreamChatMessage(
-
         {
-          message: content,
+          message: content || (image ? ' ' : ''), // 兼容后端可能需要非空 message
+          image: image,
           conversationId: conversationId.value
         },
         (event) => {
@@ -713,9 +798,91 @@ watch(messages, () => {
   background: white;
   border-top: 1px solid #e5e7eb;
   display: flex;
+  flex-wrap: wrap; /* 允许预览换行 */
   gap: 10px;
   align-items: flex-end;
   flex-shrink: 0;
+  position: relative;
+}
+
+.image-preview {
+  width: 100%;
+  display: flex;
+  margin-bottom: 5px;
+  position: relative;
+}
+
+.image-preview img {
+  max-height: 80px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: -8px;
+  left: -8px; /* Depending on image width handling, maybe relative to img */
+  background: red;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  left: 70px; /* Approximate based on max-height aspect ratio, fix dynamic later */
+}
+
+/* Better positioning for remove button */
+.image-preview {
+  position: relative;
+  display: inline-block;
+  width: auto;
+}
+
+.remove-image-btn {
+  left: auto;
+  right: -8px;
+  top: -8px;
+}
+
+.input-controls {
+  display: flex;
+  align-items: center;
+  height: 40px; /* Match send btn height */
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: color 0.2s, background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn:hover {
+  color: #667eea;
+  background: #f3f4f6;
+}
+
+.message-image {
+  margin-bottom: 8px;
+  max-width: 100%;
+}
+
+.message-image img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .chat-input {
