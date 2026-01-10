@@ -4,6 +4,7 @@ import { useUserInfoStore } from '@/stores/userInfo.js'
 import { onMounted, onUnmounted } from 'vue'
 import { eventBus, startMessageChecking, stopMessageChecking } from '@/utils/request.js'
 import * as messageApi from '@/api/message.js'
+import AiChatDialog from '@/components/AiChatDialog.vue'
 
 const tokenStore = useTokenStore()
 const userInfoStore = useUserInfoStore()
@@ -61,6 +62,8 @@ function checkUnreadMessages() {
 
 <template>
   <router-view />
+  <!-- 全局 AI 助手 -->
+  <AiChatDialog />
 </template>
 
 <style scoped>

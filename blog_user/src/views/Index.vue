@@ -5,7 +5,7 @@ import { getAllCategories } from '@/api/category.js'
 import { getBlogPage, getHotBlogs, getRecommendedBlogs } from '@/api/blog.js'
 import { Icon } from '@iconify/vue'
 import AuthDialog from '@/components/AuthDialog.vue'
-import AiChatDialog from '@/components/AiChatDialog.vue'
+
 import { useTokenStore } from '@/stores/token.js'
 import { ElMessage } from 'element-plus'
 import eyeIcon from '@iconify/icons-mdi/eye'
@@ -675,8 +675,7 @@ onUnmounted(() => {
       @login-success="handleLoginSuccess"
     />
 
-    <!-- AI 助手弹窗 -->
-    <AiChatDialog />
+
   </div>
 </template>
 
