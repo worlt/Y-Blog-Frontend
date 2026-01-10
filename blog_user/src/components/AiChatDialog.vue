@@ -96,40 +96,71 @@
         <div class="chat-input-area">
           <!-- 图片预览 -->
           <div v-if="selectedImage" class="image-preview">
-            <img :src="selectedImage" alt="Preview"/>
-            <button class="remove-image-btn" @click="clearImage">
-              <Icon icon="mdi:close" />
-            </button>
+            <div class="preview-wrapper">
+              <img :src="selectedImage" alt="Preview" @click="previewImage(selectedImage)"/>
+              <button class="remove-image-btn" @click="clearImage">
+                <Icon icon="mdi:close" />
+              </button>
+            </div>
           </div>
           
-          <div class="input-controls">
-            <input 
-              type="file" 
-              ref="fileInputRef" 
-              accept="image/*" 
-              style="display: none" 
-              @change="handleFileSelect"
-            />
-            <button class="icon-btn" @click="triggerFileUpload" title="上传图片">
-              <Icon icon="mdi:image-outline" />
+          <!-- 回到底部按钮 -->
+          <transition name="fade">
+            <button 
+              v-show="!isNearBottom && messages.length > 0" 
+              class="scroll-bottom-btn" 
+              @click="scrollToBottom(true)"
+              title="回到底部"
+            >
+              <Icon icon="mdi:arrow-down" />
+            </button>
+          </transition>
+
+          <div class="input-row">
+            <div class="input-controls">
+              <input 
+                type="file" 
+                ref="fileInputRef" 
+                accept="image/*" 
+                style="display: none" 
+                @change="handleFileSelect"
+              />
+              <button class="icon-btn" @click="triggerFileUpload" title="上传图片">
+                <Icon icon="mdi:image-outline" />
+              </button>
+            </div>
+
+            <textarea
+              v-model="inputMessage"
+              class="chat-input"
+              placeholder="请输入您的问题... (可粘贴图片)"
+              @keydown.enter.prevent="handleEnter"
+              @paste="handlePaste"
+              :disabled="loading"
+              rows="1"
+              ref="textareaRef"
+              @input="autoResize"
+            ></textarea>
+
+            <button 
+              class="send-btn" 
+              @click="sendMessage"
+              :disabled="(!inputMessage.trim() && !selectedImage) || loading"
+            >
+              <Icon icon="mdi:send" />
             </button>
           </div>
+        </div>
+      </div>
+    </transition>
 
-          <textarea
-            v-model="inputMessage"
-            class="chat-input"
-            placeholder="请输入您的问题... (可粘贴图片)"
-            @keydown.enter.prevent="handleEnter"
-            @paste="handlePaste"
-            :disabled="loading"
-            rows="3"
-          ></textarea>
-          <button 
-            class="send-btn" 
-            @click="sendMessage"
-            :disabled="(!inputMessage.trim() && !selectedImage) || loading"
-          >
-            <Icon icon="mdi:send" />
+    <!-- 图片预览遮罩 -->
+    <transition name="fade">
+      <div v-if="previewVisible" class="image-viewer-overlay" @click="closePreview">
+        <div class="image-viewer-content">
+          <img :src="previewSrc" alt="Full Preview" @click.stop />
+          <button class="close-preview-btn" @click="closePreview">
+            <Icon icon="mdi:close" />
           </button>
         </div>
       </div>
@@ -151,6 +182,24 @@ const messagesRef = ref(null)
 const conversationId = ref(null)
 const selectedImage = ref(null)
 const fileInputRef = ref(null)
+const textareaRef = ref(null)
+const previewVisible = ref(false)
+const previewSrc = ref('')
+const isNearBottom = ref(true)
+
+// 自动调整输入框高度
+const autoResize = () => {
+  const el = textareaRef.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = el.scrollHeight + 'px'
+  // 限制最大高度
+  if (el.scrollHeight > 120) {
+    el.style.overflowY = 'auto'
+  } else {
+    el.style.overflowY = 'hidden'
+  }
+}
 
 // 触发文件选择
 const triggerFileUpload = () => {
@@ -199,10 +248,17 @@ const clearImage = () => {
   selectedImage.value = null
 }
 
-// 预览大图（简单实现，后续可优化）
+// 预览大图
 const previewImage = (src) => {
-  // 可以使用 Element Plus 的 preview 组件，或者简单 window open
-  // 这里暂时不做复杂处理
+  if (!src) return
+  previewSrc.value = src
+  previewVisible.value = true
+}
+
+// 关闭预览
+const closePreview = () => {
+  previewVisible.value = false
+  previewSrc.value = ''
 }
 
 // 判断是否正在生成内容（已有部分输出）
@@ -379,11 +435,24 @@ const formatTime = (timestamp) => {
 }
 
 // 滚动到底部
-const scrollToBottom = async () => {
+const scrollToBottom = async (force = false) => {
   await nextTick()
   if (messagesRef.value) {
-    messagesRef.value.scrollTop = messagesRef.value.scrollHeight
+    if (force) {
+      messagesRef.value.scrollTop = messagesRef.value.scrollHeight
+      isNearBottom.value = true
+    } else if (isNearBottom.value) {
+      messagesRef.value.scrollTop = messagesRef.value.scrollHeight
+    }
   }
+}
+
+// 监听滚动事件
+const handleScroll = () => {
+  if (!messagesRef.value) return
+  const { scrollTop, scrollHeight, clientHeight } = messagesRef.value
+  // 阈值设为 50px，如果距离底部小于 50px 则认为在底部
+  isNearBottom.value = scrollHeight - scrollTop - clientHeight < 50
 }
 
 // 处理回车键
@@ -413,7 +482,7 @@ const sendMessage = async () => {
   inputMessage.value = ''
   selectedImage.value = null
   loading.value = true
-  scrollToBottom()
+  scrollToBottom(true) // 发送时强制滚动到底部
 
   // AI 占位消息
   const aiMsgIndex = messages.value.push({
@@ -533,17 +602,25 @@ const stopResize = () => {
   window.removeEventListener('mouseup', stopResize)
 }
 
+// 初始化
+onMounted(() => {
+  loadHistory()
+  if (messagesRef.value) {
+    messagesRef.value.addEventListener('scroll', handleScroll)
+    // 初始滚动到底部
+    scrollToBottom(true)
+  }
+})
+
 onBeforeUnmount(() => {
   if (abortController.value) {
     abortController.value.abort();
   }
   window.removeEventListener('mousemove', onResize)
   window.removeEventListener('mouseup', stopResize)
-})
-
-// 初始化
-onMounted(() => {
-  loadHistory()
+  if (messagesRef.value) {
+    messagesRef.value.removeEventListener('scroll', handleScroll)
+  }
 })
 
 // 监听消息变化自动保存
@@ -798,31 +875,46 @@ watch(messages, () => {
   background: white;
   border-top: 1px solid #e5e7eb;
   display: flex;
-  flex-wrap: wrap; /* 允许预览换行 */
+  flex-direction: column; /* 垂直排列 */
   gap: 10px;
-  align-items: flex-end;
   flex-shrink: 0;
   position: relative;
+}
+
+.input-row {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  align-items: flex-end;
 }
 
 .image-preview {
   width: 100%;
   display: flex;
-  margin-bottom: 5px;
   position: relative;
+  padding: 5px 0;
+}
+
+.preview-wrapper {
+  position: relative;
+  display: inline-block;
 }
 
 .image-preview img {
-  max-height: 80px;
+  max-width: 150px;
+  max-height: 100px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
 }
 
 .remove-image-btn {
   position: absolute;
   top: -8px;
-  left: -8px; /* Depending on image width handling, maybe relative to img */
-  background: red;
+  right: -8px;
+  background: rgba(0,0,0,0.5);
   color: white;
   border-radius: 50%;
   width: 20px;
@@ -832,26 +924,18 @@ watch(messages, () => {
   justify-content: center;
   border: none;
   cursor: pointer;
-  left: 70px; /* Approximate based on max-height aspect ratio, fix dynamic later */
+  transition: background 0.2s;
 }
 
-/* Better positioning for remove button */
-.image-preview {
-  position: relative;
-  display: inline-block;
-  width: auto;
-}
-
-.remove-image-btn {
-  left: auto;
-  right: -8px;
-  top: -8px;
+.remove-image-btn:hover {
+  background: rgba(0,0,0,0.7);
 }
 
 .input-controls {
   display: flex;
   align-items: center;
-  height: 40px; /* Match send btn height */
+  height: 40px;
+  flex-shrink: 0;
 }
 
 .icon-btn {
@@ -871,6 +955,33 @@ watch(messages, () => {
 .icon-btn:hover {
   color: #667eea;
   background: #f3f4f6;
+}
+
+/* 回到底部按钮 */
+.scroll-bottom-btn {
+  position: absolute;
+  top: -50px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  color: #667eea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+  z-index: 10;
+}
+
+.scroll-bottom-btn:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .message-image {
@@ -896,11 +1007,77 @@ watch(messages, () => {
   transition: border-color 0.2s;
   background: #f9fafb;
   font-family: inherit;
+  min-height: 42px;
+  max-height: 120px;
 }
 
 .chat-input:focus {
   border-color: #667eea;
   background: white;
+}
+
+/* 图片预览遮罩 */
+.image-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 10000; /* 最高层级 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+}
+
+.image-viewer-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-viewer-content img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.close-preview-btn {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: background 0.3s;
+}
+
+.close-preview-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .send-btn {
