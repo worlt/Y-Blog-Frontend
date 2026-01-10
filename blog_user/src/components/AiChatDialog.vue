@@ -134,6 +134,18 @@
         </div>
       </div>
     </transition>
+
+    <!-- 图片预览遮罩 -->
+    <transition name="fade">
+      <div v-if="previewVisible" class="image-viewer-overlay" @click="closePreview">
+        <div class="image-viewer-content">
+          <img :src="previewSrc" alt="Full Preview" @click.stop />
+          <button class="close-preview-btn" @click="closePreview">
+            <Icon icon="mdi:close" />
+          </button>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -151,6 +163,8 @@ const messagesRef = ref(null)
 const conversationId = ref(null)
 const selectedImage = ref(null)
 const fileInputRef = ref(null)
+const previewVisible = ref(false)
+const previewSrc = ref('')
 
 // 触发文件选择
 const triggerFileUpload = () => {
@@ -199,10 +213,17 @@ const clearImage = () => {
   selectedImage.value = null
 }
 
-// 预览大图（简单实现，后续可优化）
+// 预览大图
 const previewImage = (src) => {
-  // 可以使用 Element Plus 的 preview 组件，或者简单 window open
-  // 这里暂时不做复杂处理
+  if (!src) return
+  previewSrc.value = src
+  previewVisible.value = true
+}
+
+// 关闭预览
+const closePreview = () => {
+  previewVisible.value = false
+  previewSrc.value = ''
 }
 
 // 判断是否正在生成内容（已有部分输出）
@@ -901,6 +922,70 @@ watch(messages, () => {
 .chat-input:focus {
   border-color: #667eea;
   background: white;
+}
+
+/* 图片预览遮罩 */
+.image-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 10000; /* 最高层级 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+}
+
+.image-viewer-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-viewer-content img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.close-preview-btn {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: background 0.3s;
+}
+
+.close-preview-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .send-btn {
