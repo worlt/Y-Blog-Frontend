@@ -522,6 +522,7 @@ watch(editorRef, (newEditor) => {
               ref="editorRef"
               v-model="blogForm.content"
               :height="500"
+              :blog-title="blogForm.title"
             />
           </el-form-item>
         </div>

@@ -2,6 +2,7 @@
 import { ref, shallowRef, onMounted, onBeforeUnmount, watch, nextTick, computed } from 'vue';
 import { Boot, createEditor, createToolbar } from '@wangeditor/editor';
 import { uploadImage } from '@/api/common.js';
+import { getCompletion } from '@/api/aiCompletion.js';
 import { ElMessage } from 'element-plus';
 
 // 引入编辑器样式
@@ -48,6 +49,10 @@ const props = defineProps({
   showWordCount: {
     type: Boolean,
     default: false
+  },
+  title: {
+    type: String, // 传入标题用于AI上下文
+    default: ''
   }
 });
 
@@ -63,7 +68,38 @@ const html = ref(props.modelValue || '');
 const isFullScreen = ref(false);
 const editorContainer = ref(null);
 
-// 计算样式
+// AI 补全相关
+// AI 补全相关
+let completionTimer = null
+let isInsertingCompletion = false
+let hasCompletion = false
+const COMPLETION_DELAY = 500
+let currentCompletionLength = 0
+let requestId = 0
+
+// 清除补全
+const clearCompletion = () => {
+  if (!hasCompletion || !editorRef.value) return
+  
+  const editor = editorRef.value
+  
+  // 暂停 onChange 监听
+  isInsertingCompletion = true
+  
+  try {
+      // 循环删除字符
+      const editorLength = currentCompletionLength
+      for (let i = 0; i < editorLength; i++) {
+          editor.deleteBackward('character')
+      }
+  } catch (e) {
+      console.error('清除补全失败', e)
+  }
+  
+  hasCompletion = false
+  currentCompletionLength = 0
+  isInsertingCompletion = false
+}
 const editorHeight = computed(() => {
   if (typeof props.height === 'number') {
     return `${props.height}px`;
@@ -194,6 +230,98 @@ const toggleFullScreen = () => {
   }
 };
 
+
+
+// 存储当前补全文本，用于 confirm
+let currentCompletionTextString = ''
+
+// 确认补全
+const confirmCompletion = () => {
+    if (!hasCompletion || !editorRef.value) return
+    const editor = editorRef.value
+    
+    isInsertingCompletion = true
+    try {
+        console.log('确认补全触发')
+        // 删除灰色的（包括提示文案）
+        const len = currentCompletionLength
+        for (let i = 0; i < len; i++) {
+            editor.deleteBackward('character')
+        }
+        
+        // 关键：删除后，光标处可能仍残留样式，必须显式清除
+        editor.removeMark('color')
+        
+        // 插入正常的补全内容（不含提示文案）
+        if (currentCompletionTextString) {
+             editor.insertText(currentCompletionTextString)
+        }
+        
+        // 再次清除样式，双重保险
+        editor.removeMark('color')
+        
+    } catch(e) {
+        console.error('确认补全出错', e)
+    }
+    
+    hasCompletion = false
+    currentCompletionLength = 0
+    currentCompletionTextString = ''
+    isInsertingCompletion = false
+}
+
+// 请求补全
+const requestCompletion = async () => {
+  const currentReqId = ++requestId
+  const editor = editorRef.value
+  if (!editor) return
+
+  const text = editor.getText()
+  
+  try {
+      const res = await getCompletion({
+          content: text,
+          title: props.title
+      })
+      
+      // 检查请求是否过期
+      if (currentReqId !== requestId) return
+      // 检查此时如果有 completion，说明重叠了？
+      if (hasCompletion) return 
+      
+      if (res.code === 0 && res.data && res.data.completion) {
+          let completion = res.data.completion
+          if (!completion.trim()) return
+          
+          // 过滤换行符，简化处理
+          completion = completion.replace(/[\r\n]/g, '')
+          if (!completion) return
+          
+          currentCompletionTextString = completion
+          
+          // 添加提示文案
+          const hintText = ' (按CTRL补全)'
+          const displayedText = completion + hintText
+          
+          // 使用扩展运算符计算字符数（处理Emoji等）
+          currentCompletionLength = [...displayedText].length
+          
+          isInsertingCompletion = true
+          hasCompletion = true
+          
+          // 添加灰色样式
+          editor.addMark('color', '#999')
+          editor.insertText(displayedText)
+          // 移除样式，以免后续输入也变灰
+          editor.removeMark('color')
+          
+          isInsertingCompletion = false
+      }
+  } catch (e) {
+      console.error('补全失败', e)
+  }
+}
+
 // 初始化编辑器和工具栏
 const initEditor = () => {
   try {
@@ -218,9 +346,56 @@ const initEditor = () => {
 
     // 设置编辑器内容
     editor.setHtml(html.value);
+    
+    // 监听 Keydown 事件
+    const textarea = editorDomRef.value
+    textarea.addEventListener('keydown', (e) => {
+        if (hasCompletion) {
+             if (e.ctrlKey || e.key === 'Tab') {
+                  if (e.key === 'Control' || e.key === 'Tab') {
+                      e.preventDefault()
+                      confirmCompletion()
+                      return
+                  }
+              }
+            if (!['Control', 'Shift', 'Alt', 'Meta', 'Tab'].includes(e.key)) {
+                clearCompletion()
+            }
+        }
+    }, true)
+    
+    // 监听 Blur 和 Click
+    textarea.addEventListener('blur', () => {
+        if (hasCompletion) clearCompletion()
+    }, true)
+    
+    textarea.addEventListener('click', () => {
+        if (hasCompletion) clearCompletion()
+    }, true)
+
+    textarea.addEventListener('compositionstart', () => {
+        if (hasCompletion) clearCompletion()
+    }, true)
+
+    textarea.addEventListener('mousedown', () => {
+        if (hasCompletion) clearCompletion()
+    }, true)
 
     // 监听编辑器内容变化
     editor.on('change', () => {
+      // 关键修正：只要内容变化（除了补全插入），都应废弃旧的补全请求
+      if (!isInsertingCompletion) {
+          requestId++
+      }
+
+      // 如果是补全插入引起的change，忽略
+      if (isInsertingCompletion) return
+      
+      if (hasCompletion) {
+          hasCompletion = false 
+          editor.removeMark('color')
+      }
+    
       const newHtml = editor.getHtml();
       if (html.value !== newHtml) {
         html.value = newHtml;
@@ -230,7 +405,15 @@ const initEditor = () => {
           text: editor.getText()
         });
       }
+      
+      // 触发补全防抖
+      clearTimeout(completionTimer)
+      completionTimer = setTimeout(() => {
+          requestCompletion()
+      }, COMPLETION_DELAY)
     });
+// ...
+
 
     // 监听编辑器焦点状态
     editor.on('focus', () => {
@@ -373,6 +556,7 @@ onMounted(() => {
 // 组件销毁前清理
 onBeforeUnmount(() => {
   destroyEditor();
+  clearTimeout(completionTimer)
 });
 
 // 暴露方法
