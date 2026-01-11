@@ -11,12 +11,14 @@ const router = useRouter()
 // 博客列表
 const blogList = ref([])
 
-// 状态筛选选项 - 根据后端BlogVO的status字段调整
+// 状态筛选选项 - 根据后端BlogStatusConstant的status字段调整
 const statusOptions = [
   { label: '全部', value: '' },
   { label: '审核中', value: 0 },    // 待审核
   { label: '已发布', value: 1 },    // 已发布
   { label: '被拒绝', value: 2 },    // 审核不通过
+  { label: '整改中', value: 3 },    // 整改
+  { label: '已封禁', value: 4 },    // 永久封禁
   { label: '草稿', value: 5 }       // 草稿
 ]
 
@@ -196,6 +198,8 @@ const getStatusType = (status) => {
     case 0: return 'warning'  // 审核中
     case 1: return 'success'  // 已发布
     case 2: return 'danger'   // 被拒绝
+    case 3: return 'warning'  // 整改中（橙色警告）
+    case 4: return 'danger'   // 已封禁（红色危险）
     case 5: return 'info'     // 草稿
     default: return 'info'
   }
