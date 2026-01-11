@@ -12,6 +12,17 @@
       {{ completionText }}
       <span class="completion-tip"> (按 Ctrl 键补全)</span>
     </div>
+    
+    <!-- AI Loading Indicator -->
+    <div 
+      v-if="isLoadingCompletion" 
+      class="ai-completion-loading"
+      :style="completionStyle"
+    >
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
   </div>
 </template>
 
@@ -388,5 +399,46 @@ defineExpose({
 /* 调整 placeholder 位置 */
 :deep(.w-e-text-placeholder) {
   top: 8px;
+}
+
+/* AI Loading Styles */
+.ai-completion-loading {
+  position: absolute;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background-color: #409eff;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% { 
+    transform: scale(0);
+  }
+  40% { 
+    transform: scale(1);
+  }
 }
 </style> 
