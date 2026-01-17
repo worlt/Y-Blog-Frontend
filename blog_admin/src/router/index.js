@@ -11,6 +11,12 @@ const routes = [
         component: () => import('@/views/Home.vue'),
         // 子路由
         children: [
+            // 仪表盘
+            {
+                path: '/dashboard',
+                component: () => import('@/views/dashboard/Dashboard.vue'),
+                meta: { title: '仪表盘' }
+            },
             // 内容管理
             {
                 path: '/content/blog',
@@ -76,7 +82,7 @@ const routes = [
                 meta: { title: '网站基础设置' }
             }
         ],
-        redirect: '/content/blog'
+        redirect: '/dashboard'
     }
 ]
 

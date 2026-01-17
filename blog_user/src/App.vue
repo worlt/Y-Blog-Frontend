@@ -4,6 +4,7 @@ import { useUserInfoStore } from '@/stores/userInfo.js'
 import { onMounted, onUnmounted } from 'vue'
 import { eventBus, startMessageChecking, stopMessageChecking } from '@/utils/request.js'
 import * as messageApi from '@/api/message.js'
+import { recordVisit } from '@/api/visit.js'
 import AiChatDialog from '@/components/AiChatDialog.vue'
 
 const tokenStore = useTokenStore()
@@ -11,6 +12,9 @@ const userInfoStore = useUserInfoStore()
 
 // 组件挂载时启动消息检查
 onMounted(() => {
+  // 记录网站访问
+  recordVisit()
+
   // 如果已登录，检查未读消息
   if (tokenStore.token) {
     checkUnreadMessages()

@@ -1,5 +1,5 @@
 <script setup>
-import {Bell, Document, Setting, SwitchButton, User} from "@element-plus/icons-vue";
+import {Bell, Document, Setting, SwitchButton, User, DataLine} from "@element-plus/icons-vue";
 import {useAdminInfoStore} from "@/stores/adminInfo.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {useTokenStore} from "@/stores/token.js";
@@ -134,6 +134,10 @@ onUnmounted(() => {
         <el-aside width="200px" class="aside">
           <el-scrollbar>
             <el-menu :default-openeds="['content', 'user', 'interaction', 'config']" router>
+              <el-menu-item index="/dashboard">
+                <el-icon><DataLine /></el-icon>
+                <span>仪表盘</span>
+              </el-menu-item>
               <el-sub-menu index="content">
                 <template #title>
                   <el-icon><Document /></el-icon>内容管理
