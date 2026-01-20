@@ -1,5 +1,6 @@
 <script setup>
 import { ref, reactive, onMounted, computed, nextTick, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 import * as messageApi from '@/api/message.js'
@@ -16,6 +17,7 @@ dayjs.locale('zh-cn')
 // 用户信息
 const userInfoStore = useUserInfoStore()
 const currentUserId = ref(null)
+const router = useRouter()
 
 // 会话列表数据
 const conversationList = ref([])
@@ -497,6 +499,32 @@ const createNewConversation = async () => {
     // 用户取消操作
   })
 }
+
+// 处理消息点击事件（用于处理消息中的链接跳转）
+const handleMessageClick = (event) => {
+  const target = event.target
+  // 检查点击的是否是我们要处理的链接
+  if (target.classList.contains('msg-link')) {
+    // 阻止默认行为（虽然已经是span了，但以防万一）
+    event.preventDefault()
+    
+    const type = target.getAttribute('data-type')
+    const id = target.getAttribute('data-id')
+    
+    if (type && id) {
+      if (type === 'user') {
+        router.push(`/user/${id}`)
+      } else if (type === 'blog') {
+        router.push(`/blog/${id}`)
+      }
+    }
+  }
+}
+// 去除HTML标签
+const stripHtml = (html) => {
+  if (!html) return ''
+  return html.replace(/<[^>]+>/g, '')
+}
 </script>
 
 <template>
@@ -577,7 +605,7 @@ const createNewConversation = async () => {
                     <span class="conversation-time">{{ formatConversationTime(getLastMessage(conversation).createTime) }}</span>
                   </div>
                   <div class="conversation-preview" :class="{'preview-unread': conversation.unreadCount > 0}">
-                    {{ getLastMessage(conversation).content }}
+                    {{ stripHtml(getLastMessage(conversation).content) }}
                   </div>
                 </div>
               </div>
@@ -689,7 +717,7 @@ const createNewConversation = async () => {
                           <el-icon><Delete /></el-icon>
                           <span>消息已撤回</span>
                         </div>
-                        <div v-else class="message-text">{{ message.content }}</div>
+                        <div v-else class="message-text" v-html="message.content" @click="handleMessageClick($event)"></div>
                       </div>
                     </div>
                     
@@ -760,6 +788,19 @@ const createNewConversation = async () => {
 </template>
 
 <style scoped>
+/* 消息链接样式 - 使用 :deep 穿透 scopes */
+.message-text :deep(.msg-link) {
+  color: #409EFF;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.message-text :deep(.msg-link:hover) {
+  text-decoration: underline;
+  color: #66b1ff;
+}
+
 .messages-container {
   height: calc(100vh - 60px);
   width: 100%;
