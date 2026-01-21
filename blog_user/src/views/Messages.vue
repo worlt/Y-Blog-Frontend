@@ -39,10 +39,6 @@ const messagePagination = reactive({
   total: 0
 })
 
-// 轮询间隔（毫秒）
-const POLLING_INTERVAL = 10000
-let pollingTimer = null
-
 // 引用消息内容区域
 const messagesContentRef = ref(null)
 
@@ -57,48 +53,24 @@ onMounted(async () => {
   // 通知顶栏更新未读消息总数
   eventBus.emit('unread-count-update', totalUnreadCount.value)
   
-  // 启动轮询
-  startPolling()
-  
-  // 监听新消息事件
-  eventBus.on('conversation-new-message', handleNewMessages)
+  // 监听WS新消息事件
+  eventBus.on('ws-new-message', handleWebSocketMessage)
 })
 
-// 组件销毁时清除轮询和事件监听
+// 组件销毁时清除事件监听
 onUnmounted(() => {
-  stopPolling()
-  eventBus.off('conversation-new-message', handleNewMessages)
+  eventBus.off('ws-new-message', handleWebSocketMessage)
 })
 
-// 启动轮询
-const startPolling = () => {
-  // 清除现有的定时器
-  stopPolling()
+// 处理WebSocket新消息
+const handleWebSocketMessage = (msg) => {
+  // 收到消息，刷新会话列表（获取最新消息预览和时间）
+  loadConversations(false)
   
-  // 创建新的定时器，定期刷新会话列表和当前会话的消息
-  pollingTimer = setInterval(() => {
-    loadConversations(false) // 静默更新，不显示加载状态
-    
-    // 如果当前有选中的会话，也更新消息列表
-    if (currentConversation.value) {
-      loadMessages(currentConversation.value.conversationId, false) // 静默更新
-    }
-  }, POLLING_INTERVAL)
-}
-
-// 停止轮询
-const stopPolling = () => {
-  if (pollingTimer) {
-    clearInterval(pollingTimer)
-    pollingTimer = null
-  }
-}
-
-// 处理新消息通知
-const handleNewMessages = (conversationId) => {
-  // 如果通知的会话是当前选中的会话，刷新消息列表
-  if (conversationId === currentConversation.value?.conversationId) {
-    loadMessages(conversationId, false)
+  // 如果当前正在查看相关会话，刷新消息列表
+  const activeCid = currentConversation.value?.conversationId
+  if (activeCid && (msg.conversationId == activeCid || msg.data?.conversationId == activeCid)) {
+     loadMessages(activeCid, false)
   }
 }
 

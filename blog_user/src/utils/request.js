@@ -279,7 +279,7 @@ export function stopMessageChecking() {
   }
 }
 
-// 自动开始消息检查
-startMessageChecking()
+// 自动开始消息检查 - 已移除，改用WebSocket
+// startMessageChecking()
 
 export default instance;

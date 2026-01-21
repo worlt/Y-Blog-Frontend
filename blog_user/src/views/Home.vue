@@ -5,7 +5,7 @@ import {useTokenStore} from "@/stores/token.js";
 import router from "@/router/index.js";
 import {ElMessage} from "element-plus";
 import AuthDialog from '@/components/AuthDialog.vue';
-import { eventBus, stopMessageChecking } from '@/utils/request.js';
+import { eventBus } from '@/utils/request.js';
 import * as messageApi from '@/api/message.js';
 import { Icon } from '@iconify/vue';
 import { executeAutoLogout } from '@common/utils/autoLogout.js';
@@ -52,6 +52,9 @@ onMounted(() => {
   
   // 监听未读消息数更新事件
   eventBus.on('unread-count-update', handleUnreadCountUpdate);
+  // 监听WebSocket新消息事件，刷新未读数
+  eventBus.on('ws-new-message', loadUnreadMessageCount);
+  eventBus.on('ws-unread-update', loadUnreadMessageCount);
   
   // 如果已登录，获取未读消息数
   if (isLoggedIn.value) {
@@ -76,6 +79,8 @@ onUnmounted(() => {
   
   // 移除未读消息数更新事件监听
   eventBus.off('unread-count-update', handleUnreadCountUpdate);
+  eventBus.off('ws-new-message', loadUnreadMessageCount);
+  eventBus.off('ws-unread-update', loadUnreadMessageCount);
 });
 
 // 加载未读消息数
