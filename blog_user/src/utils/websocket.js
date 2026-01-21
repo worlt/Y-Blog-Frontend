@@ -52,8 +52,16 @@ export const initWebSocket = (userId) => {
         // 生产环境通常用 /api 代理，或者独立域名
         // 这里简单实现：使用当前 location.hostname，端口 8088
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-        // 注意：这里硬编码了端口 8088，如果您的后端端口不同请修改
-        const wsUrl = `${protocol}://${window.location.hostname}:8088/ws/${userId}`
+
+        let wsUrl = ''
+        // 判断环境：本地开发通常是 localhost 或 127.0.0.1
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // 本地开发直接连接后端端口
+            wsUrl = `${protocol}://${window.location.hostname}:8088/ws/${userId}`
+        } else {
+            // 生产环境：使用特定的后端域名 back.yb.worlt.asia
+            wsUrl = `wss://back.yb.worlt.asia/ws/${userId}`
+        }
 
         socket = new WebSocket(wsUrl)
 

@@ -2,8 +2,7 @@
 import { useTokenStore } from '@/stores/token.js'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 import { onMounted, onUnmounted } from 'vue'
-import { eventBus } from '@/utils/request.js'
-import { initWebSocket, closeWebSocket } from '@/utils/websocket.js'
+import { eventBus, startMessageChecking, stopMessageChecking } from '@/utils/request.js'
 import * as messageApi from '@/api/message.js'
 import { recordVisit } from '@/api/visit.js'
 import AiChatDialog from '@/components/AiChatDialog.vue'
@@ -19,10 +18,7 @@ onMounted(() => {
   // 如果已登录，检查未读消息
   if (tokenStore.token) {
     checkUnreadMessages()
-    // 初始化WebSocket
-    if (userInfoStore.info?.id) {
-      initWebSocket(userInfoStore.info.id)
-    }
+    startMessageChecking()
   }
   
   // 监听登录事件
@@ -31,18 +27,14 @@ onMounted(() => {
 
 // 组件卸载时停止消息检查
 onUnmounted(() => {
-  // 关闭WebSocket连接
-  closeWebSocket()
+  stopMessageChecking()
   eventBus.off('user-login-success', handleUserLogin)
 })
 
 // 用户登录成功处理
 function handleUserLogin() {
   checkUnreadMessages()
-  // 登录成功后初始化WebSocket
-  if (userInfoStore.info?.id) {
-    initWebSocket(userInfoStore.info.id)
-  }
+  startMessageChecking()
 }
 
 // 检查未读消息
