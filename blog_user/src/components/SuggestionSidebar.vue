@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { showLoginDialog } from '@/utils/request'
 import { Icon } from '@iconify/vue'
 import thumbUpIcon from '@iconify/icons-mdi/thumb-up'
 import thumbDownIcon from '@iconify/icons-mdi/thumb-down'
@@ -38,7 +39,7 @@ const isLoggedIn = () => {
 
 const checkLogin = () => {
   if (!isLoggedIn()) {
-    ElMessage.warning('请先登录')
+    showLoginDialog()
     return false
   }
   return true
@@ -111,6 +112,13 @@ const openDetail = async (id) => {
 
 const handleVote = async (item, type) => {
   if (!checkLogin()) return
+  
+  // Only allow voting if status is Pending (0)
+  if (item.status !== 0) {
+      ElMessage.warning('该建议已结束投票')
+      return
+  }
+
   // If already voted, do not allow modification
   if (item.currentUserVoteType !== null && item.currentUserVoteType !== undefined) {
       return
@@ -125,9 +133,30 @@ const handleVote = async (item, type) => {
         openDetail(item.id) // Refresh detail
       }
       fetchData() // Refresh list
+    } else {
+      // 400 errors are resolved with data by errorHandler, so we handle them here
+      const msg = res.msg || '投票失败'
+      if (msg.includes('结束投票')) {
+          ElMessage.warning('该建议已结束投票')
+          fetchData() // Auto refresh to update status
+      } else if (msg.includes('已投票')) { // Handle 'already voted' clearly
+          ElMessage.warning('您已投票，不可修改')
+      } else {
+          ElMessage.error(msg)
+      }
     }
   } catch (error) {
     console.error(error)
+    // Handle other errors (like 500, network error) that are rejected
+    const msg = error.response?.data?.msg || error.message || '投票失败'
+    
+    // Fallback logic in case error strategy changes or other status codes used
+    if (msg.includes('结束投票')) {
+        ElMessage.warning('该建议已结束投票')
+        fetchData() 
+    } else {
+        ElMessage.error(msg)
+    }
   }
 }
 
@@ -216,7 +245,7 @@ onMounted(() => {
                 class="action-btn want-btn" 
                 :class="{ 
                     active: item.currentUserVoteType === 1,
-                    disabled: item.currentUserVoteType !== null && item.currentUserVoteType !== undefined
+                    disabled: (item.currentUserVoteType !== null && item.currentUserVoteType !== undefined) || item.status !== 0
                 }"
                 @click.stop="handleVote(item, 1)"
             >
@@ -229,7 +258,7 @@ onMounted(() => {
                 class="action-btn not-want-btn" 
                 :class="{ 
                     active: item.currentUserVoteType === 0,
-                    disabled: item.currentUserVoteType !== null && item.currentUserVoteType !== undefined
+                    disabled: (item.currentUserVoteType !== null && item.currentUserVoteType !== undefined) || item.status !== 0
                 }"
                 @click.stop="handleVote(item, 0)"
             >
@@ -242,6 +271,7 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- ... Dialog ... -->
     <!-- Add Dialog -->
     <el-dialog v-model="showAddDialog" title="提出建议" width="500px">
       <el-form>
@@ -287,7 +317,7 @@ onMounted(() => {
                 class="action-btn want-btn" 
                 :class="{ 
                     active: currentSuggestion.currentUserVoteType === 1,
-                    disabled: currentSuggestion.currentUserVoteType !== null && currentSuggestion.currentUserVoteType !== undefined
+                    disabled: (currentSuggestion.currentUserVoteType !== null && currentSuggestion.currentUserVoteType !== undefined) || currentSuggestion.status !== 0
                 }"
                 @click="handleVote(currentSuggestion, 1)"
                 style="min-width: 140px;"
@@ -301,7 +331,7 @@ onMounted(() => {
                 class="action-btn not-want-btn" 
                 :class="{ 
                     active: currentSuggestion.currentUserVoteType === 0,
-                    disabled: currentSuggestion.currentUserVoteType !== null && currentSuggestion.currentUserVoteType !== undefined
+                    disabled: (currentSuggestion.currentUserVoteType !== null && currentSuggestion.currentUserVoteType !== undefined) || currentSuggestion.status !== 0
                 }"
                 @click="handleVote(currentSuggestion, 0)"
                 style="min-width: 140px;"

@@ -45,9 +45,9 @@ export function executeAutoLogout(options = {}) {
   if (isLoggingOut) {
     return
   }
-  
+
   isLoggingOut = true
-  
+
   try {
     const {
       tokenStore,
@@ -56,23 +56,23 @@ export function executeAutoLogout(options = {}) {
       showLoginDialog,
       reason = '登录状态已过期'
     } = options
-    
+
     console.log(`执行自动登出: ${reason}`)
-    
+
     // 1. 停止所有定时任务
     if (stopMessageChecking && typeof stopMessageChecking === 'function') {
       stopMessageChecking()
     }
-    
+
     // 2. 清除用户状态
     if (tokenStore && tokenStore.removeToken) {
       tokenStore.removeToken()
     }
-    
+
     if (userStore && userStore.removeInfo) {
       userStore.removeInfo()
     }
-    
+
     // 3. 清除本地存储
     try {
       localStorage.removeItem('token')
@@ -82,7 +82,7 @@ export function executeAutoLogout(options = {}) {
     } catch (error) {
       console.warn('清除本地存储失败:', error)
     }
-    
+
     // 4. 执行注册的回调函数
     autoLogoutCallbacks.forEach(callback => {
       try {
@@ -91,17 +91,17 @@ export function executeAutoLogout(options = {}) {
         console.error('执行登出回调失败:', error)
       }
     })
-    
+
     // 5. 显示登录弹窗（延迟执行，避免与其他操作冲突）
     setTimeout(() => {
       if (showLoginDialog && typeof showLoginDialog === 'function') {
         showLoginDialog()
       }
     }, 100)
-    
+
     // 6. 显示提示消息
     ElMessage.warning(reason)
-    
+
   } catch (error) {
     console.error('自动登出执行失败:', error)
   } finally {
@@ -134,17 +134,17 @@ export function resetAutoLogoutState() {
  */
 export function isAuthError(response) {
   if (!response) return false
-  
-  // 检查业务错误码
-  if (response.code === -1) {
-    return true
-  }
-  
+
+  // 检查业务错误码 - 这里移除 -1 的检查，因为 -1 通常表示通用业务错误
+  // if (response.code === -1) {
+  //   return true
+  // }
+
   // 检查HTTP状态码
   if (response.status === 401) {
     return true
   }
-  
+
   // 检查特定的错误消息
   const authErrorMessages = [
     '请重新登录',
@@ -153,7 +153,7 @@ export function isAuthError(response) {
     'token已过期',
     '无效的token'
   ]
-  
+
   const message = response.msg || response.message || ''
   return authErrorMessages.some(errorMsg => message.includes(errorMsg))
 }

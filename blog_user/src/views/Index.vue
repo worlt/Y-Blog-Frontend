@@ -4,8 +4,9 @@ import router from '@/router/index.js'
 import { getAllCategories } from '@/api/category.js'
 import { getBlogPage, getHotBlogs, getRecommendedBlogs } from '@/api/blog.js'
 import { Icon } from '@iconify/vue'
-import AuthDialog from '@/components/AuthDialog.vue'
+
 import SuggestionSidebar from '@/components/SuggestionSidebar.vue'
+import { showLoginDialog } from '@/utils/request.js'
 
 import { useTokenStore } from '@/stores/token.js'
 import { ElMessage } from 'element-plus'
@@ -28,8 +29,7 @@ const isSuggestionView = ref(false); // 是否显示建议模块
 // 侧边栏折叠状态
 const sidebarCollapsed = ref(false);
 
-// 登录弹窗状态
-const showAuthDialog = ref(false);
+
 
 // token store
 const tokenStore = useTokenStore();
@@ -271,7 +271,7 @@ const goToBlogDetail = (blogId) => {
 // 处理需要登录的操作
 const handleAuthRequiredAction = (action) => {
   if (!isLoggedIn()) {
-    showAuthDialog.value = true;
+    showLoginDialog();
     ElMessage.warning('请先登录后再进行此操作');
     return false;
   }
@@ -340,7 +340,7 @@ const initActiveMenuItem = () => {
 const handleSideMenuClick = (item) => {
   // 检查是否需要登录
   if (item.requireAuth && !isLoggedIn()) {
-    showAuthDialog.value = true;
+    showLoginDialog();
     ElMessage.warning('请先登录后再访问该功能');
     return;
   }
@@ -369,29 +369,13 @@ const toggleSidebar = () => {
 };
 
 // 处理登录成功
-const handleLoginSuccess = (userData) => {
-  ElMessage.success('登录成功');
-  // 可以在这里刷新用户相关数据
-};
-
-// 处理创作按钮点击
 const handleCreateClick = () => {
   if (!isLoggedIn()) {
-    showAuthDialog.value = true;
+    showLoginDialog();
     ElMessage.warning('请先登录后再进行创作');
     return;
   }
   router.push('/write');
-};
-
-// 监听自定义登录事件
-const setupAuthDialogListener = () => {
-  window.addEventListener('show-auth-dialog', handleShowAuthDialog);
-};
-
-// 显示登录弹窗
-const handleShowAuthDialog = () => {
-  showAuthDialog.value = true;
 };
 
 // 组件挂载时初始化数据
@@ -405,8 +389,7 @@ onMounted(async () => {
   // 初始化活跃菜单项
   initActiveMenuItem();
   
-  // 添加自定义登录事件监听
-  setupAuthDialogListener();
+
   
   // 找到正确的滚动容器并添加事件监听
   const scrollElement = document.querySelector('.el-main');
@@ -485,7 +468,7 @@ onUnmounted(() => {
   }
   
   // 移除自定义事件监听
-  window.removeEventListener('show-auth-dialog', handleShowAuthDialog);
+  // 移除自定义事件监听
   window.removeEventListener('router-change', handleRouterChange);
   
   if (scrollTimer) {
@@ -683,11 +666,7 @@ onUnmounted(() => {
       </el-aside>
     </el-container>
     
-    <!-- 登录弹窗 -->
-    <AuthDialog 
-      v-model="showAuthDialog"
-      @login-success="handleLoginSuccess"
-    />
+
 
 
   </div>

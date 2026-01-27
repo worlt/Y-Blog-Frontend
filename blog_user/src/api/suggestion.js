@@ -21,7 +21,7 @@ export function getSuggestionList(params) {
 // 获取建议详情
 export function getSuggestionDetail(id) {
     return request({
-        url: `/user/suggestion/${id}`,
+        url: `/user/suggestion/detail/${id}`,
         method: 'get'
     })
 }
