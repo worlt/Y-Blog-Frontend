@@ -5,6 +5,7 @@ import { getAllCategories } from '@/api/category.js'
 import { getBlogPage, getHotBlogs, getRecommendedBlogs } from '@/api/blog.js'
 import { Icon } from '@iconify/vue'
 import AuthDialog from '@/components/AuthDialog.vue'
+import SuggestionSidebar from '@/components/SuggestionSidebar.vue'
 
 import { useTokenStore } from '@/stores/token.js'
 import { ElMessage } from 'element-plus'
@@ -22,6 +23,7 @@ import menuIcon from '@iconify/icons-mdi/menu'
 // 分类数据
 const categories = ref([]);
 const currentCategoryId = ref(null);
+const isSuggestionView = ref(false); // 是否显示建议模块
 
 // 侧边栏折叠状态
 const sidebarCollapsed = ref(false);
@@ -92,7 +94,8 @@ const fetchAllCategories = async () => {
     if (result.code === 0) {
       // 在分类列表前添加"全部"选项
       const allCategory = { id: null, name: '全部' };
-      categories.value = [allCategory, ...result.data];
+      const suggestionCategory = { id: 'suggestion', name: '建议反馈' };
+      categories.value = [allCategory, suggestionCategory, ...result.data];
     }
   } catch (error) {
     console.error('获取分类失败');
@@ -241,6 +244,13 @@ const loadMore = () => {
 // 切换分类
 const switchCategory = (categoryId) => {
   currentCategoryId.value = categoryId;
+  
+  if (categoryId === 'suggestion') {
+    isSuggestionView.value = true;
+    return;
+  }
+  
+  isSuggestionView.value = false;
   queryParams.categoryId = categoryId;
   queryParams.page = 1;
   hasMore.value = true; // 重置hasMore状态
@@ -543,8 +553,11 @@ onUnmounted(() => {
           </ul>
         </div>
         
+        <!-- 建议模块 -->
+        <SuggestionSidebar v-if="isSuggestionView" class="main-suggestion-module" />
+
         <!-- 最新博客区域 -->
-        <div class="article-section">
+        <div v-else class="article-section">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 class="section-title" style="margin: 0;">最新博客</h2>
           </div>
@@ -616,6 +629,7 @@ onUnmounted(() => {
       <el-aside width="300px" class="right-sidebar">
         <el-affix :offset="80">
           <div class="sidebar-content right-sidebar-content">
+             
             <!-- 热门文章区域 -->
             <div class="sidebar-card hot-articles">
               <h3 class="card-title">热门博客</h3>

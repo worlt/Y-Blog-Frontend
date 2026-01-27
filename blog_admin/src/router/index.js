@@ -38,6 +38,11 @@ const routes = [
                 component: () => import('@/views/content/Category.vue'),
                 meta: { title: '分类管理' }
             },
+            {
+                path: '/content/suggestion',
+                component: () => import('@/views/content/Suggestion.vue'),
+                meta: { title: '建议与反馈' }
+            },
             // 用户中心
             {
                 path: '/user/admin',

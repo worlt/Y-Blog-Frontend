@@ -146,6 +146,7 @@ onUnmounted(() => {
                 <el-menu-item index="/content/comment">评论管理</el-menu-item>
                 <el-menu-item index="/content/tag">标签管理</el-menu-item>
                 <el-menu-item index="/content/category">分类管理</el-menu-item>
+                <el-menu-item index="/content/suggestion">建议与反馈</el-menu-item>
               </el-sub-menu>
               <el-sub-menu index="user">
                 <template #title>
