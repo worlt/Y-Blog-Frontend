@@ -159,6 +159,30 @@ export function isAuthError(response) {
 }
 
 /**
+ * 检查响应是否为账号被封禁错误
+ * @param {Object} response - 响应对象
+ * @returns {boolean} 是否为封禁错误
+ */
+export function isBannedError(response) {
+  if (!response) return false
+
+  // 检查HTTP 403状态码
+  if (response.status === 403 || response.code === 403) {
+    return true
+  }
+
+  // 检查封禁相关的错误消息
+  const bannedMessages = [
+    '已被封禁',
+    '账号被封禁',
+    '账号已被封禁'
+  ]
+
+  const message = response.msg || response.message || ''
+  return bannedMessages.some(errorMsg => message.includes(errorMsg))
+}
+
+/**
  * 创建认证错误处理器
  * @param {Object} options - 配置选项
  * @returns {Function} 错误处理函数
@@ -183,5 +207,6 @@ export default {
   isAutoLoggingOut,
   resetAutoLogoutState,
   isAuthError,
+  isBannedError,
   createAuthErrorHandler
 } 

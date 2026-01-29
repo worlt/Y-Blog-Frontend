@@ -1,14 +1,28 @@
 <script setup>
 import { useTokenStore } from '@/stores/token.js'
 import { useUserInfoStore } from '@/stores/userInfo.js'
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { eventBus, startMessageChecking, stopMessageChecking } from '@/utils/request.js'
 import * as messageApi from '@/api/message.js'
 import { recordVisit } from '@/api/visit.js'
 import AiChatDialog from '@/components/AiChatDialog.vue'
+import AuthDialog from '@/components/AuthDialog.vue'
 
 const tokenStore = useTokenStore()
 const userInfoStore = useUserInfoStore()
+
+// 控制AuthDialog显示（用于封禁申诉）
+const showAuthDialog = ref(false)
+
+// 处理封禁申诉弹窗事件 (已废弃，改为跳转登录页)
+// const handleBannedAppeal = (event) => {
+//   const email = event.detail && event.detail.email ? event.detail.email : '';
+//   showAuthDialog.value = true
+//   // 通过自定义事件通知AuthDialog显示申诉表单，并传递邮箱
+//   setTimeout(() => {
+//     window.dispatchEvent(new CustomEvent('show-appeal-form', { detail: { email } }))
+//   }, 100)
+// }
 
 // 组件挂载时启动消息检查
 onMounted(() => {
@@ -23,12 +37,17 @@ onMounted(() => {
   
   // 监听登录事件
   eventBus.on('user-login-success', handleUserLogin)
+  
+  // 监听封禁申诉弹窗事件
+  // 监听封禁申诉弹窗事件 (已废弃)
+  // window.addEventListener('show-banned-appeal-dialog', handleBannedAppeal)
 })
 
 // 组件卸载时停止消息检查
 onUnmounted(() => {
   stopMessageChecking()
   eventBus.off('user-login-success', handleUserLogin)
+  // window.removeEventListener('show-banned-appeal-dialog', handleBannedAppeal)
 })
 
 // 用户登录成功处理
@@ -68,6 +87,8 @@ function checkUnreadMessages() {
   <router-view />
   <!-- 全局 AI 助手 -->
   <AiChatDialog />
+  <!-- 全局登录/申诉对话框 -->
+  <AuthDialog v-model="showAuthDialog" />
 </template>
 
 <style scoped>

@@ -7,10 +7,12 @@ import {ElMessage} from "element-plus";
 const tableData = ref([]);
 const total = ref(0);
 const loading = ref(false);
+// 提交中loading状态（防止重复点击）
+const submitting = ref(false);
 const queryParams = reactive({
   page: 1,
   pageSize: 10,
-  username: '',
+  reporterName: '',
   commentContent: '',
   status: ''
 })
@@ -60,7 +62,7 @@ const getList = async () => {
 
 // 重置查询条件
 const resetQueryParam = () => {
-  queryParams.username = '';
+  queryParams.reporterName = '';
   queryParams.commentContent = '';
   queryParams.status = '';
   queryParams.page = 1;
@@ -82,13 +84,15 @@ const pageSizeChange = (pageSize) => {
 
 // 查看评论详情
 const commentDetail = ref({});
+const currentReport = ref({}); // 新增：保存当前举报信息
 const detailDialogVisible = ref(false);
 
-const showCommentDetail = async (id) => {
+const showCommentDetail = async (row) => {
   try {
-    const res = await getCommentById(id);
+    const res = await getCommentById(row.commentId);
     if (res.code === 0) {
       commentDetail.value = res.data;
+      currentReport.value = row; // 保存举报信息
       detailDialogVisible.value = true;
     } else {
       ElMessage.error(res.msg || '获取评论详情失败');
@@ -148,6 +152,8 @@ const openHandleDialog = (report, status) => {
 // 提交处理结果
 const submitHandle = async () => {
   if (!handleFormRef.value) return;
+  // 防止重复提交
+  if (submitting.value) return;
   
   // 如果是删除评论操作，则审核原因必填
   if (handleForm.status === 1 && handleForm.reviewResult === 1) {
@@ -159,6 +165,7 @@ const submitHandle = async () => {
   await handleFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        submitting.value = true;
         const res = await handleCommentReport(handleForm);
         if (res.code === 0) {
           ElMessage.success('处理提交成功');
@@ -170,6 +177,8 @@ const submitHandle = async () => {
       } catch (err) {
         console.log('处理提交出错：', err);
         ElMessage.error('处理提交失败，请稍后重试');
+      } finally {
+        submitting.value = false;
       }
     } else {
       return false;
@@ -191,7 +200,7 @@ onMounted(() => {
     <el-card class="search-card">
       <el-form :inline="true" :model="queryParams">
         <el-form-item label="举报用户">
-          <el-input v-model="queryParams.username" placeholder="请输入举报用户名" clearable />
+          <el-input v-model="queryParams.reporterName" placeholder="请输入举报用户名" clearable />
         </el-form-item>
         <el-form-item label="评论内容">
           <el-input v-model="queryParams.commentContent" placeholder="请输入评论内容关键词" clearable />
@@ -217,7 +226,7 @@ onMounted(() => {
     <el-card class="table-card">
       <el-table :data="tableData" border stripe v-loading="loading">
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="username" label="举报用户" width="120" />
+        <el-table-column prop="reporterName" label="举报用户" width="120" />
         <el-table-column prop="commentContent" label="评论内容" show-overflow-tooltip />
         <el-table-column prop="commentUsername" label="评论作者" width="120" />
         <el-table-column prop="reportReason" label="举报原因" width="120" show-overflow-tooltip />
@@ -231,7 +240,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="250">
           <template #default="scope">
-            <el-button size="small" @click="showCommentDetail(scope.row.commentId)">查看评论</el-button>
+            <el-button size="small" @click="showCommentDetail(scope.row)">查看评论</el-button>
             <el-button 
               size="small" 
               type="success" 
@@ -276,6 +285,20 @@ onMounted(() => {
           <el-descriptions-item label="所属博客ID">{{ commentDetail.blogId }}</el-descriptions-item>
 <!--          <el-descriptions-item label="点赞数">{{ commentDetail.likeCount || 0 }}</el-descriptions-item>-->
         </el-descriptions>
+        
+        <div class="report-info-section" style="margin-top: 20px;">
+          <el-alert
+            :title="'举报原因：' + currentReport.reportReason"
+            type="error"
+            :closable="false"
+            show-icon
+          >
+            <template #default>
+              <div>举报时间：{{ currentReport.reportTime }}</div>
+              <div>举报人：{{ currentReport.reporterName }}</div>
+            </template>
+          </el-alert>
+        </div>
         
         <div class="detail-section">
           <h3>评论内容</h3>
@@ -340,8 +363,8 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="handleDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitHandle">提交</el-button>
+          <el-button @click="handleDialogVisible = false" :disabled="submitting">取消</el-button>
+          <el-button type="primary" @click="submitHandle" :loading="submitting" :disabled="submitting">提交</el-button>
         </div>
       </template>
     </el-dialog>

@@ -1,8 +1,11 @@
 <script setup>
-import { ref, reactive, onMounted, onBeforeMount } from 'vue'
+import { ref, reactive, onMounted, onBeforeMount, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
+import { useTokenStore } from '@/stores/token.js'
+import { useUserInfoStore } from '@/stores/userInfo.js'
 import * as userApi from '@/api/user.js'
+import ReportDialog from '@/components/ReportDialog.vue'
 
 // 路由对象
 const router = useRouter()
@@ -34,6 +37,34 @@ const userStats = reactive({
 // 关注状态
 const isFollowing = ref(false)
 const followLoading = ref(false)
+
+const tokenStore = useTokenStore()
+const userInfoStore = useUserInfoStore()
+const isLoggedIn = computed(() => !!tokenStore.getToken())
+const currentUserId = computed(() => userInfoStore.info?.id)
+
+// 举报相关
+const showReportDialog = ref(false)
+const reportType = ref('user')
+const reportTargetId = ref(0)
+
+const openReportDialog = () => {
+   if (!isLoggedIn.value) {
+     ElMessage.warning('请先登录')
+     // 简单的跳转登录逻辑，实际项目中可能有更复杂的鉴权弹窗
+     router.push('/login') 
+     return
+   }
+   
+   if (currentUserId.value === userForm.id) {
+     ElMessage.warning('不能举报自己')
+     return;
+   }
+   
+   reportType.value = 'user'
+   reportTargetId.value = userForm.id
+   showReportDialog.value = true
+}
 
 // 初始化
 onBeforeMount(() => {
@@ -213,8 +244,17 @@ const formatDate = (dateString) => {
               :type="isFollowing ? 'danger' : 'primary'"
               @click="toggleFollow"
               :loading="followLoading"
+              v-if="currentUserId !== userForm.id"
             >
               {{ isFollowing ? '取消关注' : '关注' }}
+            </el-button>
+            <el-button 
+              type="warning"
+              plain
+              @click="openReportDialog"
+              v-if="currentUserId !== userForm.id"
+            >
+              举报
             </el-button>
           </div>
         </div>
@@ -293,6 +333,13 @@ const formatDate = (dateString) => {
         </div>
       </div>
     </div>
+    
+    <!-- 举报弹窗 -->
+    <ReportDialog
+      v-model:visible="showReportDialog"
+      :report-type="reportType"
+      :target-id="reportTargetId"
+    />
   </div>
 </template>
 

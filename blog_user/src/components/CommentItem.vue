@@ -20,7 +20,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['reply', 'delete', 'showLogin'])
+const emit = defineEmits(['reply', 'delete', 'showLogin', 'report'])
 
 // 格式化日期
 const formatDate = (dateString) => {
@@ -102,6 +102,13 @@ const viewUserProfile = (userId) => {
             text
             @click="handleDelete"
           >删除</el-button>
+          <el-button 
+            v-if="isLoggedIn && currentUserId !== comment.userId"
+            type="warning" 
+            size="small" 
+            text
+            @click="$emit('report', comment.id)"
+          >举报</el-button>
         </div>
       </div>
     </div>
@@ -116,6 +123,7 @@ const viewUserProfile = (userId) => {
         :is-logged-in="isLoggedIn"
         @reply="$emit('reply', $event)"
         @delete="$emit('delete', $event)"
+        @report="$emit('report', $event)"
         @show-login="$emit('showLogin')"
       />
     </div>

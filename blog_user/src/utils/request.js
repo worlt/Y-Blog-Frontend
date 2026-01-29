@@ -4,10 +4,13 @@ import router from '@/router/index.js'
 import { useTokenStore } from '@/stores/token.js'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 import { createErrorHandler, ERROR_STRATEGY, handleRequestError } from "@common/utils/errorHandler.js";
-import { executeAutoLogout, isAuthError } from "@common/utils/autoLogout.js";
+import { executeAutoLogout, isAuthError, isBannedError } from "@common/utils/autoLogout.js";
 
 const baseURL = '/api';
 const instance = axios.create({ baseURL });
+
+// 防止重复触发自动登出的标志
+let isLogoutProcessing = false;
 
 // 创建一个事件总线，用于组件间通信
 export const eventBus = {
@@ -42,6 +45,9 @@ export const showLoginDialog = () => {
   // 触发自定义事件，通知需要显示登录弹窗
   window.dispatchEvent(new CustomEvent('show-auth-dialog'));
 }
+
+// 显示封禁申诉对话框事件
+// 移除 showBannedAppealDialog 函数
 
 // 创建专用的错误处理器 - 用户前端使用弹窗策略
 const errorHandler = createErrorHandler({
@@ -89,6 +95,12 @@ instance.interceptors.response.use(
     if (isAuthError(data)) {
       console.log('检测到认证过期，执行自动登出');
 
+      // 防止重复执行
+      if (isLogoutProcessing) {
+        return Promise.reject(new Error('认证过期'));
+      }
+      isLogoutProcessing = true;
+
       // 执行统一的自动登出
       executeAutoLogout({
         tokenStore: useTokenStore(),
@@ -98,6 +110,11 @@ instance.interceptors.response.use(
         reason: data.msg || '登录状态已过期'
       });
 
+      // 2秒后重置标志
+      setTimeout(() => {
+        isLogoutProcessing = false;
+      }, 2000);
+
       // 返回rejected promise，避免组件继续处理
       return Promise.reject(new Error('认证过期'));
     }
@@ -106,9 +123,59 @@ instance.interceptors.response.use(
     return data;
   },
   err => {
+    // 检查是否为封禁错误（优先于认证错误检查）
+    if (isBannedError(err.response?.data) || err.response?.status === 403) {
+      // 防止多个请求同时触发封禁处理
+      if (window._isBannedHandling) {
+        return Promise.reject(new Error('账号被封禁'));
+      }
+      window._isBannedHandling = true;
+
+      console.log('检测到账号被封禁，执行登出并显示申诉提示');
+
+      // 获取用户邮箱（如果有）
+      const userInfoStore = useUserInfoStore();
+      const userEmail = userInfoStore.info?.email || '';
+
+      // 清除用户状态
+      const tokenStore = useTokenStore();
+      tokenStore.removeToken();
+      userInfoStore.removeInfo();
+      localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+
+      // 停止消息检查
+      stopMessageChecking();
+
+      // 显示封禁提示并跳转到登录页（只显示一次）
+      ElMessage.warning(err.response?.data?.msg || '您的账号已被封禁');
+
+      // 跳转到登录页并显示申诉表单
+      router.push({
+        path: '/auth',
+        query: {
+          banned: 'true',
+          email: userEmail,
+          msg: err.response?.data?.msg || '您的账号已被封禁'
+        }
+      });
+
+      // 2秒后重置标志，允许下次处理
+      setTimeout(() => {
+        window._isBannedHandling = false;
+      }, 2000);
+
+      return Promise.reject(new Error('账号被封禁'));
+    }
+
     // 检查HTTP错误是否为认证错误
     if (isAuthError(err.response?.data) || err.response?.status === 401) {
       console.log('检测到HTTP认证错误，执行自动登出');
+
+      if (isLogoutProcessing) {
+        return Promise.reject(new Error('认证过期'));
+      }
+      isLogoutProcessing = true;
 
       executeAutoLogout({
         tokenStore: useTokenStore(),
@@ -117,6 +184,10 @@ instance.interceptors.response.use(
         showLoginDialog,
         reason: err.response?.data?.msg || '登录状态已过期'
       });
+
+      setTimeout(() => {
+        isLogoutProcessing = false;
+      }, 2000);
 
       return Promise.reject(new Error('认证过期'));
     }

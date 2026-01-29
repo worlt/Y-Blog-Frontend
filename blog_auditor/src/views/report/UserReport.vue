@@ -7,10 +7,12 @@ import {ElMessage} from "element-plus";
 const tableData = ref([]);
 const total = ref(0);
 const loading = ref(false);
+// 提交中loading状态（防止重复点击）
+const submitting = ref(false);
 const queryParams = reactive({
   page: 1,
   pageSize: 10,
-  username: '',
+  reporterName: '',
   reportedUsername: '',
   status: ''
 })
@@ -18,15 +20,15 @@ const queryParams = reactive({
 // 举报状态选项
 const reportStatus = [
   { value: 0, label: '待处理' },
-  { value: 1, label: '处理中' },
-  { value: 2, label: '已处理' }
+  { value: 1, label: '已处理' },
+  { value: 2, label: '已忽略' }
 ]
 
 // 状态标签类型映射
 const statusTypeMap = {
   0: 'info',
-  1: 'warning',
-  2: 'success'
+  1: 'success',
+  2: 'warning'
 }
 
 // 举报原因类型
@@ -61,7 +63,7 @@ const getList = async () => {
 
 // 重置查询条件
 const resetQueryParam = () => {
-  queryParams.username = '';
+  queryParams.reporterName = '';
   queryParams.reportedUsername = '';
   queryParams.status = '';
   queryParams.page = 1;
@@ -86,27 +88,41 @@ const userDetail = ref({});
 const reportDetail = ref({});
 const detailDialogVisible = ref(false);
 
-const showUserDetail = async (userId, reportId) => {
+const showUserDetail = async (reportId) => {
   try {
-    // 获取用户详情
-    const userRes = await getUserReportById(userId);
-    if (userRes.code === 0) {
-      userDetail.value = userRes.data;
-      
-      // 获取举报详情
-      const reportRes = await getUserReportById(reportId);
-      if (reportRes.code === 0) {
-        reportDetail.value = reportRes.data;
+    // 1. 获取举报详情
+    const reportRes = await getUserReportById(reportId);
+    if (reportRes.code !== 0) {
+      ElMessage.error(reportRes.msg || '获取举报详情失败');
+      return;
+    }
+    reportDetail.value = reportRes.data;
+    
+    // 2. 获取被举报用户详情
+    const userId = reportRes.data.reportedUserId;
+    if (userId) {
+      const userRes = await getUserById(userId);
+      if (userRes.code === 0) {
+        userDetail.value = userRes.data;
+        detailDialogVisible.value = true;
+      } else {
+        ElMessage.error(userRes.msg || '获取用户详情失败');
       }
-      
-      detailDialogVisible.value = true;
     } else {
-      ElMessage.error(userRes.msg || '获取用户详情失败');
+      ElMessage.error('无法获取被举报用户ID');
     }
   } catch (err) {
-    console.log('获取用户详情出错：', err);
-    ElMessage.error('获取用户详情失败，请稍后重试');
+    console.log('获取详情出错：', err);
+    ElMessage.error('获取详情失败，请稍后重试');
   }
+}
+
+// 跳转到用户主页
+const openUserHomepage = (userId) => {
+  // TODO: 这里即使是开发环境也写死 localhost:2002, 生产环境需改为实际域名
+  // 建议提取到配置文件中
+  const baseUrl = 'http://localhost:2002'; 
+  window.open(`${baseUrl}/user/${userId}`, '_blank');
 }
 
 // 处理举报对话框
@@ -116,7 +132,7 @@ const handleForm = reactive({
   reportedUserId: null,
   reviewerId: 1, // 实际应用中应从用户会话中获取
   status: null,
-  reportReason: '',
+  reviewReason: '',
   reviewResult: 0 // 0: 正常, 1: 封禁
 });
 
@@ -128,7 +144,7 @@ const reviewResultOptions = [
 
 // 表单验证规则
 const handleRules = reactive({
-  reportReason: [
+  reviewReason: [
     { required: false, message: '请输入审核原因', trigger: 'blur' }
   ]
 });
@@ -138,9 +154,11 @@ const handleFormRef = ref(null);
 // 打开处理对话框
 const openHandleDialog = (report, status) => {
   handleForm.id = report.id;
-  handleForm.reportedUserId = report.reportedUserId;
-  handleForm.status = status;
-  handleForm.reportReason = '';
+  // 注意：这里需要 ensure report 对象中有 reportedUserId
+  // pageQuery 返回的 VO 应该包含 reportedUserId
+  handleForm.reportedUserId = report.reportedUserId; 
+  handleForm.status = status; // 1: 处理, 2: 忽略
+  handleForm.reviewReason = '';
   handleForm.reviewResult = 0;
   handleDialogVisible.value = true;
 }
@@ -148,17 +166,20 @@ const openHandleDialog = (report, status) => {
 // 提交处理结果
 const submitHandle = async () => {
   if (!handleFormRef.value) return;
+  // 防止重复提交
+  if (submitting.value) return;
   
   // 如果是封禁用户操作，则审核原因必填
   if (handleForm.status === 1 && handleForm.reviewResult === 1) {
-    handleRules.reportReason[0].required = true;
+    handleRules.reviewReason[0].required = true;
   } else {
-    handleRules.reportReason[0].required = false;
+    handleRules.reviewReason[0].required = false;
   }
   
   await handleFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        submitting.value = true;
         const res = await handleUserReport(handleForm);
         if (res.code === 0) {
           ElMessage.success('处理提交成功');
@@ -170,6 +191,8 @@ const submitHandle = async () => {
       } catch (err) {
         console.log('处理提交出错：', err);
         ElMessage.error('处理提交失败，请稍后重试');
+      } finally {
+        submitting.value = false;
       }
     } else {
       return false;
@@ -191,13 +214,13 @@ onMounted(() => {
     <el-card class="search-card">
       <el-form :inline="true" :model="queryParams">
         <el-form-item label="举报用户">
-          <el-input v-model="queryParams.username" placeholder="请输入举报用户名" clearable />
+          <el-input v-model="queryParams.reporterName" placeholder="请输入举报用户名" clearable />
         </el-form-item>
         <el-form-item label="被举报用户">
           <el-input v-model="queryParams.reportedUsername" placeholder="请输入被举报用户名" clearable />
         </el-form-item>
         <el-form-item label="处理状态">
-          <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
+          <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 150px">
             <el-option 
               v-for="item in reportStatus" 
               :key="item.value" 
@@ -212,12 +235,12 @@ onMounted(() => {
         </el-form-item>
       </el-form>
     </el-card>
-    
+
     <!-- 表格区域 -->
     <el-card class="table-card">
       <el-table :data="tableData" border stripe v-loading="loading">
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="username" label="举报用户" width="120" />
+        <el-table-column prop="reporterName" label="举报用户" width="120" />
         <el-table-column prop="reportedUsername" label="被举报用户" width="120" />
         <el-table-column prop="reportReason" label="举报原因" show-overflow-tooltip />
         <el-table-column prop="reportTime" label="举报时间" width="180" />
@@ -230,7 +253,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="250">
           <template #default="scope">
-            <el-button size="small" @click="showUserDetail(scope.row.id, scope.row.id)">查看详情</el-button>
+            <el-button size="small" @click="showUserDetail(scope.row.id)">查看详情</el-button>
             <el-button 
               size="small" 
               type="success" 
@@ -263,89 +286,47 @@ onMounted(() => {
     <!-- 用户详情对话框 -->
     <el-dialog
       v-model="detailDialogVisible"
-      title="用户与举报详情"
-      width="70%"
+      title="用户详情"
+      width="600px"
       destroy-on-close
     >
       <div class="user-detail" v-if="userDetail">
-        <h3>被举报用户信息</h3>
-        <el-descriptions border>
-          <el-descriptions-item label="用户ID">{{ userDetail.id }}</el-descriptions-item>
-          <el-descriptions-item label="用户名">{{ userDetail.username }}</el-descriptions-item>
-<!--          <el-descriptions-item label="邮箱">{{ userDetail.email }}</el-descriptions-item>-->
-<!--          <el-descriptions-item label="手机">{{ userDetail.phone }}</el-descriptions-item>-->
-<!--          <el-descriptions-item label="注册时间">{{ userDetail.createTime }}</el-descriptions-item>-->
+        <div class="user-info-header" style="display: flex; align-items: center; margin-bottom: 20px;">
+          <el-avatar :size="60" :src="userDetail.avatar"></el-avatar>
+          <div style="margin-left: 20px;">
+            <div style="font-size: 18px; font-weight: bold;">{{ userDetail.username }}</div>
+            <div style="color: #999; margin-top: 5px;">ID: {{ userDetail.id }}</div>
+          </div>
+          <el-button style="margin-left: auto;" @click="openUserHomepage(userDetail.id)">访问主页</el-button>
+        </div>
+        
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="邮箱">{{ userDetail.email || '未绑定' }}</el-descriptions-item>
+          <el-descriptions-item label="注册时间">{{ userDetail.createTime }}</el-descriptions-item>
+          <el-descriptions-item label="简介">{{ userDetail.summary || '暂无简介' }}</el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="userDetail.status === 0 ? 'success' : 'danger'">
-              {{ userDetail.status === 0 ? '正常' : '禁用' }}
+              {{ userDetail.status === 0 ? '正常' : '封禁中' }}
             </el-tag>
           </el-descriptions-item>
         </el-descriptions>
         
-        <div class="detail-section" v-if="reportDetail.reportReason">
-          <h3>举报详情</h3>
-          <el-descriptions border>
-            <el-descriptions-item label="举报用户">{{ reportDetail.username }}</el-descriptions-item>
-            <el-descriptions-item label="举报时间">{{ reportDetail.reportTime }}</el-descriptions-item>
-            <el-descriptions-item label="举报状态">
-              <el-tag :type="statusTypeMap[reportDetail.status]">
-                {{ reportStatus.find(s => s.value === reportDetail.status)?.label || '未知状态' }}
-              </el-tag>
-            </el-descriptions-item>
-          </el-descriptions>
-          
-          <div class="report-reason">
-            <h4>举报原因</h4>
-            <div class="content-box">{{ reportDetail.reportReason }}</div>
-          </div>
-          
-<!--          <div class="report-review" v-if="reportDetail.reportReason">-->
-<!--            <h4>审核结果</h4>-->
-<!--            <div class="content-box">-->
-<!--              <p><strong>审核结果：</strong>{{ reportDetail.reviewResult === 0 ? '正常' : '封禁' }}</p>-->
-<!--              <p><strong>审核原因：</strong>{{ reportDetail.reportReason }}</p>-->
-<!--              <p><strong>审核时间：</strong>{{ reportDetail.reviewTime }}</p>-->
-<!--            </div>-->
-<!--          </div>-->
-        </div>
-        
-        <div class="detail-section" v-if="userDetail.bio">
-          <h3>个人简介</h3>
-          <div class="content-box">{{ userDetail.bio }}</div>
-        </div>
-        
-        <div class="user-stats" v-if="userDetail.stats">
-          <h3>用户数据统计</h3>
-          <el-row :gutter="20">
-            <el-col :span="6">
-              <div class="stat-item">
-                <div class="stat-value">{{ userDetail.stats?.blogCount || 0 }}</div>
-                <div class="stat-label">发布博客</div>
-              </div>
-            </el-col>
-            <el-col :span="6">
-              <div class="stat-item">
-                <div class="stat-value">{{ userDetail.stats?.commentCount || 0 }}</div>
-                <div class="stat-label">发表评论</div>
-              </div>
-            </el-col>
-            <el-col :span="6">
-              <div class="stat-item">
-                <div class="stat-value">{{ userDetail.stats?.followerCount || 0 }}</div>
-                <div class="stat-label">粉丝数</div>
-              </div>
-            </el-col>
-            <el-col :span="6">
-              <div class="stat-item">
-                <div class="stat-value">{{ userDetail.stats?.followingCount || 0 }}</div>
-                <div class="stat-label">关注数</div>
-              </div>
-            </el-col>
-          </el-row>
+        <div class="report-info-section" style="margin-top: 20px;">
+          <el-alert
+            :title="'举报原因：' + reportDetail.reportReason"
+            type="error"
+            :closable="false"
+            show-icon
+          >
+            <template #default>
+              <div>举报时间：{{ reportDetail.reportTime }}</div>
+              <div>举报人：{{ reportDetail.reporterName }}</div>
+            </template>
+          </el-alert>
         </div>
       </div>
     </el-dialog>
-    
+
     <!-- 处理对话框 -->
     <el-dialog
       v-model="handleDialogVisible"
@@ -379,7 +360,7 @@ onMounted(() => {
         </el-form-item>
         <el-form-item 
           label="审核原因" 
-          prop="reportReason"
+          prop="reviewReason"
           :rules="[
             { required: handleForm.status === 1 && handleForm.reviewResult === 1, 
               message: '封禁用户时，审核原因必填', 
@@ -388,7 +369,7 @@ onMounted(() => {
           ]"
         >
           <el-input
-            v-model="handleForm.reportReason"
+            v-model="handleForm.reviewReason"
             type="textarea"
             rows="4"
             :placeholder="handleForm.status === 1 && handleForm.reviewResult === 1 ? '请输入审核原因（必填）' : '请输入审核原因（选填）'"
@@ -397,8 +378,8 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="handleDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitHandle">提交</el-button>
+          <el-button @click="handleDialogVisible = false" :disabled="submitting">取消</el-button>
+          <el-button type="primary" @click="submitHandle" :loading="submitting" :disabled="submitting">提交</el-button>
         </div>
       </template>
     </el-dialog>
@@ -425,57 +406,6 @@ onMounted(() => {
 }
 
 .user-detail {
-  padding: 20px;
-}
-
-.detail-section {
-  margin-top: 20px;
-}
-
-.detail-section h3, .user-stats h3 {
-  margin-bottom: 15px;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.report-reason, .report-review {
-  margin-top: 15px;
-}
-
-.report-reason h4, .report-review h4 {
-  margin-bottom: 10px;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.content-box {
-  padding: 15px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  background-color: #f9f9f9;
-  min-height: 60px;
-  white-space: pre-wrap;
-}
-
-.user-stats {
-  margin-top: 20px;
-}
-
-.stat-item {
-  text-align: center;
-  padding: 15px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: bold;
-  color: #409eff;
-}
-
-.stat-label {
-  margin-top: 5px;
-  color: #606266;
+  padding: 10px;
 }
 </style>

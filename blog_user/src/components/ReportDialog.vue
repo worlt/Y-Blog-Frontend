@@ -1,7 +1,9 @@
 <template>
-  <div class="report-dialog-overlay" v-if="visible" @click="closeDialog">
-    <div class="report-dialog" @click.stop>
-      <div class="dialog-header">
+  <Teleport to="body">
+    <div class="report-dialog-overlay" v-if="visible" @click="closeDialog">
+      <div class="report-dialog" @click.stop>
+        <div class="dialog-header">
+
         <h3>举报内容</h3>
         <button class="close-btn" @click="closeDialog">×</button>
       </div>
@@ -12,28 +14,15 @@
           <span>{{ reportTypeText }}</span>
         </div>
         
-        <div class="report-reason">
-          <label>举报原因:</label>
-          <select v-model="reportData.reason" required>
-            <option value="">请选择举报原因</option>
-            <option value="spam">垃圾信息</option>
-            <option value="inappropriate">不当内容</option>
-            <option value="harassment">骚扰行为</option>
-            <option value="copyright">版权侵犯</option>
-            <option value="fraud">欺诈行为</option>
-            <option value="other">其他</option>
-          </select>
-        </div>
-        
         <div class="report-description">
-          <label>详细描述:</label>
+          <label>举报原因:</label>
           <textarea 
-            v-model="reportData.description" 
+            v-model="reportReason" 
             placeholder="请详细说明举报原因..."
             maxlength="500"
             rows="4"
           ></textarea>
-          <div class="char-count">{{ reportData.description.length }}/500</div>
+          <div class="char-count">{{ reportReason.length }}/500</div>
         </div>
       </div>
       
@@ -41,8 +30,9 @@
         <button class="cancel-btn" @click="closeDialog">取消</button>
         <button class="submit-btn" @click="submitReport" :disabled="!canSubmit">提交举报</button>
       </div>
+      </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script>
@@ -68,10 +58,7 @@ export default {
   },
   emits: ['update:visible', 'reported'],
   setup(props, { emit }) {
-    const reportData = ref({
-      reason: '',
-      description: ''
-    })
+    const reportReason = ref('')
 
     const reportTypeText = computed(() => {
       const typeMap = {
@@ -83,31 +70,25 @@ export default {
     })
 
     const canSubmit = computed(() => {
-      return reportData.value.reason && reportData.value.description.trim()
+      return reportReason.value.trim().length > 0
     })
 
     const closeDialog = () => {
       emit('update:visible', false)
-      // 重置表单数据
-      reportData.value = {
-        reason: '',
-        description: ''
-      }
+      reportReason.value = ''
     }
 
     const submitReport = async () => {
       if (!canSubmit.value) {
-        ElMessage.warning('请填写完整的举报信息')
+        ElMessage.warning('请填写举报原因')
         return
       }
 
       try {
         const data = {
-          reason: reportData.value.reason,
-          description: reportData.value.description
+          reportReason: reportReason.value
         }
 
-        // 根据类型设置不同的ID字段
         if (props.reportType === 'blog') {
           data.blogId = props.targetId
           await reportBlog(data)
@@ -115,7 +96,8 @@ export default {
           data.commentId = props.targetId
           await reportComment(data)
         } else if (props.reportType === 'user') {
-          data.userId = props.targetId
+          // 修正：用户举报需要传 reportedUserId
+          data.reportedUserId = props.targetId
           await reportUser(data)
         }
 
@@ -128,18 +110,14 @@ export default {
       }
     }
 
-    // 监听visible变化，重置表单
     watch(() => props.visible, (newVal) => {
       if (newVal) {
-        reportData.value = {
-          reason: '',
-          description: ''
-        }
+        reportReason.value = ''
       }
     })
 
     return {
-      reportData,
+      reportReason,
       reportTypeText,
       canSubmit,
       closeDialog,
@@ -160,7 +138,9 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
 }
 
 .report-dialog {

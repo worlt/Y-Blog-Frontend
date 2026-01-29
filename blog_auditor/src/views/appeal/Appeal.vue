@@ -7,6 +7,10 @@ import {ElMessage} from "element-plus";
 const tableData = ref([]);
 const total = ref(0);
 const loading = ref(false);
+// 提交中状态（防止重复点击）
+const submitting = ref(false);
+// 正在处理的申诉ID（防止标记处理中重复点击）
+const processingId = ref(null);
 const queryParams = reactive({
   page: 1,
   pageSize: 10,
@@ -130,7 +134,11 @@ const openHandleDialog = (appeal, status) => {
 
 // 设置为处理中
 const setInProcess = async (id) => {
+  // 防止重复点击
+  if (processingId.value === id) return;
+  
   try {
+    processingId.value = id;
     const res = await inProcess(id);
     if (res.code === 0) {
       ElMessage.success('已设置为处理中');
@@ -141,12 +149,16 @@ const setInProcess = async (id) => {
   } catch (err) {
     console.log('设置为处理中出错：', err);
     ElMessage.error('操作失败，请稍后重试');
+  } finally {
+    processingId.value = null;
   }
 }
 
 // 提交处理结果
 const submitHandle = async () => {
   if (!handleFormRef.value) return;
+  // 防止重复提交
+  if (submitting.value) return;
   
   // 如果是拒绝申诉，则处理意见必填
   if (handleForm.reviewResult === 1) {
@@ -158,6 +170,7 @@ const submitHandle = async () => {
   await handleFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        submitting.value = true;
         const res = await handleAppeal(handleForm);
         if (res.code === 0) {
           ElMessage.success('处理提交成功');
@@ -169,6 +182,8 @@ const submitHandle = async () => {
       } catch (err) {
         console.log('处理提交出错：', err);
         ElMessage.error('处理提交失败，请稍后重试');
+      } finally {
+        submitting.value = false;
       }
     } else {
       return false;
@@ -243,7 +258,8 @@ getList();
               size="small" 
               type="warning" 
               @click="setInProcess(scope.row.id)"
-              :disabled="scope.row.status !== 0">标记处理中</el-button>
+              :disabled="scope.row.status !== 0 || processingId === scope.row.id"
+              :loading="processingId === scope.row.id">标记处理中</el-button>
             <el-button 
               size="small" 
               type="success" 
@@ -359,8 +375,8 @@ getList();
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="handleDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitHandle">提交</el-button>
+          <el-button @click="handleDialogVisible = false" :disabled="submitting">取消</el-button>
+          <el-button type="primary" @click="submitHandle" :loading="submitting" :disabled="submitting">提交</el-button>
         </div>
       </template>
     </el-dialog>

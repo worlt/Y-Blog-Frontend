@@ -9,10 +9,12 @@ import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 const tableData = ref([]);
 const total = ref(0);
 const loading = ref(false);
+// 提交中loading状态（防止重复点击）
+const submitting = ref(false);
 const queryParams = reactive({
   page: 1,
   pageSize: 10,
-  username: '',
+  reporterName: '',
   blogTitle: '',
   status: ''
 })
@@ -63,7 +65,7 @@ const getList = async () => {
 
 // 重置查询条件
 const resetQueryParam = () => {
-  queryParams.username = '';
+  queryParams.reporterName = '';
   queryParams.blogTitle = '';
   queryParams.status = '';
   queryParams.page = 1;
@@ -169,10 +171,13 @@ const openHandleDialog = (report, status) => {
 // 提交处理结果
 const submitHandle = async () => {
   if (!handleFormRef.value) return;
+  // 防止重复提交
+  if (submitting.value) return;
 
   await handleFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        submitting.value = true;
         // 创建提交数据对象，只包含DTO需要的字段
         const submitData = {
           id: handleForm.id,
@@ -193,6 +198,8 @@ const submitHandle = async () => {
       } catch (err) {
         console.log('处理提交出错：', err);
         ElMessage.error('处理提交失败，请稍后重试');
+      } finally {
+        submitting.value = false;
       }
     } else {
       return false;
@@ -211,9 +218,9 @@ getList();
     <!-- 搜索区域 -->
     <el-card class="search-card">
       <el-form :inline="true" :model="queryParams">
-<!--        <el-form-item label="举报用户">-->
-<!--          <el-input v-model="queryParams.username" placeholder="请输入举报用户名" clearable />-->
-<!--        </el-form-item>-->
+        <el-form-item label="举报用户">
+          <el-input v-model="queryParams.reporterName" placeholder="请输入举报用户名" clearable />
+        </el-form-item>
 <!--        <el-form-item label="博客标题">-->
 <!--          <el-input v-model="queryParams.blogTitle" placeholder="请输入博客标题" clearable />-->
 <!--        </el-form-item>-->
@@ -238,7 +245,7 @@ getList();
     <el-card class="table-card">
       <el-table :data="tableData" border stripe v-loading="loading">
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="username" label="举报用户" width="120" />
+        <el-table-column prop="reporterName" label="举报用户" width="120" />
         <el-table-column prop="blogId" label="博客ID" show-overflow-tooltip width="100"/>
         <el-table-column prop="blogTitle" label="博客标题" show-overflow-tooltip width="300"/>
         <el-table-column prop="reportReason" label="举报原因"  show-overflow-tooltip>
@@ -300,8 +307,13 @@ getList();
         <h3 class="detail-title">{{ blogDetail.title }}</h3>
         <div class="detail-info">
           <span>作者：{{ blogDetail.username }}</span>
-          <span>创建时间：{{ blogDetail.reportTime }}</span>
-<!--          <span>阅读：{{ blogDetail.viewCount || 0 }}</span>-->
+          <span>举报时间：{{ blogDetail.reportTime }}</span>
+          <span>状态：{{ reportStatus.find(s => s.value === blogDetail.status)?.label }}</span>
+        </div>
+        <div class="report-reason-box" style="margin-bottom: 20px; padding: 15px; background-color: #fef0f0; border-radius: 4px; color: #f56c6c;">
+          <div style="font-weight: bold; margin-bottom: 5px;">举报详情：</div>
+          <div>举报人：{{ blogDetail.reporterName }} (ID: {{ blogDetail.reporterId }})</div>
+          <div>举报原因：{{ blogDetail.reportReason }}</div>
         </div>
         <div class="editor-container">
           <div style="border: 1px solid #ccc; z-index: 100">
@@ -370,8 +382,8 @@ getList();
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="handleDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitHandle">提交</el-button>
+          <el-button @click="handleDialogVisible = false" :disabled="submitting">取消</el-button>
+          <el-button type="primary" @click="submitHandle" :loading="submitting" :disabled="submitting">提交</el-button>
         </div>
       </template>
     </el-dialog>

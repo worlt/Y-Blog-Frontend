@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Icon } from '@iconify/vue'
 import AuthDialog from '@/components/AuthDialog.vue'
+import ReportDialog from '@/components/ReportDialog.vue'
 import CommentItem from '@/components/CommentItem.vue'
 import { useTokenStore } from '@/stores/token.js'
 import { useUserInfoStore } from '@/stores/userInfo.js'
@@ -65,6 +66,36 @@ const loadingRequest = ref(false)
 // 回复相关
 const replyTo = ref(null)
 const isReplyMode = ref(false)
+
+// 举报相关
+const showReportDialog = ref(false)
+const reportType = ref('blog')
+const reportTargetId = ref(0) // blogId, commentId, or userId
+
+// 打开举报弹窗
+const openReportDialog = (type, id) => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录后举报')
+    showAuthDialog.value = true
+    return
+  }
+  
+  // 不能举报自己
+  if (type === 'blog' && isAuthor.value) {
+    ElMessage.warning('不能举报自己的博客')
+    return
+  }
+  // 评论举报的自我检测在组件内或后端做，这里简单放行
+  
+  reportType.value = type
+  reportTargetId.value = id
+  showReportDialog.value = true
+}
+
+// 处理评论举报
+const handleCommentReport = (commentId) => {
+  openReportDialog('comment', commentId)
+}
 
 // 权限验证函数
 const withAuth = (callback, message = '请先登录') => {
@@ -1131,14 +1162,25 @@ const totalCommentsCount = computed(() => {
             </div>
             
             <div class="author-action" v-if="!isAuthor">
-              <el-button 
-                :type="author.followed ? 'default' : 'primary'" 
-                size="large" 
-                block
-                @click="handleFollowAuthor"
-              >
-                {{ author.followed ? '已关注' : '关注' }}
-              </el-button>
+              <div class="author-btn-group">
+                <el-button 
+                  :type="author.followed ? 'default' : 'primary'" 
+                  size="default" 
+                  class="follow-btn"
+                  @click="handleFollowAuthor"
+                >
+                  {{ author.followed ? '已关注' : '关注' }}
+                </el-button>
+                <el-button 
+                  type="info" 
+                  plain 
+                  size="default"
+                  class="report-btn"
+                  @click="openReportDialog('user', author.id)"
+                >
+                  举报
+                </el-button>
+              </div>
             </div>
           </div>
         </el-affix>
@@ -1197,14 +1239,8 @@ const totalCommentsCount = computed(() => {
                 </div>
                 
                 <!-- 非作者的关注按钮 -->
-                <div class="follow-action" v-else>
-                  <el-button 
-                    :type="author.followed ? 'default' : 'primary'" 
-                    size="small"
-                    @click="handleFollowAuthor"
-                  >
-                    {{ author.followed ? '已关注' : '+ 关注作者' }}
-                  </el-button>
+                <div class="follow-action" v-if="false">
+                  <!-- 已移除头部关注和举报按钮 -->
                 </div>
               </div>
             </div>
@@ -1282,6 +1318,11 @@ const totalCommentsCount = computed(() => {
                   <span class="action-text">{{ blog.shareCount || 0 }}</span>
                   <span class="action-label">分享</span>
                 </div>
+                
+                <div class="action-item full-width-item" @click="openReportDialog('blog', blog.id)">
+                  <Icon icon="mdi:alert-circle-outline" class="action-icon warning-icon" />
+                  <span class="action-text">举报</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1293,6 +1334,13 @@ const totalCommentsCount = computed(() => {
     <AuthDialog 
       v-model="showAuthDialog" 
       @login-success="handleLoginSuccess"
+    />
+
+    <!-- 举报弹窗 -->
+    <ReportDialog
+      v-model:visible="showReportDialog"
+      :report-type="reportType"
+      :target-id="reportTargetId"
     />
     
     <!-- 移动端浮动操作按钮 -->
@@ -1383,6 +1431,7 @@ const totalCommentsCount = computed(() => {
               :is-logged-in="isLoggedIn"
               @reply="replyComment"
               @delete="deleteComment"
+              @report="handleCommentReport"
               @show-login="showAuthDialog = true"
             />
           </div>
@@ -1419,6 +1468,29 @@ html {
 .icon.collected {
   color: #e6a23c;
 }
+
+.warning-icon {
+  color: #E6A23C;
+}
+
+.warning-icon:hover {
+  color: #F56C6C;
+}
+
+.author-btn-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.follow-btn {
+  flex: 1;
+}
+
+.report-btn {
+  padding: 8px 15px;
+}
+
 .blog-detail-page {
   width: 100%;
   padding: 0 20px;
@@ -1729,7 +1801,12 @@ html {
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
 }
 
+.full-width-item {
+  grid-column: 1 / -1;
+}
+
 .action-icon {
+
   font-size: 20px;
   margin-bottom: 3px;
   color: #666;

@@ -7,6 +7,8 @@ import { getUserPage, getUserById, addUser, updateUser, deleteUser, setUserStatu
 // 用户列表
 const userList = ref([])
 const loading = ref(false)
+// 正在变更状态的用户ID（防止重复点击）
+const statusChangingId = ref(null)
 
 // 分页参数
 const queryParams = reactive({
@@ -164,25 +166,29 @@ const handleDelete = (row) => {
 
 // 启用/禁用用户
 const handleStatusChange = async (row) => {
+  // 防止重复点击
+  if (statusChangingId.value === row.id) return
+  
   // 计算目标状态
   const targetStatus = row.status === 0 ? 1 : 0
   const statusText = targetStatus === 0 ? '启用' : '禁用'
-  const originalStatus = row.status // 保存原始状态
   
   try {
-    // 发送请求前不改变UI状态
+    // 标记正在处理
+    statusChangingId.value = row.id
     const res = await setUserStatus(row.id, targetStatus)
     if (res.code === 0) {
-      // 请求成功才改变状态
       ElMessage.success(`${statusText}成功`)
       row.status = targetStatus
     } else {
-      // 请求失败，提示错误
       ElMessage.error(res.msg || `${statusText}失败`)
     }
   } catch (error) {
     console.error(`${statusText}用户失败`, error)
     ElMessage.error(`${statusText}失败`)
+  } finally {
+    // 清除loading状态
+    statusChangingId.value = null
   }
 }
 
@@ -323,6 +329,8 @@ onMounted(() => {
               @change="(val) => handleStatusChange(scope.row)"
               active-color="#13ce66"
               inactive-color="#ff4949"
+              :loading="statusChangingId === scope.row.id"
+              :disabled="statusChangingId === scope.row.id"
             />
           </template>
         </el-table-column>

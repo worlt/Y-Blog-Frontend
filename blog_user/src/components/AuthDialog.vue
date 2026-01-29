@@ -29,6 +29,8 @@ const loginType = ref('password')
 
 // 是否显示申诉表单
 const showAppealForm = ref(false)
+// 邮箱是否只读
+const isEmailReadOnly = ref(false)
 
 // 密码登录表单数据
 const loginForm = reactive({
@@ -62,12 +64,10 @@ const resetForm = reactive({
 })
 
 // 申诉表单数据
+// 申诉表单数据
 const appealForm = reactive({
   email: '',
-  username: '',
-  reason: '',
-  contactInfo: '',
-  description: ''
+  appealReason: ''
 })
 
 // 验证规则
@@ -156,18 +156,9 @@ const appealRules = {
     {required: true, message: '请输入邮箱地址', trigger: 'blur'},
     {type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur'}
   ],
-  username: [
-    {required: true, message: '请输入用户名', trigger: 'blur'}
-  ],
-  reason: [
-    {required: true, message: '请选择申诉理由', trigger: 'change'}
-  ],
-  contactInfo: [
-    {required: true, message: '请输入联系方式', trigger: 'blur'}
-  ],
-  description: [
-    {required: true, message: '请输入详细说明', trigger: 'blur'},
-    {min: 10, message: '详细说明至少10个字符', trigger: 'blur'}
+  appealReason: [
+    {required: true, message: '请输入申诉理由', trigger: 'blur'},
+    {min: 5, message: '申诉理由至少5个字符', trigger: 'blur'}
   ]
 }
 
@@ -369,12 +360,7 @@ const handleAppeal = async () => {
       try {
         const response = await appealApi.appealSubmit({
           email: appealForm.email,
-          username: appealForm.username,
-          reason: appealForm.reason,
-          contactInfo: appealForm.contactInfo,
-          description: appealForm.description,
-          submitTime: new Date(),
-          status: 0
+          appealReason: appealForm.appealReason
         })
 
         if (response.code === 0) {
@@ -461,13 +447,14 @@ const resetForms = () => {
   activeForm.value = 'login'
   loginType.value = 'password'
   showAppealForm.value = false
+  isEmailReadOnly.value = false
 
   // 重置表单数据
   Object.assign(loginForm, {email: '', password: '', rememberMe: false})
   Object.assign(codeLoginForm, {email: '', code: '', rememberMe: false})
   Object.assign(registerForm, {email: '', username: '', password: '', confirmPassword: '', code: ''})
   Object.assign(resetForm, {email: '', code: '', password: '', confirmPassword: ''})
-  Object.assign(appealForm, {email: '', username: '', reason: '', contactInfo: '', description: ''})
+  Object.assign(appealForm, {email: '', appealReason: ''})
 
   // 清除倒计时
   if (timer.value) {
@@ -482,6 +469,27 @@ watch(dialogVisible, (newVal) => {
   if (!newVal) {
     resetForms()
   }
+})
+
+// 处理外部触发的显示申诉表单事件
+const handleShowAppealForm = (event) => {
+  showAppealForm.value = true
+  if (event && event.detail && event.detail.email) {
+    appealForm.email = event.detail.email;
+    isEmailReadOnly.value = true;
+  } else {
+    isEmailReadOnly.value = false;
+  }
+}
+
+// 组件挂载时添加事件监听
+import { onMounted, onUnmounted } from 'vue'
+onMounted(() => {
+  window.addEventListener('show-appeal-form', handleShowAppealForm)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('show-appeal-form', handleShowAppealForm)
 })
 </script>
 
@@ -702,30 +710,14 @@ watch(dialogVisible, (newVal) => {
           label-width="80px"
       >
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="appealForm.email" placeholder="请输入邮箱地址"/>
+          <el-input v-model="appealForm.email" placeholder="请输入邮箱地址" :disabled="isEmailReadOnly"/>
         </el-form-item>
 
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="appealForm.username" placeholder="请输入用户名"/>
-        </el-form-item>
-
-        <el-form-item label="申诉理由" prop="reason">
-          <el-select v-model="appealForm.reason" class="full-width" placeholder="请选择申诉理由">
-            <el-option label="账号被盗用" value="被盗用"/>
-            <el-option label="误封禁" value="误封禁"/>
-            <el-option label="其他原因" value="其他原因"/>
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="联系方式" prop="contactInfo">
-          <el-input v-model="appealForm.contactInfo" placeholder="请输入联系方式（手机号/微信等）"/>
-        </el-form-item>
-
-        <el-form-item label="详细说明" prop="description">
+        <el-form-item label="申诉理由" prop="appealReason">
           <el-input
-              v-model="appealForm.description"
+              v-model="appealForm.appealReason"
               :rows="4"
-              placeholder="请详细说明申诉原因（至少10个字符）"
+              placeholder="请详细说明申诉原因（至少5个字符）"
               type="textarea"
           />
         </el-form-item>

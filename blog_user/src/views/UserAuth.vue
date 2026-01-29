@@ -1,6 +1,6 @@
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import * as userApi from '@/api/user.js'
 import * as appealApi from '@/api/appeal.js'
 import { ElMessage, ElTabs, ElTabPane } from 'element-plus'
@@ -10,6 +10,7 @@ import SlideVerify from '@common/components/SlideVerify.vue'
 import { useSlideVerify } from '@common/composables/useSlideVerify.js'
 
 const router = useRouter()
+const route = useRoute()
 const tokenStore = useTokenStore()
 const userInfoStore = useUserInfoStore()
 
@@ -24,6 +25,8 @@ const loginType = ref('password')
 
 // 是否显示申诉表单
 const showAppealForm = ref(false)
+// 邮箱是否只读（用于封禁跳转时）
+const isEmailReadOnly = ref(false)
 
 // 密码登录表单数据
 const loginForm = reactive({
@@ -245,7 +248,14 @@ const submitPasswordLogin = async () => {
     if (response.code === 0) {
       handleLoginSuccess(response.data)
     } else {
-      ElMessage.error(response.msg || '登录失败')
+      // 检查是否为封禁错误
+      if (response.msg && response.msg.includes('封禁')) {
+        appealForm.email = loginForm.email
+        showAppealForm.value = true
+        ElMessage.warning('您的账号已被封禁，请提交申诉')
+      } else {
+        ElMessage.error(response.msg || '登录失败')
+      }
       slideVerifyRef.value?.reset()
     }
   } catch (error) {
@@ -263,7 +273,14 @@ const submitCodeLogin = async () => {
     if (response.code === 0) {
       handleLoginSuccess(response.data)
     } else {
-      ElMessage.error(response.msg || '登录失败')
+      // 检查是否为封禁错误
+      if (response.msg && response.msg.includes('封禁')) {
+        appealForm.email = codeLoginForm.email
+        showAppealForm.value = true
+        ElMessage.warning('您的账号已被封禁，请提交申诉')
+      } else {
+        ElMessage.error(response.msg || '登录失败')
+      }
       slideVerifyRef.value?.reset()
     }
   } catch (error) {
@@ -408,6 +425,24 @@ const switchForm = (formName) => {
     codeSending.value = false
   }
 }
+// 检查路由参数，处理封禁申诉跳转
+onMounted(() => {
+  if (route.query.banned === 'true') {
+    const email = route.query.email
+    const msg = route.query.msg
+    
+    if (email) {
+      appealForm.email = email
+      isEmailReadOnly.value = true
+    }
+    
+    showAppealForm.value = true
+    ElMessage.warning(msg || '您的账号已被封禁，请提交申诉')
+    
+    // 清除路由参数，避免刷新时再次触发（可选）
+    // router.replace({ path: '/auth', query: {} })
+  }
+})
 </script>
 
 <template>
@@ -649,7 +684,7 @@ const switchForm = (formName) => {
           label-width="80px"
         >
           <el-form-item label="邮箱" prop="email">
-            <el-input v-model="appealForm.email" placeholder="请输入邮箱地址" />
+            <el-input v-model="appealForm.email" placeholder="请输入邮箱地址" :disabled="isEmailReadOnly"/>
           </el-form-item>
 
           <el-form-item label="申诉理由" prop="appealReason">
