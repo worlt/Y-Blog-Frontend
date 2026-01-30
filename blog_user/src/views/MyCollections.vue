@@ -174,6 +174,49 @@ const formatDate = (dateString) => {
 const getBlogStat = (blog, field, defaultValue = 0) => {
   return blog[field] || defaultValue
 }
+
+// 检查图片是否有效
+const hasValidCover = (cover) => {
+  return cover && cover.trim() && cover !== 'null' && cover !== 'undefined';
+};
+
+// 随机渐变背景数组
+const gradients = [
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',
+  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
+  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',
+  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',
+  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
+  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+];
+
+// 获取渐变背景
+const getRandomGradient = (blogId) => {
+  const index = (blogId || 0) % gradients.length;
+  return gradients[index];
+};
+
+// 图片加载错误处理
+const handleImageError = (event) => {
+  event.target.style.display = 'none';
+  const container = event.target.closest('.article-image');
+  if (container) {
+    container.style.display = 'none';
+  }
+};
+
+// 去除HTML标签（保留文本内容）
+const stripHtml = (html) => {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
+};
 </script>
 
 <template>
@@ -222,65 +265,67 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
         </el-empty>
       </div>
       
-      <!-- 收藏博客列表 -->
-      <div v-else class="collection-list">
+      <!-- 收藏博客列表 (New Layout) -->
+      <div v-else class="article-list">
         <div 
           v-for="blog in collectionList" 
           :key="blog.id || blog.blogId"
-          class="collection-item"
+          class="article-item"
+          @click="handleView(blog)"
         >
-          <!-- 博客内容 -->
-          <div class="blog-info">
-            <h3 class="blog-title" @click="handleView(blog)">
-              {{ blog.title }}
-            </h3>
+          <div class="article-content">
+            <h3 class="article-title">{{ blog.title }}</h3>
             
-<!--            <div class="blog-summary">-->
-<!--              {{ blog.summary || blog.content?.substring(0, 150) || '暂无摘要' }}-->
-<!--            </div>-->
+            <p class="article-summary">{{ stripHtml(blog.summary || blog.content) }}</p>
             
-            <div class="blog-meta">
-              <div class="blog-author">{{ blog.username || blog.author || '未知作者' }}</div>
-              <div class="blog-category" v-if="blog.categoryName || blog.category">
+            <div class="article-info">
+              <span class="article-author">
+                <el-avatar :size="20" :src="blog.avatar">{{ (blog.username || blog.author || '未知').substring(0, 1) }}</el-avatar>
+                <span style="margin-left: 5px">{{ blog.username || blog.author || '未知作者' }}</span>
+              </span>
+
+              <span class="article-category" v-if="blog.categoryName || blog.category">
                 {{ blog.categoryName || blog.category }}
-              </div>
-              <div class="blog-date">{{ formatDate(blog.createTime || blog.publishTime) }}</div>
-              <div class="blog-stats">
-                <span class="stat-item">
-                  <Icon :icon="eyeIcon" />
-                  {{ getBlogStat(blog, 'views') || getBlogStat(blog, 'viewCount') || 0 }}
-                </span>
-                <span class="stat-item">
-                  <Icon :icon="heartIcon" />
-                  {{ getBlogStat(blog, 'likes') || getBlogStat(blog, 'likeCount') || 0 }}
-                </span>
-                <span class="stat-item">
-                  <Icon :icon="starIcon" />
-                  {{ getBlogStat(blog, 'collections') || getBlogStat(blog, 'collectionCount') || 0 }}
-                </span>
-              </div>
+              </span>
+
+              <span class="article-date">{{ formatDate(blog.createTime || blog.publishTime) }}</span>
+              
+              <span class="article-count">
+                <Icon :icon="eyeIcon" />
+                {{ getBlogStat(blog, 'views') || getBlogStat(blog, 'viewCount') || 0 }}
+              </span>
+              <span class="article-count">
+                <Icon :icon="heartIcon" />
+                {{ getBlogStat(blog, 'likes') || getBlogStat(blog, 'likeCount') || 0 }}
+              </span>
+              
+              <!-- Collection Button (Highlighted/Active) -->
+              <span 
+                class="article-count clickable active-action" 
+                @click.stop="handleCancelCollection(blog)"
+                title="取消收藏"
+              >
+                <Icon :icon="starIcon" :class="{ 'loading': cancelingCollection === (blog.id || blog.blogId), 'collected-icon': true }" />
+                {{ getBlogStat(blog, 'collections') || getBlogStat(blog, 'collectionCount') || 0 }}
+              </span>
+
               <div class="collect-time" v-if="blog.collectTime">
                 收藏于 {{ formatDate(blog.collectTime) }}
               </div>
             </div>
           </div>
           
-          <!-- 博客操作 -->
-          <div class="blog-actions">
-<!--            <el-button -->
-<!--              :icon="View" -->
-<!--              circle-->
-<!--              title="阅读"-->
-<!--              @click="handleView(blog)"-->
-<!--            />-->
-            <el-button 
-              :icon="StarFilled" 
-              type="warning" 
-              circle
-              title="取消收藏"
-              :loading="cancelingCollection === (blog.id || blog.blogId)"
-              @click="handleCancelCollection(blog)"
-            />
+          <!-- Cover Image -->
+          <div class="article-image" v-if="hasValidCover(blog.cover)">
+            <img :src="blog.cover" :alt="blog.title" @error="handleImageError">
+          </div>
+          <!-- Placeholder -->
+          <div 
+            v-else 
+            class="article-image article-placeholder"
+            :style="{ background: getRandomGradient(blog.id || blog.blogId) }"
+          >
+            <span class="placeholder-text">#{{ (blog.categoryName || blog.category || '文章').substring(0, 2) }}</span>
           </div>
         </div>
       </div>
@@ -363,115 +408,187 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
   text-align: center;
 }
 
-.collection-list {
+
+/* 新版文章列表样式 (复制自首页/Search) */
+.article-list {
   display: flex;
   flex-direction: column;
 }
 
-.collection-item {
+.article-item {
   display: flex;
-  align-items: flex-start;
   padding: 20px 0;
   border-bottom: 1px solid #f0f2f5;
+  cursor: pointer;
+  transition: all 0.3s;
+  gap: 20px;
 }
 
-.collection-item:last-child {
+.article-item:hover {
+  background-color: #f9fafc;
+}
+
+.article-item:last-child {
   border-bottom: none;
 }
 
-.blog-info {
+.article-content {
   flex: 1;
   min-width: 0;
-  padding-right: 20px;
 }
 
-.blog-title {
+.article-title {
   font-size: 18px;
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
   font-weight: 600;
-  color: #409eff;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.blog-title:hover {
-  color: #66b1ff;
-  text-decoration: underline;
-}
-
-.blog-summary {
-  font-size: 14px;
-  color: #606266;
-  margin-bottom: 12px;
-  line-height: 1.6;
+  color: #333;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
 }
 
-.blog-meta {
+.article-title:hover {
+  color: #409eff;
+}
+
+.article-summary {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 10px 0;
+  line-height: 24px;
+  height: 48px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+.article-info {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   font-size: 13px;
-  color: #909399;
+  color: #999;
+  flex-wrap: wrap;
 }
 
-.blog-author,
-.blog-category,
-.blog-date,
-.collect-time {
+.article-author {
   margin-right: 15px;
-}
-
-.blog-stats {
+  cursor: pointer;
   display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.article-author:hover {
+  color: #409eff;
+}
+
+.article-date {
   margin-right: 15px;
 }
 
-.stat-item {
+.article-count {
   margin-right: 15px;
   display: flex;
   align-items: center;
+  gap: 4px;
 }
 
-.stat-item i {
-  margin-right: 4px;
+.article-count .iconify {
+  font-size: 14px;
+  color: #999;
+  width: 14px;
+  height: 14px;
 }
 
-.collect-time {
-  color: #ff9900;
-  font-weight: 500;
+/* 激活状态的操作图标（收藏） */
+.active-action :deep(.collected-icon) {
+  color: #f56c6c !important; /* 红色星形 */
 }
 
-.blog-actions {
+.active-action:hover :deep(.collected-icon) {
+  color: #f56c6c !important; /* 保持红色 */
+  transform: scale(1.1); /* 悬停放大效果 */
+}
+
+.article-count.clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.article-count.clickable:hover {
+  color: #f56c6c; /* 悬停文字颜色 */
+}
+
+
+
+.article-image {
+  width: 180px;
+  height: 120px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.article-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.article-item:hover .article-image img {
+  transform: scale(1.05);
+}
+
+.article-placeholder {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.pagination-container {
-  margin-top: 20px;
-  display: flex;
+  align-items: center;
   justify-content: center;
 }
 
+.placeholder-text {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+.article-category {
+  background-color: #f0f0f0;
+  color: #666;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-right: 15px;
+}
+
+.collect-time {
+  color: #909399;
+  font-size: 12px;
+  margin-left: auto; /* Push to right if space permits */
+}
+
+.collected-icon.loading {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 768px) {
-  .collection-item {
+  .article-item {
     flex-direction: column;
   }
   
-  .blog-info {
-    margin-bottom: 15px;
-    padding-right: 0;
-  }
-  
-  .blog-actions {
-    flex-direction: row;
+  .article-image {
     width: 100%;
-    justify-content: flex-end;
+    height: 160px;
   }
 }
 </style> 

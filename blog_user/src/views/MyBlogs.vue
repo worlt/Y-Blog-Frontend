@@ -204,6 +204,42 @@ const getStatusType = (status) => {
     default: return 'info'
   }
 }
+
+// 检查图片是否有效
+const hasValidCover = (cover) => {
+  return cover && cover.trim() && cover !== 'null' && cover !== 'undefined';
+};
+
+// 随机渐变背景数组
+const gradients = [
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',
+  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
+  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',
+  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',
+  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
+  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+];
+
+// 获取渐变背景
+const getRandomGradient = (blogId) => {
+  const index = blogId % gradients.length;
+  return gradients[index];
+};
+
+// 图片加载错误处理
+const handleImageError = (event) => {
+  event.target.style.display = 'none';
+  const container = event.target.parentElement;
+  if (container) {
+    // 可以添加逻辑显示替代内容，或者保持隐藏
+  }
+};
 </script>
 
 <template>
@@ -278,6 +314,27 @@ const getStatusType = (status) => {
         row-key="id" 
         border
       >
+        <el-table-column label="封面" width="100" align="center">
+          <template #default="{ row }">
+            <div class="cover-image-cell">
+              <img 
+                v-if="hasValidCover(row.cover)" 
+                :src="row.cover" 
+                alt="cover" 
+                class="blog-cover-img"
+                @error="handleImageError"
+              />
+              <div 
+                v-else 
+                class="blog-cover-placeholder"
+                :style="{ background: getRandomGradient(row.id) }"
+              >
+                <span>{{ (row.categoryName || '文章').substring(0, 2) }}</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
         <el-table-column label="标题" prop="title" min-width="220">
           <template #default="{ row }">
             <div class="blog-title-cell">
@@ -465,5 +522,34 @@ const getStatusType = (status) => {
   margin-top: 20px;
   display: flex;
   justify-content: center;
+}
+
+.cover-image-cell {
+  width: 80px;
+  height: 45px;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.blog-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.blog-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 </style> 

@@ -255,6 +255,49 @@ const getBlogStat = (blog, field, defaultValue = 0) => {
   return blog && blog[field] !== undefined ? blog[field] : defaultValue
 }
 
+// 检查图片是否有效
+const hasValidCover = (cover) => {
+  return cover && cover.trim() && cover !== 'null' && cover !== 'undefined';
+};
+
+// 随机渐变背景数组
+const gradients = [
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',
+  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
+  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',
+  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',
+  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
+  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+];
+
+// 获取渐变背景
+const getRandomGradient = (blogId) => {
+  const index = blogId % gradients.length;
+  return gradients[index];
+};
+
+// 图片加载错误处理
+const handleImageError = (event) => {
+  event.target.style.display = 'none';
+  const container = event.target.closest('.article-image');
+  if (container) {
+    container.style.display = 'none';
+  }
+};
+
+// 去除HTML标签（保留文本内容）
+const stripHtml = (html) => {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
+};
+
 // 组件卸载时清理
 onUnmounted(() => {
   const scrollElement = document.querySelector('.el-main')
@@ -278,29 +321,13 @@ onUnmounted(() => {
     
     <!-- 右侧主内容区 -->
     <div class="liked-blogs-container">
-    <div class="liked-blogs-header">
-      <h2 class="page-title">我的点赞</h2>
-      
-      <!-- 排序选择器 -->
-      <!-- <div class="filter-bar">
-        <span class="sort-label">排序方式：</span>
-        <el-select 
-          v-model="currentSort" 
-          size="small" 
-          placeholder="选择排序方式"
-        >
-          <el-option
-            v-for="option in sortOptions"
-            :key="option.value"
-            :label="option.label"
-            :value="option.value"
-          />
-        </el-select>
-      </div> -->
-    </div>
-
-    <!-- 博客列表 -->
     <div class="blog-list-wrapper">
+      <div class="liked-blogs-header">
+        <h2 class="page-title">我的点赞</h2>
+      </div>
+      
+      <!-- 分割线 -->
+      <div class="header-divider"></div>
       <!-- 加载中 -->
       <div v-if="loading && likedBlogList.length === 0" class="loading-state">
         <el-skeleton :rows="5" animated />
@@ -315,78 +342,67 @@ onUnmounted(() => {
         </el-empty>
       </div>
       
-      <!-- 博客列表 -->
+      <!-- 博客列表 (New Layout) -->
       <template v-else>
-        <div class="blog-list">
+        <div class="article-list">
           <div 
             v-for="blog in likedBlogList" 
             :key="blog.id" 
-            class="blog-card"
+            class="article-item"
+            @click="viewBlog(blog)"
           >
-            <div class="blog-content" @click="viewBlog(blog)">
-              <h3 class="blog-title">{{ blog.title || '无标题博客' }}</h3>
+            <div class="article-content">
+              <h3 class="article-title">{{ blog.title || '无标题博客' }}</h3>
+              <p class="article-summary">{{ stripHtml(blog.content) }}</p>
               
-              <div class="blog-excerpt">
-                {{ blog.content ? blog.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : '暂无内容' }}
-              </div>
-              
-              <div class="blog-meta">
-                <span class="blog-author">
+              <div class="article-info">
+                <span class="article-author">
                   <el-avatar :size="20" :src="blog.avatar">{{ blog.username?.substring(0, 1) }}</el-avatar>
-                  {{ blog.username || '未知作者' }}
+                  <span style="margin-left: 5px">{{ blog.username || '未知作者' }}</span>
                 </span>
                 
-                <span v-if="blog.categoryName" class="blog-category">
-                  {{ blog.categoryName }}
-                </span>
-                
-                <span class="blog-date">
+                <span class="article-date">
                   {{ formatDate(blog.likeTime || blog.createTime) }}
                 </span>
                 
-                <div class="blog-stats">
-                  <span class="stat-item">
-                    <Icon :icon="eyeIcon" />
-                    {{ getBlogStat(blog, 'views') || 0 }}
-                  </span>
-                  <span 
-                    class="stat-item liked clickable" 
-                    @click.stop="handleCancelLike(blog)"
-                    title="取消点赞"
-                  >
-                    <Icon :icon="heartIcon" :class="{ 'loading': cancelingLike === blog.id }" />
-                    {{ getBlogStat(blog, 'likes') || 0 }}
-                  </span>
-                  <span class="stat-item">
-                    <Icon :icon="starIcon" />
-                    {{ getBlogStat(blog, 'collections') || 0 }}
-                  </span>
-                </div>
+                <span class="article-count">
+                  <Icon :icon="eyeIcon" />
+                  {{ getBlogStat(blog, 'views') || 0 }}
+                </span>
+                
+                <!-- Like Button (Highlighted/Active) -->
+                <span 
+                  class="article-count clickable active-action" 
+                  @click.stop="handleCancelLike(blog)"
+                  title="取消点赞"
+                >
+                  <Icon :icon="heartIcon" :class="{ 'loading': cancelingLike === blog.id, 'liked-icon': true }" />
+                  {{ getBlogStat(blog, 'likes') || 0 }}
+                </span>
+                
+                <span class="article-count">
+                  <Icon :icon="starIcon" />
+                  {{ getBlogStat(blog, 'collections') || 0 }}
+                </span>
+
+                <span v-if="blog.category || blog.categoryName" class="article-category">
+                  {{ blog.category || blog.categoryName }}
+                </span>
               </div>
             </div>
             
-            <!-- <div class="blog-actions">
-              <el-button
-                type="primary"
-                size="small"
-                plain
-                @click="viewBlog(blog)"
-                title="查看博客"
-              >
-                查看
-              </el-button>
-              
-              <el-button
-                type="danger"
-                size="small"
-                plain
-                @click="handleCancelLike(blog)"
-                :loading="cancelingLike === blog.id"
-                title="取消点赞"
-              >
-                取消点赞
-              </el-button>
-            </div> -->
+            <!-- Cover Image -->
+            <div class="article-image" v-if="hasValidCover(blog.cover)">
+              <img :src="blog.cover" :alt="blog.title" @error="handleImageError">
+            </div>
+            <!-- Placeholder -->
+            <div 
+              v-else 
+              class="article-image article-placeholder"
+              :style="{ background: getRandomGradient(blog.id) }"
+            >
+              <span class="placeholder-text">#{{ (blog.category || blog.categoryName || '文章').substring(0, 2) }}</span>
+            </div>
           </div>
         </div>
         
@@ -401,12 +417,9 @@ onUnmounted(() => {
             加载更多
           </el-button>
           <div v-else class="loading-more">
-            <el-icon class="is-loading"><Loading /></el-icon>
+            <el-icon class="is-loading"><loadingIcon /></el-icon>
             <span>加载中...</span>
           </div>
-        </div>
-        <div v-else class="no-more">
-          没有更多数据了
         </div>
       </template>
     </div>
@@ -454,8 +467,17 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
+.header-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e4e7ed, transparent);
+  margin: 15px 0;
+}
+
 .blog-list-wrapper {
-  min-height: 300px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
 }
 
 .loading-state, .empty-state {
@@ -463,111 +485,162 @@ onUnmounted(() => {
   text-align: center;
 }
 
-.blog-list {
+
+/* 新版文章列表样式 (复制自首页/Search) */
+.article-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
 }
 
-.blog-card {
+.article-item {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 16px;
-  border-radius: 8px;
-  background-color: #fff;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  padding: 20px 0;
+  border-bottom: 1px solid #f0f2f5;
+  cursor: pointer;
+  transition: all 0.3s;
+  gap: 20px;
 }
 
-.blog-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
+.article-item:hover {
+  background-color: #f9fafc;
 }
 
-.blog-content {
+.article-item:last-child {
+  border-bottom: none;
+}
+
+.article-content {
   flex: 1;
   min-width: 0;
-  cursor: pointer;
 }
 
-.blog-title {
-  margin: 0 0 12px;
+.article-title {
+  font-size: 18px;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.article-title:hover {
+  color: #409eff;
+}
+
+.article-summary {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 10px 0;
+  line-height: 1.6;
+  /* 多行省略 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+.article-info {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #999;
+}
+
+.article-author {
+  margin-right: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.article-author:hover {
+  color: #409eff;
+}
+
+.article-date {
+  margin-right: 15px;
+}
+
+.article-count {
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.article-count .iconify {
+  font-size: 14px;
+  color: #999;
+  width: 14px;
+  height: 14px;
+}
+
+/* 激活状态的操作图标 */
+.active-action :deep(.liked-icon) {
+  color: #f56c6c !important; /* 红色心形 - 强制覆盖 */
+}
+
+.active-action:hover :deep(.liked-icon) {
+  color: #f56c6c !important; /* 保持红色 */
+  transform: scale(1.1); /* 悬停放大效果 */
+}
+
+.article-count.clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.article-count.clickable:hover {
+  color: #f56c6c; /* 悬停文字颜色 */
+}
+
+.article-image {
+  width: 180px;
+  height: 120px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.article-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.article-item:hover .article-image img {
+  transform: scale(1.05);
+}
+
+.article-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-text {
+  color: #fff;
   font-size: 18px;
   font-weight: 600;
-  color: #303133;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
 }
 
-.blog-excerpt {
-  margin-bottom: 12px;
-  font-size: 14px;
-  color: #606266;
-  line-height: 1.6;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.blog-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  color: #909399;
-}
-
-.blog-author {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.blog-category {
+.article-category {
+  background-color: #f0f0f0;
+  color: #666;
   padding: 2px 8px;
-  background-color: #ecf5ff;
-  color: #409eff;
-  border-radius: 4px;
+  border-radius: 12px;
   font-size: 12px;
+  margin-left: 10px;
 }
 
-.blog-stats {
-  display: flex;
-  gap: 12px;
-  margin-left: auto;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.stat-item.liked {
-  color: #f56c6c;
-}
-
-/* 可点击的统计项 */
-.stat-item.clickable {
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.stat-item.clickable:hover {
-  color: #409eff;
-  transform: scale(1.1);
-}
-
-.stat-item.clickable .loading {
+.liked-icon.loading {
   animation: spin 1s linear infinite;
 }
 
@@ -576,50 +649,14 @@ onUnmounted(() => {
   to { transform: rotate(360deg); }
 }
 
-.blog-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-left: 16px;
-}
-
-.load-more {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.loading-more {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #909399;
-}
-
-.no-more {
-  text-align: center;
-  color: #909399;
-  padding: 16px 0;
-  font-size: 14px;
-}
-
-/* 响应式调整 */
 @media (max-width: 768px) {
-  .liked-blogs-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .blog-card {
+  .article-item {
     flex-direction: column;
   }
   
-  .blog-actions {
-    flex-direction: row;
-    margin-left: 0;
-    margin-top: 12px;
+  .article-image {
     width: 100%;
+    height: 160px;
   }
 }
 </style> 

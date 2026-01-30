@@ -573,13 +573,21 @@ const handleShare = async () => {
     const platforms = await blogApi.getSupportedPlatforms()
     
     if (platforms.code === 0 && platforms.data && platforms.data.length > 0) {
-      // 示例中简单使用第一个平台
-      await blogApi.shareBlog(blogId, platforms.data[0])
+      // 调用分享API（使用第一个平台作为默认）
+      const shareResult = await blogApi.shareBlog(blogId, platforms.data[0])
       
-      // 更新分享次数
-      blog.value.shareCount = (blog.value.shareCount || 0) + 1
+      // 只有在后端API成功返回后才更新本地分享计数
+      if (shareResult.code === 0) {
+        blog.value.shares = (blog.value.shares || 0) + 1
+      }
       
       // 复制当前页面链接
+      const url = window.location.href
+      navigator.clipboard.writeText(url).then(() => {
+        ElMessage.success('链接已复制，可分享给朋友')
+      })
+    } else {
+      // 平台获取失败时也尝试复制链接
       const url = window.location.href
       navigator.clipboard.writeText(url).then(() => {
         ElMessage.success('链接已复制，可分享给朋友')
@@ -588,7 +596,7 @@ const handleShare = async () => {
   } catch (error) {
     console.error('分享操作失败:', error)
     
-    // 退化方案，直接复制链接
+    // 退化方案，直接复制链接（不更新分享计数）
     const url = window.location.href
     navigator.clipboard.writeText(url).then(() => {
       ElMessage.success('链接已复制，可分享给朋友')
@@ -1315,7 +1323,7 @@ const totalCommentsCount = computed(() => {
                 
                 <div class="action-item" @click="handleShare">
                   <Icon icon="mdi:share-variant" class="action-icon" />
-                  <span class="action-text">{{ blog.shareCount || 0 }}</span>
+                  <span class="action-text">{{ blog.shares || 0 }}</span>
                   <span class="action-label">分享</span>
                 </div>
                 
