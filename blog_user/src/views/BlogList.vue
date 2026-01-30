@@ -192,7 +192,16 @@ const loadBlogList = async () => {
     
     // 添加排序
     if (currentSort.value) {
-      params.sortField = currentSort.value
+      // 映射前端排序字段到后端字段
+      if (currentSort.value === 'newest') {
+        params.sortField = 'createTime'
+        params.ignoreTop = false
+      } else {
+        params.sortField = currentSort.value
+        params.ignoreTop = true
+      }
+      // 默认降序排列
+      params.sortOrder = 'desc'
     }
     
     // 添加标签（如果需要的话，后端可能需要支持标签搜索）
@@ -311,6 +320,13 @@ const formatDate = (dateString) => {
   })
 }
 
+// 去除HTML标签
+const stripHtml = (html) => {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
+}
+
 // 获取分类名称
 const getCategoryName = (categoryId) => {
   const category = categories.value.find(item => item.id === categoryId)
@@ -334,6 +350,41 @@ watch(searchKeyword, () => {
     }
   }, 500)
 })
+// 检查图片是否有效
+const hasValidCover = (cover) => {
+  return cover && cover.trim() && cover !== 'null' && cover !== 'undefined';
+};
+
+// 随机渐变背景数组
+const gradients = [
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',
+  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
+  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',
+  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',
+  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
+  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+];
+
+// 获取渐变背景
+const getRandomGradient = (blogId) => {
+  const index = blogId % gradients.length;
+  return gradients[index];
+};
+
+// 图片加载错误处理
+const handleImageError = (event) => {
+  event.target.style.display = 'none';
+  const imageContainer = event.target.closest('.article-image');
+  if (imageContainer) {
+    imageContainer.style.display = 'none';
+  }
+};
 </script>
 
 <template>
@@ -478,89 +529,48 @@ watch(searchKeyword, () => {
         </el-empty>
       </div>
       
-      <!-- 博客网格 -->
-      <div v-else class="blog-grid">
+      <!-- 博客列表 -->
+      <div v-else class="article-list">
         <div 
           v-for="blog in blogList" 
           :key="blog.id"
-          class="blog-card"
+          class="article-item"
           @click="goBlogDetail(blog.id)"
         >
-          <!-- 博客封面 -->
-          <div class="blog-cover">
-            <img 
-              v-if="blog.cover || blog.coverImage" 
-              :src="blog.cover || blog.coverImage" 
-              :alt="blog.title"
-              @error="$event.target.style.display='none'"
-            >
-            <div v-else class="default-cover">
-              <Icon icon="mdi:file-document" />
-            </div>
-            
-            <!-- 分类标签 -->
-            <div class="category-badge" v-if="blog.categoryId || blog.category">
-              {{ blog.category || getCategoryName(blog.categoryId) }}
-            </div>
-          </div>
-
-          <!-- 博客内容 -->
-          <div class="blog-info">
-            <h3 class="blog-title">{{ blog.title }}</h3>
-            
-            <p class="blog-summary">
-              {{ blog.summary || (blog.content && blog.content.substring(0, 120)) || '暂无摘要' }}
-            </p>
-
-            <!-- 博客标签 -->
-            <div class="blog-tags" v-if="(blog.tagList && blog.tagList.length > 0) || (blog.customTagList && blog.customTagList.length > 0)">
-              <!-- 系统标签 -->
-              <el-tag 
-                v-for="tag in (blog.tagList || []).slice(0, 2)" 
-                :key="'sys-' + tag" 
-                size="small" 
-                effect="plain"
-                class="blog-tag"
-              >
-                {{ tag }}
-              </el-tag>
-              <!-- 自定义标签 -->
-              <el-tag 
-                v-for="tag in (blog.customTagList || []).slice(0, 3 - (blog.tagList || []).length)" 
-                :key="'custom-' + tag" 
-                size="small" 
-                effect="plain"
-                type="success"
-                class="blog-tag"
-              >
-                {{ tag }}
-              </el-tag>
-              <span v-if="getTotalTagCount(blog) > 3" class="more-tags">
-                +{{ getTotalTagCount(blog) - 3 }}
+          <div class="article-content">
+            <h3 class="article-title">{{ blog.title }}</h3>
+            <p class="article-summary">{{ stripHtml(blog.summary || blog.content) || '暂无摘要' }}</p>
+            <div class="article-info">
+              <span class="article-author" @click.stop="goUserProfile(blog.userId)">
+                <el-avatar :size="20" :src="blog.avatar" v-if="blog.avatar" class="author-avatar"/>
+                {{ blog.username || '匿名用户' }}
+              </span>
+              <span class="article-date">{{ formatDate(blog.publishTime || blog.createTime) }}</span>
+              <span class="article-count">
+                <Icon icon="mdi:eye" />
+                {{ blog.views || blog.viewCount || 0 }}
+              </span>
+              <span class="article-count">
+                <Icon icon="mdi:thumb-up" />
+                {{ blog.likes || blog.likeCount || 0 }}
+              </span>
+              <span class="article-category" v-if="blog.category || blog.categoryId">
+                {{ blog.category || getCategoryName(blog.categoryId) }}
               </span>
             </div>
-
-            <!-- 博客元信息 -->
-            <div class="blog-meta">
-              <div class="author-info" @click.stop="goUserProfile(blog.userId)">
-                <el-avatar :size="24" :src="blog.avatar" />
-                <span class="author-name">{{ blog.username || '匿名用户' }}</span>
           </div>
           
-              <div class="meta-stats">
-                <span class="meta-item">
-                  <Icon icon="mdi:eye" />
-                  {{ blog.views || blog.viewCount || 0 }}
-                </span>
-                <span class="meta-item">
-                  <Icon icon="mdi:thumb-up" />
-                  {{ blog.likes || blog.likeCount || 0 }}
-                </span>
-                <span class="publish-date">
-                  {{ formatDate(blog.publishTime || blog.createTime) }}
-                </span>
-              </div>
-            </div>
+          <!-- 文章配图 -->
+          <div class="article-image" v-if="hasValidCover(blog.cover || blog.coverImage)">
+            <img :src="blog.cover || blog.coverImage" :alt="blog.title" @error="handleImageError">
+          </div>
+          <!-- 无封面时显示分类标签渐变背景 -->
+          <div 
+            v-else 
+            class="article-image article-placeholder"
+            :style="{ background: getRandomGradient(blog.id) }"
+          >
+            <span class="placeholder-text">#{{ blog.category || getCategoryName(blog.categoryId) || '文章' }}</span>
           </div>
         </div>
       </div>
@@ -896,16 +906,20 @@ watch(searchKeyword, () => {
   color: #409eff;
 }
 
+
+
 .blog-summary {
   font-size: 14px;
   color: #666;
-  margin: 0 0 15px 0;
+  margin-bottom: 15px;
   line-height: 1.6;
+  height: 4.8em; /* 1.6 * 3行 */
   overflow: hidden;
-  text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  text-overflow: ellipsis;
+  word-break: break-all;
 }
 
 .blog-tags {
@@ -1199,5 +1213,150 @@ watch(searchKeyword, () => {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 10px;
+}
+/* 博客列表样式 (复用首页样式) */
+.article-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.article-item {
+  display: flex;
+  padding: 20px 0;
+  border-bottom: 1px solid #f0f2f5;
+  cursor: pointer;
+  transition: all 0.3s;
+  gap: 20px;
+}
+
+.article-item:hover {
+  background-color: #f9fafc;
+}
+
+.article-item:last-child {
+  border-bottom: none;
+}
+
+.article-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.article-title {
+  font-size: 18px;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.article-title:hover {
+  color: #409eff;
+}
+
+.article-summary {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 10px 0;
+  line-height: 1.6;
+  /* 多行省略 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+.article-info {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #999;
+}
+
+.article-author {
+  margin-right: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.article-author:hover {
+  color: #409eff;
+}
+
+.article-date {
+  margin-right: 15px;
+}
+
+.article-count {
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.article-count .iconify {
+  font-size: 14px;
+  color: #999;
+  width: 14px;
+  height: 14px;
+}
+
+.article-image {
+  width: 180px;
+  height: 120px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.article-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.article-item:hover .article-image img {
+  transform: scale(1.05);
+}
+
+.article-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-text {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+.article-category {
+  background-color: #f0f0f0;
+  color: #666;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+@media (max-width: 768px) {
+  .article-item {
+    flex-direction: column;
+  }
+  
+  .article-image {
+    width: 100%;
+    height: 160px;
+  }
 }
 </style> 

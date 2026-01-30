@@ -215,6 +215,22 @@ const canAudit = (blog) => {
   return blog.status === AUDIT_STATUS.PENDING || blog.status === AUDIT_STATUS.IN_PROCESS;
 }
 
+import { useAuditorInfoStore } from '@/stores/auditorInfo'
+
+const auditorStore = useAuditorInfoStore()
+
+// 行样式
+const tableRowClassName = ({ row }) => {
+  // 审核状态：6为处理中
+  if (row.status === 6) {
+    // 如果有审核人且不是自己，显示蒙版
+    if (row.reviewerId && row.reviewerId !== auditorStore.info.id) {
+      return 'processing-mask-row'
+    }
+  }
+  return ''
+}
+
 // 初始加载数据
 getList();
 </script>
@@ -241,7 +257,7 @@ getList();
     
     <!-- 表格区域 -->
     <el-card class="table-card">
-      <el-table :data="tableData" border stripe v-loading="loading">
+      <el-table :data="tableData" border stripe v-loading="loading" :row-class-name="tableRowClassName">
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="title" label="博客标题" show-overflow-tooltip />
         <el-table-column prop="username" label="作者" width="120" />
@@ -398,6 +414,15 @@ getList();
     </el-dialog>
   </div>
 </template>
+
+<style>
+.el-table .processing-mask-row .el-button {
+  filter: grayscale(100%);
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+</style>
 
 <style scoped>
 .blog-auditor {

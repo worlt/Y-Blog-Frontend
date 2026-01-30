@@ -87,6 +87,13 @@ const triggerResize = () => {
   }, 100);
 };
 
+// 去除HTML标签（保留文本内容）
+const stripHtml = (html) => {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
+};
+
 // 获取所有分类
 const fetchAllCategories = async () => {
   try {
@@ -125,6 +132,8 @@ const fetchBlogList = async (reset = false, isLoadMore = false) => {
     const params = {
       ...queryParams,
       page: currentPage,
+      sortField: 'createTime',
+      sortOrder: 'desc',
       ignoreTop: true  // 最新文章不按置顶优先排序
     };
 
@@ -555,7 +564,7 @@ onUnmounted(() => {
             >
               <div class="article-content">
                 <h3 class="article-title">{{ blog.title }}</h3>
-                <p class="article-summary">{{ blog.content }}</p>
+                <p class="article-summary">{{ stripHtml(blog.content) }}</p>
                 <div class="article-info">
                   <span class="article-author">{{ blog.username }}</span>
                   <span class="article-date">{{ formatDate(blog.publishTime || blog.createTime) }}</span>
@@ -1556,5 +1565,19 @@ onUnmounted(() => {
   transition: width 0.3s ease;
   background-color: white;
   position: relative;
+}
+.article-summary {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+  /* 多行省略 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* 确保长单词换行 */
+  word-break: break-all;
 }
 </style>

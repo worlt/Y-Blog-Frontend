@@ -43,6 +43,21 @@ export const searchBlogs = (params) => {
     searchParams.username = params.username;
   }
 
+  // 如果有排序字段，添加sortField参数
+  if (params.sortField) {
+    searchParams.sortField = params.sortField;
+  }
+
+  // 如果有排序方式，添加sortOrder参数
+  if (params.sortOrder) {
+    searchParams.sortOrder = params.sortOrder;
+  }
+
+  // 是否忽略置顶
+  if (params.ignoreTop !== undefined) {
+    searchParams.ignoreTop = params.ignoreTop;
+  }
+
   // 排除指定ID的博客（用于相关推荐）
   if (params.excludeId) {
     searchParams.excludeId = params.excludeId;

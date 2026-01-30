@@ -250,7 +250,14 @@ const search = async (isLoadMore = false) => {
     
     // 添加排序方式
     if (filters.sortBy) {
-      params.sortBy = filters.sortBy
+      if (filters.sortBy === 'newest') {
+        params.sortField = 'createTime'
+        params.ignoreTop = false
+      } else {
+        params.sortField = filters.sortBy
+        params.ignoreTop = true
+      }
+      params.sortOrder = 'desc'
     }
     
     const result = await blogApi.searchBlogs(params)
@@ -399,6 +406,13 @@ const formatDate = (dateString) => {
   })
 }
 
+// 去除HTML标签
+const stripHtml = (html) => {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
+}
+
 // 获取分类名称
 const getCategoryName = (categoryId) => {
   const category = categories.value.find(item => item.id === categoryId)
@@ -406,6 +420,41 @@ const getCategoryName = (categoryId) => {
 }
 
 
+// 检查图片是否有效
+const hasValidCover = (cover) => {
+  return cover && cover.trim() && cover !== 'null' && cover !== 'undefined';
+};
+
+// 随机渐变背景数组
+const gradients = [
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',
+  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
+  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',
+  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',
+  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
+  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+];
+
+// 获取渐变背景
+const getRandomGradient = (blogId) => {
+  const index = blogId % gradients.length;
+  return gradients[index];
+};
+
+// 图片加载错误处理
+const handleImageError = (event) => {
+  event.target.style.display = 'none';
+  const imageContainer = event.target.closest('.article-image');
+  if (imageContainer) {
+    imageContainer.style.display = 'none';
+  }
+};
 </script>
 
 <template>
@@ -523,76 +572,50 @@ const getCategoryName = (categoryId) => {
       </div>
       
       <!-- 博客列表 -->
-      <div v-else-if="blogList.length > 0" class="blog-list">
+      <div v-else-if="blogList.length > 0" class="article-list">
         <div 
           v-for="blog in blogList" 
           :key="blog.id"
-          class="blog-item"
+          class="article-item"
           @click="goBlogDetail(blog.id)"
         >
-          <!-- 博客内容 -->
-          <div class="blog-content">
-            <h3 class="blog-title">{{ blog.title }}</h3>
-            
-            <div class="blog-summary">
-              {{ blog.summary || (blog.content && blog.content.substring(0, 200)) || '暂无摘要' }}
-            </div>
-            
-            <div class="blog-meta">
-              <div class="blog-author" @click.stop="goUserProfile(blog.userId)">
-                <el-avatar :size="24" :src="blog.avatar" />
-                <span class="author-name">{{ blog.username || '匿名用户' }}</span>
-              </div>
-              
-              <div class="blog-date">{{ formatDate(blog.createTime) }}</div>
-              
-              <!-- 分类标签 -->
-              <el-tag 
-                v-if="blog.category"
-                size="small" 
-                effect="plain"
-                class="category-tag"
-                @click.stop="searchCategoryBlogs(blog.categoryId)"
-              >
+          <div class="article-content">
+            <h3 class="article-title">{{ blog.title }}</h3>
+            <p class="article-summary">{{ stripHtml(blog.summary || blog.content) || '暂无摘要' }}</p>
+            <div class="article-info">
+              <span class="article-author" @click.stop="goUserProfile(blog.userId || blog.publisherId)">
+                {{ blog.username || blog.publisherName || '匿名用户' }}
+              </span>
+              <span class="article-date">{{ formatDate(blog.createTime || blog.publishTime) }}</span>
+              <span class="article-count">
+                <Icon :icon="eyeIcon" />
+                {{ blog.views || 0 }}
+              </span>
+              <span class="article-count">
+                <Icon :icon="heartIcon" />
+                {{ blog.likes || 0 }}
+              </span>
+              <span class="article-count">
+                <Icon :icon="starIcon" />
+                {{ blog.collections || 0 }}
+              </span>
+              <span class="article-category" v-if="blog.category">
                 {{ blog.category }}
-              </el-tag>
-              
-              <!-- 标签列表 -->
-              <template v-if="blog.tagList && blog.tagList.length > 0">
-                <el-tag 
-                  v-for="tag in blog.tagList.slice(0, 3)" 
-                  :key="tag" 
-                  size="small" 
-                  effect="plain"
-                  class="blog-tag"
-                >
-                  {{ tag }}
-                </el-tag>
-                <span v-if="blog.tagList.length > 3" class="more-tags">
-                  +{{ blog.tagList.length - 3 }}
-                </span>
-              </template>
-              
-              <div class="blog-stats">
-                <span class="stat-item">
-                  <Icon :icon="eyeIcon" />
-                  {{ blog.views || 0 }}
-                </span>
-                <span class="stat-item">
-                  <Icon :icon="heartIcon" />
-                  {{ blog.likes || 0 }}
-                </span>
-                <span class="stat-item">
-                  <Icon :icon="starIcon" />
-                  {{ blog.collections || 0 }}
-                </span>
-              </div>
+              </span>
             </div>
           </div>
           
-          <!-- 博客封面图 -->
-          <div class="blog-cover" v-if="blog.coverImage">
-            <img :src="blog.coverImage" :alt="blog.title">
+          <!-- 文章配图 -->
+          <div class="article-image" v-if="hasValidCover(blog.cover || blog.coverImage)">
+            <img :src="blog.cover || blog.coverImage" :alt="blog.title" @error="handleImageError">
+          </div>
+          <!-- 无封面时显示分类标签渐变背景 -->
+          <div 
+            v-else 
+            class="article-image article-placeholder"
+            :style="{ background: getRandomGradient(blog.id) }"
+          >
+            <span class="placeholder-text">#{{ blog.category || '文章' }}</span>
           </div>
         </div>
       
@@ -747,356 +770,179 @@ const getCategoryName = (categoryId) => {
   color: #999;
 }
 
-/* 博客列表样式 */
-.blog-list {
-  display: grid;
-  grid-template-columns: 1fr;
+/* 博客列表样 (复用首页样式) */
+.article-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.article-item {
+  display: flex;
+  padding: 20px 0;
+  border-bottom: 1px solid #f0f2f5;
+  cursor: pointer;
+  transition: all 0.3s;
   gap: 20px;
 }
 
-.blog-item {
-  display: flex;
-  padding: 25px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #f0f2f5;
-  background-color: #fafbfc;
+.article-item:hover {
+  background-color: #f9fafc;
 }
 
-.blog-item:hover {
-  background-color: white;
-  border-color: #409eff;
-  box-shadow: 0 4px 20px rgba(64, 158, 255, 0.1);
-  transform: translateY(-2px);
+.article-item:last-child {
+  border-bottom: none;
 }
 
-.blog-content {
+.article-content {
   flex: 1;
   min-width: 0;
-  padding-right: 20px;
 }
 
-.blog-title {
-  font-size: 20px;
-  margin: 0 0 15px 0;
+
+/* 搜索列表样式 (复用首页和BlogList样式) */
+.article-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.article-item {
+  display: flex;
+  padding: 20px 0;
+  border-bottom: 1px solid #f0f2f5;
+  cursor: pointer;
+  transition: all 0.3s;
+  gap: 20px;
+}
+
+.article-item:hover {
+  background-color: #f9fafc;
+}
+
+.article-item:last-child {
+  border-bottom: none;
+}
+
+.article-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.article-title {
+  font-size: 18px;
+  margin: 0 0 10px 0;
   font-weight: 600;
   color: #333;
-  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
 }
 
-.blog-item:hover .blog-title {
+.article-title:hover {
   color: #409eff;
 }
 
-.blog-summary {
+.article-summary {
   font-size: 14px;
   color: #666;
-  margin: 0 0 15px 0;
+  margin: 0 0 10px 0;
   line-height: 1.6;
+  /* 多行省略 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+  word-break: break-all;
 }
 
-.blog-meta {
+.article-info {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 15px;
   font-size: 13px;
-}
-
-.blog-author {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.blog-author:hover {
-  color: #409eff;
-}
-
-.author-name {
-  font-weight: 500;
-}
-
-.blog-category {
-  cursor: pointer;
-}
-
-.blog-date {
   color: #999;
 }
 
-.blog-stats {
+.article-author {
+  margin-right: 15px;
+  cursor: pointer;
   display: flex;
-  gap: 15px;
-  margin-left: auto;
+  align-items: center;
+  gap: 5px;
 }
 
-.stat-item {
+.article-author:hover {
+  color: #409eff;
+}
+
+.article-date {
+  margin-right: 15px;
+}
+
+.article-count {
+  margin-right: 15px;
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #999;
-  font-size: 12px;
 }
 
-.stat-item svg {
+.article-count .iconify {
   font-size: 14px;
+  color: #999;
   width: 14px;
   height: 14px;
 }
 
-.blog-tags-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.category-tag {
-  cursor: pointer;
-  background-color: #ecf5ff;
-  border-color: #d9ecff;
-  color: #409eff;
-}
-
-.blog-tag {
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.blog-tag:hover {
-  color: #409eff;
-  border-color: #409eff;
-}
-
-.more-tags {
-  font-size: 12px;
-  color: #999;
-  background-color: #f0f2f5;
-  padding: 2px 6px;
+.article-image {
+  width: 180px;
+  height: 120px;
   border-radius: 4px;
-}
-
-.blog-cover {
-  width: 200px;
-  height: 140px;
-  border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
-  background-color: #f8f9fa;
 }
 
-.blog-cover img {
+.article-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s;
 }
 
-.blog-item:hover .blog-cover img {
+.article-item:hover .article-image img {
   transform: scale(1.05);
 }
 
-/* 分页样式 */
-.pagination-container {
-  margin-top: 40px;
+.article-placeholder {
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding-top: 30px;
-  border-top: 1px solid #f0f2f5;
 }
 
-/* 响应式设计 */
-@media (max-width: 1024px) {
-  .search-page {
-    padding: 15px;
-  }
-  
-  .page-header {
-    padding: 25px 20px;
-  }
-  
-  .page-header h2 {
-    font-size: 24px;
-  }
-  
-  .blog-cover {
-    width: 160px;
-    height: 120px;
-  }
-  
-  .filter-section {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .filter-group {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-  }
-  
-  .filter-select,
-  .filter-input {
-    width: 100%;
-    min-width: unset;
-  }
-  
-  .filter-actions {
-    margin-left: 0;
-    margin-top: 10px;
-  }
-  
-  .results-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .blog-stats {
-    margin-left: 0;
-  }
+.placeholder-text {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+.article-category {
+  background-color: #f0f0f0;
+  color: #666;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 10px;
 }
 
 @media (max-width: 768px) {
-  .page-header {
-    padding: 20px 15px;
-  }
-  
-  .page-header h2 {
-    font-size: 22px;
-  }
-  
-  .page-subtitle {
-    font-size: 14px;
-  }
-  
-  .blog-item {
+  .article-item {
     flex-direction: column;
-    padding: 20px;
   }
   
-  .blog-content {
-    padding-right: 0;
-    margin-bottom: 15px;
-  }
-  
-  .blog-cover {
+  .article-image {
     width: 100%;
-    height: 180px;
+    height: 160px;
   }
-  
-  .blog-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .blog-stats {
-    margin-left: 0;
-    align-self: stretch;
-  }
-  
-  .pagination-container {
-    margin-top: 30px;
-  }
-}
-
-@media (max-width: 480px) {
-  .search-page {
-    padding: 10px;
-  }
-  
-  .page-header {
-    padding: 15px 10px;
-  }
-  
-  .page-header h2 {
-    font-size: 20px;
-  }
-  
-  .filter-toolbar,
-  .search-results {
-    padding: 15px;
-  }
-  
-  .blog-item {
-    padding: 15px;
-  }
-  
-  .blog-title {
-    font-size: 18px;
-  }
-  
-  .blog-summary {
-    font-size: 13px;
-  }
-}
-
-/* 自定义元素样式调整 */
-:deep(.el-select) {
-  width: 100%;
-}
-
-:deep(.el-input__wrapper) {
-  transition: all 0.3s ease;
-}
-
-:deep(.el-select__wrapper) {
-  transition: all 0.3s ease;
-}
-
-:deep(.el-button) {
-  transition: all 0.3s ease;
-}
-
-:deep(.el-pagination) {
-  --el-pagination-bg-color: white;
-  --el-pagination-button-color: #666;
-}
-
-:deep(.el-pagination .btn-next),
-:deep(.el-pagination .btn-prev) {
-  background-color: white;
-  border: 1px solid #dcdfe6;
-}
-
-:deep(.el-pagination .btn-next:hover),
-:deep(.el-pagination .btn-prev:hover) {
-  color: #409eff;
-  border-color: #409eff;
-}
-
-:deep(.el-pager li) {
-  background-color: white;
-  border: 1px solid #dcdfe6;
-  margin: 0 2px;
-  border-radius: 4px;
-}
-
-:deep(.el-pager li:hover) {
-  color: #409eff;
-  border-color: #409eff;
-}
-
-:deep(.el-pager li.is-active) {
-  color: white;
-  background-color: #409eff;
-  border-color: #409eff;
 }
 
 /* 加载状态提示 */
