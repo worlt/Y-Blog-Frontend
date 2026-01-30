@@ -186,7 +186,8 @@ const statusOptions = [
   { value: 2, label: '已拒绝' },
   { value: 3, label: '整改中' },
   { value: 4, label: '已封禁' },
-  { value: 5, label: '草稿' }
+  { value: 5, label: '草稿' },
+  { value: 6, label: '处理中' }
 ];
 
 // 重置表单
@@ -466,7 +467,8 @@ const formatStatus = (row) => {
     2: '已拒绝',
     3: '整改中',
     4: '已封禁',
-    5: '草稿'
+    5: '草稿',
+    6: '处理中'
   };
   return statusMap[row.status] || '未知';
 };
@@ -480,6 +482,7 @@ const getStatusTagType = (status) => {
     3: 'info',     // 整改中：蓝色信息
     4: 'danger',   // 已封禁：红色危险
     5: '',         // 草稿：灰色默认
+    6: 'warning',  // 处理中：黄色警告
   };
   return typeMap[status] || '';
 };

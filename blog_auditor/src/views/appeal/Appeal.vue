@@ -231,7 +231,7 @@ getList();
 <!--          </el-select>-->
 <!--        </el-form-item>-->
         <el-form-item label="申诉状态">
-          <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
+          <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 120px">
             <el-option 
               v-for="item in appealStatus" 
               :key="item.value" 

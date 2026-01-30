@@ -1,8 +1,9 @@
 <script setup>
 import { useTokenStore } from '@/stores/token.js'
 import { useUserInfoStore } from '@/stores/userInfo.js'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { eventBus, startMessageChecking, stopMessageChecking } from '@/utils/request.js'
+import { initWebSocket, closeWebSocket } from '@/utils/websocket.js'
 import * as messageApi from '@/api/message.js'
 import { recordVisit } from '@/api/visit.js'
 import AiChatDialog from '@/components/AiChatDialog.vue'
@@ -29,10 +30,12 @@ onMounted(() => {
   // 记录网站访问
   recordVisit()
 
-  // 如果已登录，检查未读消息
-  if (tokenStore.token) {
+  // 如果已登录，检查未读消息和初始化WebSocket
+  if (tokenStore.token && userInfoStore.info?.id) {
     checkUnreadMessages()
     startMessageChecking()
+    // 初始化WebSocket连接
+    initWebSocket(userInfoStore.info.id)
   }
   
   // 监听登录事件
@@ -43,9 +46,10 @@ onMounted(() => {
   // window.addEventListener('show-banned-appeal-dialog', handleBannedAppeal)
 })
 
-// 组件卸载时停止消息检查
+// 组件卸载时停止消息检查和关闭WebSocket
 onUnmounted(() => {
   stopMessageChecking()
+  closeWebSocket()
   eventBus.off('user-login-success', handleUserLogin)
   // window.removeEventListener('show-banned-appeal-dialog', handleBannedAppeal)
 })
@@ -54,6 +58,10 @@ onUnmounted(() => {
 function handleUserLogin() {
   checkUnreadMessages()
   startMessageChecking()
+  // 初始化WebSocket连接
+  if (userInfoStore.info?.id) {
+    initWebSocket(userInfoStore.info.id)
+  }
 }
 
 // 检查未读消息

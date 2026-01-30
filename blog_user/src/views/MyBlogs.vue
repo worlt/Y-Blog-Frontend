@@ -19,7 +19,8 @@ const statusOptions = [
   { label: '被拒绝', value: 2 },    // 审核不通过
   { label: '整改中', value: 3 },    // 整改
   { label: '已封禁', value: 4 },    // 永久封禁
-  { label: '草稿', value: 5 }       // 草稿
+  { label: '草稿', value: 5 },      // 草稿
+  { label: '处理中', value: 6 }     // 审核员处理中
 ]
 
 // 排序选项
@@ -201,6 +202,7 @@ const getStatusType = (status) => {
     case 3: return 'warning'  // 整改中（橙色警告）
     case 4: return 'danger'   // 已封禁（红色危险）
     case 5: return 'info'     // 草稿
+    case 6: return 'warning'  // 处理中（橙色警告）
     default: return 'info'
   }
 }
@@ -329,7 +331,7 @@ const handleImageError = (event) => {
                 class="blog-cover-placeholder"
                 :style="{ background: getRandomGradient(row.id) }"
               >
-                <span>{{ (row.categoryName || '文章').substring(0, 2) }}</span>
+                <span>#{{ row.category || '文章' }}</span>
               </div>
             </div>
           </template>

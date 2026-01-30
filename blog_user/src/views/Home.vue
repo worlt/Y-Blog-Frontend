@@ -46,12 +46,20 @@ const handleUnreadCountUpdate = (count) => {
   unreadMessageCount.value = count;
 };
 
+// 处理 WebSocket 实时消息更新（收到新消息时重新获取未读数）
+const handleWsUnreadUpdate = () => {
+  loadUnreadMessageCount();
+};
+
 // 组件挂载时设置事件监听和加载未读消息数
 onMounted(() => {
   setupAuthDialogListener();
   
-  // 监听未读消息数更新事件
+  // 监听未读消息数更新事件（来自轮询）
   eventBus.on('unread-count-update', handleUnreadCountUpdate);
+  
+  // 监听 WebSocket 实时消息更新事件
+  eventBus.on('ws-unread-update', handleWsUnreadUpdate);
   
   // 如果已登录，获取未读消息数
   if (isLoggedIn.value) {
@@ -76,6 +84,8 @@ onUnmounted(() => {
   
   // 移除未读消息数更新事件监听
   eventBus.off('unread-count-update', handleUnreadCountUpdate);
+  // 移除 WebSocket 实时消息更新事件监听
+  eventBus.off('ws-unread-update', handleWsUnreadUpdate);
 });
 
 // 加载未读消息数

@@ -613,10 +613,8 @@ const formatDate = (dateString) => {
         <div class="detail-content">
           <div class="detail-row">
             <div class="detail-label">邮箱</div>
-            <div v-if="editMode" class="detail-value">
-              <el-input v-model="userForm.email" placeholder="请输入邮箱" />
-            </div>
-            <div v-else class="detail-value">{{ userForm.email || '未设置' }}</div>
+            <!-- 邮箱不可编辑，始终显示只读状态 -->
+            <div class="detail-value">{{ userForm.email || '未设置' }}</div>
           </div>
           
           <div class="detail-row">

@@ -270,7 +270,7 @@ onMounted(() => {
           <el-input v-model="queryParams.commentContent" placeholder="请输入评论内容关键词" clearable />
         </el-form-item>
         <el-form-item label="处理状态">
-          <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
+          <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 120px">
             <el-option 
               v-for="item in reportStatus" 
               :key="item.value" 
