@@ -1,6 +1,6 @@
 <script setup>
 import {reactive, ref} from "vue";
-import {blogAuditPageQuery, getBlogById, handleBlogAudit} from "@/api/blogAudit.js";
+import {blogAuditPageQuery, getBlogById, handleBlogAudit, markBlogAuditAsInProcess} from "@/api/blogAudit.js";
 import {ElMessage} from "element-plus";
 import '@wangeditor/editor/dist/css/style.css'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
@@ -63,7 +63,8 @@ const AUDIT_STATUS = {
   APPROVED: 1,
   REJECTED: 2,
   IN_REVIEW: 3,
-  PERMANENTLY_BANNED: 4
+  PERMANENTLY_BANNED: 4,
+  IN_PROCESS: 6  // 修改：处理中状态值改为6，与后端BlogStatusConstant保持一致
 }
 
 // 审核状态文本映射
@@ -72,7 +73,8 @@ const statusTextMap = {
   [AUDIT_STATUS.APPROVED]: '已通过',
   [AUDIT_STATUS.REJECTED]: '已拒绝',
   [AUDIT_STATUS.IN_REVIEW]: '需整改',
-  [AUDIT_STATUS.PERMANENTLY_BANNED]: '永久封禁'
+  [AUDIT_STATUS.PERMANENTLY_BANNED]: '永久封禁',
+  [AUDIT_STATUS.IN_PROCESS]: '处理中'
 }
 
 // 审核状态类型映射
@@ -81,7 +83,8 @@ const statusTypeMap = {
   [AUDIT_STATUS.APPROVED]: 'success',
   [AUDIT_STATUS.REJECTED]: 'danger',
   [AUDIT_STATUS.IN_REVIEW]: 'warning',
-  [AUDIT_STATUS.PERMANENTLY_BANNED]: 'danger'
+  [AUDIT_STATUS.PERMANENTLY_BANNED]: 'danger',
+  [AUDIT_STATUS.IN_PROCESS]: 'warning'
 }
 
 // 查看博客详情
@@ -189,6 +192,29 @@ const submitAudit = async () => {
   });
 }
 
+// 标记为处理中
+const markAsInProcess = async (blog) => {
+  try {
+    const res = await markBlogAuditAsInProcess(blog.id);
+    if (res.code === 0) {
+      ElMessage.success('已标记为处理中');
+      getList();
+    } else {
+      ElMessage.error(res.msg || '标记失败');
+    }
+  } catch (err) {
+    console.log('标记为处理中出错：', err);
+    ElMessage.error('标记失败，请稍后重试');
+  }
+}
+
+// 检查是否可以审核
+const canAudit = (blog) => {
+  // 允许待审核(0)和处理中(5)状态进行操作
+  // TODO: 后续需要添加处理人权限检查
+  return blog.status === AUDIT_STATUS.PENDING || blog.status === AUDIT_STATUS.IN_PROCESS;
+}
+
 // 初始加载数据
 getList();
 </script>
@@ -219,6 +245,19 @@ getList();
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="title" label="博客标题" show-overflow-tooltip />
         <el-table-column prop="username" label="作者" width="120" />
+        <el-table-column label="封面" width="100">
+          <template #default="scope">
+            <el-image 
+              v-if="scope.row.cover"
+              :src="scope.row.cover" 
+              :preview-src-list="[scope.row.cover]"
+              preview-teleported
+              fit="cover" 
+              style="width: 80px; height: 45px; border-radius: 4px; display: block;"
+            />
+            <div v-else style="color: #909399; font-size: 12px; line-height: 45px; text-align: center; background: #f5f7fa; border-radius: 4px;">无封面</div>
+          </template>
+        </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="scope">
@@ -227,30 +266,34 @@ getList();
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="380">
+        <el-table-column label="操作" width="450">
           <template #default="scope">
             <el-button size="small" @click="showBlogDetail(scope.row.id)">查看</el-button>
+            <el-button 
+              size="small"
+              v-if="scope.row.status === AUDIT_STATUS.PENDING"
+              @click="markAsInProcess(scope.row)">标记处理中</el-button>
             <el-button 
               size="small" 
               type="success" 
               @click="openAuditDialog(scope.row, AUDIT_STATUS.APPROVED)"
-              :disabled="scope.row.status !== AUDIT_STATUS.PENDING">通过</el-button>
+              :disabled="!canAudit(scope.row)">通过</el-button>
             <el-button 
               size="small" 
               type="danger" 
               @click="openAuditDialog(scope.row, AUDIT_STATUS.REJECTED)"
-              :disabled="scope.row.status !== AUDIT_STATUS.PENDING">拒绝</el-button>
+              :disabled="!canAudit(scope.row)">拒绝</el-button>
             <el-button 
               size="small" 
               type="warning" 
               @click="openAuditDialog(scope.row, AUDIT_STATUS.IN_REVIEW)"
-              :disabled="scope.row.status !== AUDIT_STATUS.PENDING">整改</el-button>
+              :disabled="!canAudit(scope.row)">整改</el-button>
             <el-button 
               size="small" 
               type="danger" 
               plain
               @click="openAuditDialog(scope.row, AUDIT_STATUS.PERMANENTLY_BANNED)"
-              :disabled="scope.row.status !== AUDIT_STATUS.PENDING">永久封禁</el-button>
+              :disabled="!canAudit(scope.row)">永久封禁</el-button>
           </template>
         </el-table-column>
       </el-table>

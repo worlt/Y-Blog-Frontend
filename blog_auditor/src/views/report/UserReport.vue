@@ -1,6 +1,6 @@
 <script setup>
 import {onMounted, reactive, ref} from "vue";
-import {userReportPageQuery, getUserReportById, getUserById, handleUserReport} from "@/api/userReport.js";
+import {userReportPageQuery, getUserReportById, getUserById, handleUserReport, markUserReportAsInProcess} from "@/api/userReport.js";
 import {ElMessage} from "element-plus";
 
 // 分页数据
@@ -20,15 +20,27 @@ const queryParams = reactive({
 // 举报状态选项
 const reportStatus = [
   { value: 0, label: '待处理' },
-  { value: 1, label: '已处理' },
-  { value: 2, label: '已忽略' }
+  { value: 1, label: '处理中' },
+  { value: 2, label: '已处理' },
+  { value: 3, label: '已忽略' }
 ]
+
+// 用户状态映射
+const getUserStatusLabel = (status) => {
+  return status === 0 ? '正常' : '已封禁'
+}
+
+// 获取用户状态对应的标签类型
+const getUserStatusType = (status) => {
+  return status === 0 ? 'success' : 'danger' // 0正常-绿，1封禁-红
+}
 
 // 状态标签类型映射
 const statusTypeMap = {
   0: 'info',
-  1: 'success',
-  2: 'warning'
+  1: 'primary',
+  2: 'success',
+  3: 'info'
 }
 
 // 举报原因类型
@@ -142,6 +154,12 @@ const reviewResultOptions = [
   { value: 1, label: '封禁用户' }
 ]
 
+// 获取审核结果标签
+const getReviewResultLabel = (value) => {
+  const option = reviewResultOptions.find(item => item.value === value)
+  return option ? option.label : '未知'
+}
+
 // 表单验证规则
 const handleRules = reactive({
   reviewReason: [
@@ -170,7 +188,7 @@ const submitHandle = async () => {
   if (submitting.value) return;
   
   // 如果是封禁用户操作，则审核原因必填
-  if (handleForm.status === 1 && handleForm.reviewResult === 1) {
+  if (handleForm.status === 2 && handleForm.reviewResult === 1) {
     handleRules.reviewReason[0].required = true;
   } else {
     handleRules.reviewReason[0].required = false;
@@ -198,6 +216,29 @@ const submitHandle = async () => {
       return false;
     }
   });
+}
+
+// 标记为处理中
+const markAsInProcess = async (row) => {
+  try {
+    const res = await markUserReportAsInProcess(row.id);
+    if (res.code === 0) {
+      ElMessage.success('已标记为处理中');
+      getList();
+    } else {
+      ElMessage.error(res.msg || '标记失败');
+    }
+  } catch (err) {
+    console.log('标记为处理中出错：', err);
+    ElMessage.error('标记失败，请稍后重试');
+  }
+}
+
+// 检查是否可以处理
+const canHandle = (row) => {
+  // 允许待处理(0)和处理中(1)状态进行操作
+  // TODO: 后续需要添加处理人权限检查
+  return row.status === 0 || row.status === 1;
 }
 
 // 初始加载数据
@@ -244,26 +285,37 @@ onMounted(() => {
         <el-table-column prop="reportedUsername" label="被举报用户" width="120" />
         <el-table-column prop="reportReason" label="举报原因" show-overflow-tooltip />
         <el-table-column prop="reportTime" label="举报时间" width="180" />
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="status" label="状态" width="120">
           <template #default="scope">
-            <el-tag :type="statusTypeMap[scope.row.status]">
-              {{ reportStatus.find(s => s.value === scope.row.status)?.label || '未知状态' }}
+            <el-tag :type="(scope.row.status === 0 || scope.row.status === 1) ? statusTypeMap[scope.row.status] : getUserStatusType(scope.row.reportedUserStatus)">
+              <!-- 如果举报状态是待处理(0)或处理中(1)，显示举报状态 -->
+              <template v-if="scope.row.status === 0 || scope.row.status === 1">
+                {{ reportStatus.find(s => s.value === scope.row.status)?.label || '未知状态' }}
+              </template>
+              <!-- 否则显示用户的实际状态 -->
+              <template v-else>
+                {{ getUserStatusLabel(scope.row.reportedUserStatus) }}
+              </template>
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="250">
+        <el-table-column label="操作" width="320">
           <template #default="scope">
             <el-button size="small" @click="showUserDetail(scope.row.id)">查看详情</el-button>
             <el-button 
+              size="small"
+              v-if="scope.row.status === 0"
+              @click="markAsInProcess(scope.row)">标记处理中</el-button>
+            <el-button 
               size="small" 
               type="success" 
-              @click="openHandleDialog(scope.row, 1)"
-              :disabled="scope.row.status !== 0">处理</el-button>
+              @click="openHandleDialog(scope.row, 2)"
+              :disabled="!canHandle(scope.row)">处理</el-button>
             <el-button 
               size="small" 
               type="warning" 
-              @click="openHandleDialog(scope.row, 2)"
-              :disabled="scope.row.status !== 0">忽略</el-button>
+              @click="openHandleDialog(scope.row, 3)"
+              :disabled="!canHandle(scope.row)">忽略</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -324,13 +376,26 @@ onMounted(() => {
             </template>
           </el-alert>
         </div>
+        
+        <!-- 审核信息显示（如果已被审核） -->
+        <div v-if="reportDetail.reviewReason || (reportDetail.status !== null && reportDetail.status !== 0)" 
+             style="margin-top: 20px; padding: 15px; background-color: #e6f7ff; border-radius: 4px; border-left: 4px solid #1890ff;">
+          <div style="font-weight: bold; margin-bottom: 10px; color: #1890ff;">审核信息：</div>
+          <div v-if="reportDetail.reviewReason">
+            <div style="margin-bottom: 5px;">审核结果：{{ getReviewResultLabel(reportDetail.reviewResult) }}</div>
+            <div style="margin-bottom: 5px;">审核原因：{{ reportDetail.reviewReason }}</div>
+            <div v-if="reportDetail.reviewerName" style="margin-bottom: 5px;">审核员：{{ reportDetail.reviewerName }}</div>
+            <div v-if="reportDetail.reviewTime">审核时间：{{ reportDetail.reviewTime }}</div>
+          </div>
+          <div v-else style="color: #999;">暂无审核原因记录</div>
+        </div>
       </div>
     </el-dialog>
 
     <!-- 处理对话框 -->
     <el-dialog
       v-model="handleDialogVisible"
-      :title="handleForm.status === 1 ? '处理举报' : '忽略举报'"
+      :title="handleForm.status === 2 ? '处理举报' : '忽略举报'"
       width="500px"
       destroy-on-close
     >
@@ -344,11 +409,11 @@ onMounted(() => {
           <span>{{ handleForm.reportedUserId }}</span>
         </el-form-item>
         <el-form-item label="处理结果">
-          <el-tag :type="handleForm.status === 1 ? 'success' : 'warning'">
-            {{ handleForm.status === 1 ? '处理' : '忽略' }}
+          <el-tag :type="handleForm.status === 2 ? 'success' : 'warning'">
+            {{ handleForm.status === 2 ? '处理' : '忽略' }}
           </el-tag>
         </el-form-item>
-        <el-form-item label="审核结果" v-if="handleForm.status === 1">
+        <el-form-item label="审核结果" v-if="handleForm.status === 2">
           <el-select v-model="handleForm.reviewResult">
             <el-option 
               v-for="item in reviewResultOptions" 
@@ -362,7 +427,7 @@ onMounted(() => {
           label="审核原因" 
           prop="reviewReason"
           :rules="[
-            { required: handleForm.status === 1 && handleForm.reviewResult === 1, 
+            { required: handleForm.status === 2 && handleForm.reviewResult === 1, 
               message: '封禁用户时，审核原因必填', 
               trigger: 'blur' 
             }
@@ -372,7 +437,7 @@ onMounted(() => {
             v-model="handleForm.reviewReason"
             type="textarea"
             rows="4"
-            :placeholder="handleForm.status === 1 && handleForm.reviewResult === 1 ? '请输入审核原因（必填）' : '请输入审核原因（选填）'"
+            :placeholder="handleForm.status === 2 && handleForm.reviewResult === 1 ? '请输入审核原因（必填）' : '请输入审核原因（选填）'"
           ></el-input>
         </el-form-item>
       </el-form>

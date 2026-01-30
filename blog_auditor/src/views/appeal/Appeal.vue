@@ -37,7 +37,7 @@ const appealStatus = [
 // 状态标签类型映射
 const statusTypeMap = {
   0: 'info',
-  1: 'warning',
+  1: 'primary',
   2: 'success',
   3: 'danger'
 }
@@ -205,16 +205,16 @@ getList();
         <el-form-item label="用户名">
           <el-input v-model="queryParams.username" placeholder="请输入用户名" clearable />
         </el-form-item>
-        <el-form-item label="申诉类型">
-          <el-select v-model="queryParams.type" placeholder="请选择类型" clearable>
-            <el-option 
-              v-for="item in appealTypes" 
-              :key="item.value" 
-              :label="item.label" 
-              :value="item.value" 
-            />
-          </el-select>
-        </el-form-item>
+<!--        <el-form-item label="申诉类型">-->
+<!--          <el-select v-model="queryParams.type" placeholder="请选择类型" clearable>-->
+<!--            <el-option -->
+<!--              v-for="item in appealTypes" -->
+<!--              :key="item.value" -->
+<!--              :label="item.label" -->
+<!--              :value="item.value" -->
+<!--            />-->
+<!--          </el-select>-->
+<!--        </el-form-item>-->
         <el-form-item label="申诉状态">
           <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
             <el-option 
@@ -322,13 +322,15 @@ getList();
 <!--          <h3>申诉证据</h3>-->
 <!--          <div class="content-box">{{ appealDetail.evidence }}</div>-->
 <!--        </div>-->
-        
-        <div class="detail-section" v-if="appealDetail.reviewReason">
-          <h3>处理结果</h3>
-          <div class="content-box">
-            <p><strong>处理结果：</strong>{{ appealDetail.reviewResult === 0 ? '通过' : '拒绝' }}</p>
-            <p><strong>处理意见：</strong>{{ appealDetail.reviewReason }}</p>
-            <p v-if="appealDetail.reviewTime"><strong>处理时间：</strong>{{ appealDetail.reviewTime }}</p>
+
+        <!-- 处理结果 - 改为蓝色样式 -->
+        <div v-if="appealDetail.reviewResult !== null" 
+             style="padding: 15px; background-color: #e6f7ff; border-radius: 4px; border-left: 4px solid #1890ff;">
+          <h3 style="margin-bottom: 10px; color: #1890ff;">处理结果</h3>
+          <div>
+            <p style="margin-bottom: 5px;"><strong>处理结果：</strong>{{ appealDetail.reviewResult === 0 ? '通过' : '拒绝' }}</p>
+            <p style="margin-bottom: 5px;"><strong>处理原因：</strong>{{ appealDetail.reviewReason || '无' }}</p>
+            <p><strong>处理时间：</strong>{{ appealDetail.reviewTime }}</p>
           </div>
         </div>
       </div>

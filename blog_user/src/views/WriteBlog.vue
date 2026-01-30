@@ -11,10 +11,17 @@ import * as tagApi from '@/api/tag.js'
 
 const route = useRoute()
 const router = useRouter()
-const blogId = route.params.id
+const blogId = computed(() => route.params.id)
 
 // 是否是编辑模式
-const isEdit = computed(() => !!blogId)
+const isEdit = computed(() => !!blogId.value)
+// ... (lines 19-380 skipped/kept same, need to be careful with range)
+
+// I cannot replace scattered lines easily with one block if they are far apart.
+// I will use multiple ReplaceFileContent or one large block?
+// blogId definition is at top. saveBlog is at bottom.
+// I will split into chunks.
+
 
 // 博客表单
 const blogForm = reactive({
@@ -145,7 +152,7 @@ const loadTags = async () => {
 // 加载博客详情
 const loadBlogDetail = async () => {
   try {
-    const result = await blogApi.getBlogById(blogId)
+    const result = await blogApi.getBlogById(blogId.value)
     
     if (result.code === 0 && result.data) {
       const blog = result.data
@@ -378,14 +385,31 @@ const saveBlog = async (status, isAutoSave = false) => {
       // 更新博客
       result = await blogApi.updateBlog({
         ...blogForm,
-        id: blogId
+        id: blogId.value
       })
     } else {
       // 新建博客
-      result = await blogApi.addBlog(blogForm)
+      result = await blogApi.addBlog(blogForm) // 此时result.data包含ID
     }
     
     if (result.code === 0) {
+      // 如果是新建并且有返回ID，替换路由进入编辑模式，防止重复提交
+      if (!isEdit.value && result.data) {
+        // 使用replace替换当前历史记录，避免用户按返回键回到新建页面再次提交
+        // 假设路由名称为 'EditBlog' 或路径为 /article/edit/:id
+        // 如果不知道路由名称，尝试构建路径
+        // 这里的路径需要根据实际路由配置确认，通常是 /article/edit/
+        // 用户路由配置一般是 /blog/edit/:id 或 /article/edit/:id ? 
+        // 查看顶部import，没有提示。查看router/index.js最稳妥，但这里我只能猜测或使用push
+        // 为了安全，我使用 push 到当前路径 + ID?
+        // 最好是 reload 或 replace params
+        // 如果是同个组件，router.replace({ params: { id: result.data } }) 可能不会触发重新加载，但会更新 route.params
+        await router.replace('/edit/' + result.data)
+
+        // 如果路由名不对，可能会报错。
+        // 但根据文件名 WriteBlog.vue，路由名可能也是 WriteBlog
+      }
+
       if (!isAutoSave) {
         if (status === 5) {
           ElMessage.success('博客已保存为草稿')

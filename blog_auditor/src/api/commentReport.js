@@ -3,7 +3,7 @@ import request from "@/utils/request.js";
 const URL = '/auditor/commentReport'
 
 export const commentReportPageQuery = (params) => {
-    return request.get(URL + '/page', {params})
+    return request.get(URL + '/page', { params })
 }
 
 export const getCommentReportById = (id) => {
@@ -19,3 +19,7 @@ export const handleCommentReport = (data) => {
     return request.put(URL + '/handle', data)
 }
 
+// 标记为处理中
+export const markCommentReportAsInProcess = (id) => {
+    return request.put(URL + `/inProcess/${id}`)
+}

@@ -1,6 +1,6 @@
 <script setup>
 import {reactive, ref} from "vue";
-import {blogReportPageQuery, getBlogById, handleBlogReport} from "@/api/blogReport.js";
+import {blogReportPageQuery, getBlogById, handleBlogReport, markBlogReportAsInProcess} from "@/api/blogReport.js";
 import {ElMessage} from "element-plus";
 import '@wangeditor/editor/dist/css/style.css'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
@@ -22,16 +22,51 @@ const queryParams = reactive({
 // 举报状态选项
 const reportStatus = [
   { value: 0, label: '待处理' },
-  { value: 1, label: '已处理' },
-  { value: 2, label: '已忽略' }
+  { value: 1, label: '处理中' },
+  { value: 2, label: '已处理' },
+  { value: 3, label: '已忽略' }
 ]
+
+// 博客状态映射
+const blogStatusOptions = [
+  { value: 0, label: '待审核' },
+  { value: 1, label: '已批准' },
+  { value: 2, label: '已拒绝' },
+  { value: 3, label: '整改中' },
+  { value: 4, label: '永久封禁' },
+  { value: 5, label: '草稿' },
+  { value: 6, label: '处理中' }
+]
+
+// 获取博客状态标签
+const getBlogStatusLabel = (status) => {
+  const option = blogStatusOptions.find(item => item.value === status)
+  return option ? option.label : '未知'
+}
 
 // 状态标签类型映射
 const statusTypeMap = {
   0: 'info',
-  1: 'success',
-  2: 'warning'
+  1: 'primary',
+  2: 'success',
+  3: 'info'
 }
+
+// 获取博客状态对应的标签类型
+const getBlogStatusType = (status) => {
+  switch (status) {
+    case 1: // 已批准
+      return 'success'
+    case 3: // 整改中
+      return 'warning'
+    case 2: // 已拒绝
+    case 4: // 永久封禁
+      return 'danger'
+    default:
+      return 'info'
+  }
+}
+
 
 // 举报原因类型
 const reportReasonTypes = [
@@ -138,7 +173,13 @@ const handleForm = reactive({
   reviewerId: null, // 实际应用中应从用户会话中获取
   status: null,
   reviewResult: 0, // 0-正常、1-整改、2-永久封禁
-  reviewReason: '' // 审核原因
+  reviewReason: '', // 审核原因
+  // 历史审核信息
+  existingReviewResult: null,
+  existingReviewReason: '',
+  reviewerName: '',
+  reviewTime: '',
+  reportStatus: null // 用于判断举报原始状态
 });
 
 // 审核结果选项
@@ -147,6 +188,12 @@ const reviewResultOptions = [
   { value: 1, label: '整改' },
   { value: 2, label: '永久封禁' }
 ]
+
+// 获取审核结果标签
+const getReviewResultLabel = (value) => {
+  const option = reviewResultOptions.find(item => item.value === value)
+  return option ? option.label : '未知'
+}
 
 // 表单验证规则
 const handleRules = reactive({
@@ -157,6 +204,19 @@ const handleRules = reactive({
 
 const handleFormRef = ref(null);
 
+// 处理审核结果变化
+const handleResultChange = (val) => {
+  if (val === 0) {
+    handleRules.reviewReason[0].required = false;
+     // 清除可能的校验错误
+     if (handleFormRef.value) {
+        handleFormRef.value.clearValidate('reviewReason');
+     }
+  } else {
+    handleRules.reviewReason[0].required = true;
+  }
+}
+
 // 打开处理对话框
 const openHandleDialog = (report, status) => {
   handleForm.id = report.id;
@@ -165,6 +225,16 @@ const openHandleDialog = (report, status) => {
   handleForm.status = status;
   handleForm.reviewResult = 0;
   handleForm.reviewReason = '';
+  // 填充历史审核信息
+  handleForm.existingReviewResult = report.reviewResult || null;
+  handleForm.existingReviewReason = report.reviewReason || '';
+  handleForm.reviewerName = report.reviewerName || '';
+  handleForm.reviewTime = report.reviewTime || '';
+  handleForm.reportStatus = report.status; // 记录原始举报状态
+  
+  // 初始化校验规则
+  handleResultChange(0);
+  
   handleDialogVisible.value = true;
 }
 
@@ -173,6 +243,20 @@ const submitHandle = async () => {
   if (!handleFormRef.value) return;
   // 防止重复提交
   if (submitting.value) return;
+
+  // 根据审核结果动态设置审核原因校验规则
+  if (handleForm.reviewResult === 0) { // 0-正常
+     handleRules.reviewReason[0].required = false;
+     // 清除可能的校验错误
+     if (handleFormRef.value) {
+        handleFormRef.value.clearValidate('reviewReason');
+     }
+  } else {
+     handleRules.reviewReason[0].required = true;
+  }
+  
+  // 强制触发响应式更新 (虽然reactive应该自动更新，但为了保险)
+  handleRules.reviewReason = [...handleRules.reviewReason];
 
   await handleFormRef.value.validate(async (valid) => {
     if (valid) {
@@ -205,6 +289,29 @@ const submitHandle = async () => {
       return false;
     }
   });
+}
+
+// 标记为处理中
+const markAsInProcess = async (row) => {
+  try {
+    const res = await markBlogReportAsInProcess(row.id);
+    if (res.code === 0) {
+      ElMessage.success('已标记为处理中');
+      getList(); // 刷新列表
+    } else {
+      ElMessage.error(res.msg || '标记失败');
+    }
+  } catch (err) {
+    console.log('标记为处理中出错：', err);
+    ElMessage.error('标记失败，请稍后重试');
+  }
+}
+
+// 检查是否可以处理
+const canHandle = (row) => {
+  // 允许待处理(0)和处理中(1)状态进行操作
+  // TODO: 后续需要添加处理人权限检查，确保只有标记处理中的审核员才能继续操作
+  return row.status === 0 || row.status === 1;
 }
 
 // 初始加载数据
@@ -248,32 +355,56 @@ getList();
         <el-table-column prop="reporterName" label="举报用户" width="120" />
         <el-table-column prop="blogId" label="博客ID" show-overflow-tooltip width="100"/>
         <el-table-column prop="blogTitle" label="博客标题" show-overflow-tooltip width="300"/>
+        <el-table-column label="封面" width="100">
+          <template #default="scope">
+            <el-image 
+              v-if="scope.row.blogCover"
+              :src="scope.row.blogCover" 
+              :preview-src-list="[scope.row.blogCover]"
+              preview-teleported
+              fit="cover" 
+              style="width: 80px; height: 45px; border-radius: 4px; display: block;"
+            />
+            <div v-else style="color: #909399; font-size: 12px; line-height: 45px; text-align: center; background: #f5f7fa; border-radius: 4px;">无封面</div>
+          </template>
+        </el-table-column>
         <el-table-column prop="reportReason" label="举报原因"  show-overflow-tooltip>
 <!--          <template #default="scope">-->
 <!--            {{ reportReasonTypes.find(t => t.value === scope.row.reason)?.label || scope.row.reason }}-->
 <!--          </template>-->
         </el-table-column>
         <el-table-column prop="reportTime" label="举报时间" width="180" />
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="status" label="状态" width="120">
           <template #default="scope">
-            <el-tag :type="statusTypeMap[scope.row.status]">
-              {{ reportStatus.find(s => s.value === scope.row.status)?.label || '未知状态' }}
+            <el-tag :type="(scope.row.status === 0 || scope.row.status === 1) ? statusTypeMap[scope.row.status] : getBlogStatusType(scope.row.blogStatus)">
+              <!-- 如果举报状态是待处理(0)或处理中(1)，显示举报状态 -->
+              <template v-if="scope.row.status === 0 || scope.row.status === 1">
+                {{ reportStatus.find(s => s.value === scope.row.status)?.label || '未知状态' }}
+              </template>
+              <!-- 否则显示博客的实际状态 -->
+              <template v-else>
+                {{ getBlogStatusLabel(scope.row.blogStatus) }}
+              </template>
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="250">
+        <el-table-column label="操作" width="320">
           <template #default="scope">
             <el-button size="small" @click="showBlogDetail(scope.row.id)">查看博客</el-button>
             <el-button
               size="small"
+              v-if="scope.row.status === 0"
+              @click="markAsInProcess(scope.row)">标记处理中</el-button>
+            <el-button
+              size="small"
               type="success"
-              @click="openHandleDialog(scope.row, 1)"
-              :disabled="scope.row.status !== 0">处理</el-button>
+              @click="openHandleDialog(scope.row, 2)"
+              :disabled="!canHandle(scope.row)">处理</el-button>
             <el-button
               size="small"
               type="warning"
-              @click="openHandleDialog(scope.row, 2)"
-              :disabled="scope.row.status !== 0">忽略</el-button>
+              @click="openHandleDialog(scope.row, 3)"
+              :disabled="!canHandle(scope.row)">忽略</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -306,7 +437,7 @@ getList();
       <div class="blog-detail" v-if="blogDetail">
         <h3 class="detail-title">{{ blogDetail.title }}</h3>
         <div class="detail-info">
-          <span>作者：{{ blogDetail.username }}</span>
+<!--          <span>作者：{{ blogDetail.username || '未知' }}</span>-->
           <span>举报时间：{{ blogDetail.reportTime }}</span>
           <span>状态：{{ reportStatus.find(s => s.value === blogDetail.status)?.label }}</span>
         </div>
@@ -314,6 +445,18 @@ getList();
           <div style="font-weight: bold; margin-bottom: 5px;">举报详情：</div>
           <div>举报人：{{ blogDetail.reporterName }} (ID: {{ blogDetail.reporterId }})</div>
           <div>举报原因：{{ blogDetail.reportReason }}</div>
+        </div>
+        <!-- 审核信息显示（如果已被审核） -->
+        <div v-if="blogDetail.reviewReason || (blogDetail.status !== null && blogDetail.status !== 0)" 
+             style="margin-bottom: 20px; padding: 15px; background-color: #e6f7ff; border-radius: 4px; border-left: 4px solid #1890ff;">
+          <div style="font-weight: bold; margin-bottom: 10px; color: #1890ff;">审核信息：</div>
+          <div v-if="blogDetail.reviewReason">
+            <div style="margin-bottom: 5px;">审核结果：{{ getReviewResultLabel(blogDetail.reviewResult) }}</div>
+            <div style="margin-bottom: 5px;">审核原因：{{ blogDetail.reviewReason }}</div>
+            <div v-if="blogDetail.reviewerName" style="margin-bottom: 5px;">审核员：{{ blogDetail.reviewerName }}</div>
+            <div v-if="blogDetail.reviewTime">审核时间：{{ blogDetail.reviewTime }}</div>
+          </div>
+          <div v-else style="color: #999;">暂无审核原因记录</div>
         </div>
         <div class="editor-container">
           <div style="border: 1px solid #ccc; z-index: 100">
@@ -356,13 +499,26 @@ getList();
         <el-form-item label="博客标题">
           <span>{{ handleForm.blogTitle }}</span>
         </el-form-item>
+        <!-- 显示已有的审核原因（当状态为已处理/处理中时） -->
+        <el-form-item label="历史审核" v-if="handleForm.existingReviewReason || (handleForm.reportStatus !== null && handleForm.reportStatus !== 0)">
+          <el-alert 
+            :title="handleForm.existingReviewReason ? `审核结果：${getReviewResultLabel(handleForm.existingReviewResult)}` : '此举报已被处理'"
+            type="info" 
+            :closable="false"
+            style="margin-bottom: 10px">
+            <div v-if="handleForm.existingReviewReason">审核原因：{{ handleForm.existingReviewReason }}</div>
+            <div v-else>暂无审核原因记录</div>
+            <div v-if="handleForm.reviewerName">审核员：{{ handleForm.reviewerName }}</div>
+            <div v-if="handleForm.reviewTime">审核时间：{{ handleForm.reviewTime }}</div>
+          </el-alert>
+        </el-form-item>
         <el-form-item label="处理结果">
-          <el-tag :type="handleForm.status === 1 ? 'success' : 'warning'">
-            {{ handleForm.status === 1 ? '处理' : '忽略' }}
+          <el-tag :type="handleForm.status === 2 ? 'success' : 'warning'">
+            {{ handleForm.status === 2 ? '处理' : '忽略' }}
           </el-tag>
         </el-form-item>
-        <el-form-item label="审核结果" v-if="handleForm.status === 1">
-          <el-select v-model="handleForm.reviewResult">
+        <el-form-item label="审核结果" v-if="handleForm.status === 2">
+          <el-select v-model="handleForm.reviewResult" @change="handleResultChange">
             <el-option
               v-for="item in reviewResultOptions"
               :key="item.value"

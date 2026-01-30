@@ -1,4 +1,4 @@
-import request from "@/utils/request.js";
+﻿import request from "@/utils/request.js";
 
 const URL = '/auditor/blogAudit'
 
@@ -14,3 +14,7 @@ export const handleBlogAudit = (data) => {
     return request.put(URL + '/handle', data)
 }
 
+// 标记为处理中
+export const markBlogAuditAsInProcess = (id) => {
+    return request.put(URL + `/inProcess/${id}`)
+}

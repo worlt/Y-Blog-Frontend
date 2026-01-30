@@ -3,7 +3,7 @@ import request from "@/utils/request.js";
 const URL = '/auditor/userReport'
 
 export const userReportPageQuery = (params) => {
-    return request.get(URL + '/page', {params})
+    return request.get(URL + '/page', { params })
 }
 
 export const getUserReportById = (id) => {
@@ -19,3 +19,7 @@ export const handleUserReport = (data) => {
     return request.put(URL + '/handle', data)
 }
 
+// 标记为处理中
+export const markUserReportAsInProcess = (id) => {
+    return request.put(URL + `/inProcess/${id}`)
+}
