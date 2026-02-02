@@ -126,17 +126,16 @@ const defaultToolbarConfig = {
     'delIndent',
     '|',
     'insertLink',
-    'insertImage',
-    'uploadImage',
+    // 'insertImage',  // 移除：不需要插入网络图片
+    'uploadImage',     // 保留：上传本地图片
     'insertTable',
-    'insertVideo',
+    // 'insertVideo', // 移除：不需要视频功能
     'codeBlock',
     'blockquote',
     '|',
     'undo',
-    'redo',
-    '|',
-    'fullScreen'
+    'redo'
+    // 'fullScreen' // 移除：不需要全屏功能
   ]
 };
 
