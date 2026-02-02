@@ -65,10 +65,22 @@ const formRef = ref(null)
 // 自动保存定时器
 let autoSaveTimer = null
 
-// 上传封面图的对话框可见性
 const coverUploadVisible = ref(false)
 const coverFile = ref(null)
 const uploading = ref(false)
+
+// AI补全相关
+const aiCompletionEnabled = ref(true)
+const showAiTipDialog = ref(false)
+const noMoreTip = ref(false)
+
+// 确认不再提示
+const handleAiTipConfirm = () => {
+  if (noMoreTip.value) {
+    localStorage.setItem('ai_completion_tip_dismissed', 'true')
+  }
+  showAiTipDialog.value = false
+}
 
 // 表单校验规则
 const rules = {
@@ -98,6 +110,12 @@ onMounted(async () => {
   
   // 设置自动保存
   setupAutoSave()
+  
+  // 检查是否需要显示AI补全提示
+  const isTipDismissed = localStorage.getItem('ai_completion_tip_dismissed')
+  if (!isTipDismissed) {
+    showAiTipDialog.value = true
+  }
   
   // 添加离开页面前的提示
   window.addEventListener('beforeunload', handleBeforeUnload)
@@ -547,6 +565,7 @@ watch(editorRef, (newEditor) => {
               v-model="blogForm.content"
               :height="500"
               :blog-title="blogForm.title"
+              :enable-ai-completion="aiCompletionEnabled"
             />
           </el-form-item>
         </div>
@@ -561,6 +580,15 @@ watch(editorRef, (newEditor) => {
             </template>
             
             <div class="settings-section">
+              <!-- AI补全开关 -->
+              <el-form-item label="AI智能补全">
+                 <el-switch
+                    v-model="aiCompletionEnabled"
+                    active-text="开启"
+                    inactive-text="关闭"
+                 />
+                 <div class="ai-tips">开启后，编辑时会自动获得AI写作建议 (按Ctrl补全)</div>
+              </el-form-item>
               <!-- 分类选择 -->
               <el-form-item label="博客分类" prop="categoryId">
                 <el-select v-model="blogForm.categoryId" placeholder="请选择分类" style="width: 100%">
@@ -705,6 +733,27 @@ watch(editorRef, (newEditor) => {
         </div>
       </div>
     </el-form>
+    
+    <!-- AI补全功能提示对话框 -->
+    <el-dialog
+      v-model="showAiTipDialog"
+      title="AI智能补全功能上线啦！"
+      width="400px"
+      align-center
+    >
+      <div class="ai-tip-content">
+        <div class="tip-icon">✨</div>
+        <p>我们在编辑器中集成了AI智能写作助手，它可以根据您的上下文自动生成补全建议。</p>
+        <p>当您停止输入时，AI会尝试为您续写。</p>
+        <p class="highlight">确实需要补全时，请按下 <strong>Ctrl</strong> 键采纳建议。</p>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-checkbox v-model="noMoreTip">不再提示</el-checkbox>
+          <el-button type="primary" @click="handleAiTipConfirm">我知道了</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -839,5 +888,44 @@ watch(editorRef, (newEditor) => {
 .cover-actions {
   display: flex;
   justify-content: center;
+}
+
+.ai-tips {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.4;
+  margin-top: 5px;
+}
+
+.ai-tip-content {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.tip-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.ai-tip-content p {
+  margin-bottom: 10px;
+  line-height: 1.6;
+  color: #606266;
+}
+
+.highlight {
+  color: #409eff;
+  font-weight: bold;
+  background-color: #ecf5ff;
+  padding: 5px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style> 

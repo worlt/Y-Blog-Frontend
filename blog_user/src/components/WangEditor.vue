@@ -48,6 +48,11 @@ const props = defineProps({
   blogTitle: { // 新增：博客标题，用于AI上下文
     type: String,
     default: ''
+  },
+  // 新增：是否启用AI补全
+  enableAiCompletion: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -172,6 +177,11 @@ const handleEditorChange = () => {
     return
   }
 
+  // 如果未开启AI补全，仅清除状态后返回
+  if (!props.enableAiCompletion) {
+    return
+  }
+
   debounceTimer = setTimeout(() => {
     requestCompletion()
   }, COMPLETION_DELAY)
@@ -180,6 +190,9 @@ const handleEditorChange = () => {
 // 请求 AI 补全
 const requestCompletion = async () => {
   if (!editorRef.value) return
+  
+  // 如果未开启AI补全，直接返回
+  if (!props.enableAiCompletion) return
   
   // 获取当前光标位置
   updateCursorPosition()
