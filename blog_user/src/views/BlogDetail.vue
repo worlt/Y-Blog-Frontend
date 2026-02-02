@@ -11,6 +11,7 @@ import { useUserInfoStore } from '@/stores/userInfo.js'
 import * as blogApi from '@/api/blog.js'
 import * as commentApi from '@/api/comment.js'
 import * as userApi from '@/api/user.js'
+import * as messageApi from '@/api/message.js'
 import 'highlight.js/styles/github.css'
 import hljs from 'highlight.js'
 import { marked } from 'marked'
@@ -636,6 +637,28 @@ const handleFollowAuthor = async () => {
   }
 }
 
+// 处理私信 - 创建/匹配会话后跳转到消息页面
+const handleSendMessage = async () => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录')
+    showAuthDialog.value = true
+    return
+  }
+  
+  try {
+    const result = await messageApi.createPrivateConversation(author.value.id)
+    if (result.code === 0 && result.data) {
+      // 跳转到消息页面并传递会话ID
+      router.push({ path: '/messages', query: { conversationId: result.data } })
+    } else {
+      ElMessage.error(result.msg || '创建会话失败')
+    }
+  } catch (error) {
+    console.error('创建会话失败:', error)
+    ElMessage.error('操作失败，请稍后重试')
+  }
+}
+
 // 提交评论
 const submitComment = () => {
   withAuth(async () => {
@@ -1147,7 +1170,7 @@ const totalCommentsCount = computed(() => {
       <el-aside v-if="showSidebars" class="blog-sidebar-left" width="260px">
         <el-affix :offset="80">
           <div class="sidebar-card author-card">
-            <div class="author-header">
+            <div class="author-header" @click="router.push(`/user/${author.id}`)" style="cursor: pointer;">
               <el-avatar :size="60" :src="author.avatar || ''" />
               <div class="author-info">
                 <div class="author-name">{{ author.username || '未知作者' }}</div>
@@ -1178,6 +1201,15 @@ const totalCommentsCount = computed(() => {
                   @click="handleFollowAuthor"
                 >
                   {{ author.followed ? '已关注' : '关注' }}
+                </el-button>
+                <el-button 
+                  type="success" 
+                  plain 
+                  size="default"
+                  class="message-btn"
+                  @click="handleSendMessage"
+                >
+                  ✉ 
                 </el-button>
                 <el-button 
                   type="info" 

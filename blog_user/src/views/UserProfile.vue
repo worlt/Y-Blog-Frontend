@@ -5,6 +5,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useTokenStore } from '@/stores/token.js'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 import * as userApi from '@/api/user.js'
+import * as messageApi from '@/api/message.js'
 import ReportDialog from '@/components/ReportDialog.vue'
 
 // 路由对象
@@ -191,6 +192,29 @@ const toggleFollow = async () => {
   }
 }
 
+// 处理私信 - 创建/匹配会话后跳转到消息页面
+const handleSendMessage = async () => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录')
+    router.push('/auth')
+    return
+  }
+  
+  try {
+    const userId = route.params.userId
+    const result = await messageApi.createPrivateConversation(userId)
+    if (result.code === 0 && result.data) {
+      // 跳转到消息页面并传递会话ID
+      router.push({ path: '/messages', query: { conversationId: result.data } })
+    } else {
+      ElMessage.error(result.msg || '创建会话失败')
+    }
+  } catch (error) {
+    console.error('创建会话失败:', error)
+    ElMessage.error('操作失败，请稍后重试')
+  }
+}
+
 // 查看用户的博客
 const viewUserBlogs = () => {
   router.push({
@@ -247,6 +271,14 @@ const formatDate = (dateString) => {
               v-if="currentUserId !== userForm.id"
             >
               {{ isFollowing ? '取消关注' : '关注' }}
+            </el-button>
+            <el-button 
+              type="success"
+              plain
+              @click="handleSendMessage"
+              v-if="currentUserId !== userForm.id"
+            >
+              ✉ 
             </el-button>
             <el-button 
               type="warning"

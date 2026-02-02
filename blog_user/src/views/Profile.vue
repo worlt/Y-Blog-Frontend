@@ -49,6 +49,7 @@ const userStats = reactive({
 const editMode = ref(false)
 // 头像上传相关
 const avatarFile = ref(null)
+const avatarPreview = ref('') // 新增：用于预览选中的头像，不直接修改 userForm.avatar
 const avatarUploadVisible = ref(false)
 const avatarUploading = ref(false)
 // 提交状态
@@ -399,6 +400,9 @@ const sendVerificationCode = async () => {
 
 // 显示头像上传对话框
 const showAvatarUploadDialog = () => {
+  // 打开对话框时，将当前的头像赋值给预览变量
+  avatarPreview.value = userForm.avatar
+  avatarFile.value = null // 清空之前选中的文件
   avatarUploadVisible.value = true
 }
 
@@ -424,7 +428,8 @@ const handleAvatarChange = (e) => {
   // 预览图片
   const reader = new FileReader()
   reader.onload = (e) => {
-    userForm.avatar = e.target.result
+    // 修改：只更新预览变量，不更新 userForm.avatar
+    avatarPreview.value = e.target.result
   }
   reader.readAsDataURL(file)
   
@@ -800,8 +805,8 @@ const formatDate = (dateString) => {
           @change="handleAvatarChange"
         />
         
-        <div v-if="userForm.avatar" class="avatar-preview">
-          <img :src="userForm.avatar" class="preview-image" alt="预览图" />
+        <div v-if="avatarPreview" class="avatar-preview">
+          <img :src="avatarPreview" class="preview-image" alt="预览图" />
         </div>
       </div>
       

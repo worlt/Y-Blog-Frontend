@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, onMounted, computed, nextTick, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 import * as messageApi from '@/api/message.js'
@@ -18,6 +18,7 @@ dayjs.locale('zh-cn')
 const userInfoStore = useUserInfoStore()
 const currentUserId = ref(null)
 const router = useRouter()
+const route = useRoute()
 
 // 会话列表数据
 const conversationList = ref([])
@@ -54,6 +55,18 @@ onMounted(async () => {
 
   // 加载会话列表，完成后同步更新顶栏未读数
   await loadConversations()
+  
+  // 检查 URL 参数是否指定了要选中的会话（从私信按钮跳转过来）
+  const targetConversationId = route.query.conversationId
+  if (targetConversationId) {
+    const targetConv = conversationList.value.find(
+      conv => conv.conversationId === Number(targetConversationId)
+    )
+    if (targetConv) {
+      selectConversation(targetConv)
+    }
+  }
+  
   // 通知顶栏更新未读消息总数
   eventBus.emit('unread-count-update', totalUnreadCount.value)
   
