@@ -3,25 +3,28 @@
     <div class="editor-toolbar-container" ref="toolbarDomRef"></div>
     <div class="editor-content-container" ref="editorDomRef"></div>
     
-    <!-- AI 补全提示 Overlay -->
     <div 
-      v-if="showCompletion && completionText" 
+      v-if="showCompletion && (completionText || isLoadingCompletion)" 
       class="ai-completion-overlay"
       :style="completionStyle"
     >
-      {{ completionText }}
-      <span class="completion-tip"> (按 Ctrl 键补全)</span>
-    </div>
-    
-    <!-- AI Loading Indicator -->
-    <div 
-      v-if="isLoadingCompletion" 
-      class="ai-completion-loading"
-      :style="completionStyle"
-    >
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
+      <!-- 拖拽手柄 -->
+      <div class="drag-handle" @mousedown.prevent.stop="startDrag" title="按住拖动">
+        <div class="drag-bar"></div>
+      </div>
+      
+      <!-- Loading 状态 -->
+      <div v-if="isLoadingCompletion" class="loading-content">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      
+      <!-- 补全内容 -->
+      <div v-else class="completion-content">
+        {{ completionText }}
+        <span class="completion-tip"> (按 Ctrl 键补全)</span>
+      </div>
     </div>
   </div>
 </template>
@@ -199,6 +202,7 @@ const requestCompletion = async () => {
   
   try {
     isLoadingCompletion.value = true
+    showCompletion.value = true // 显示 loading 状态的弹窗
     const text = editorRef.value.getText() // 获取纯文本更适合补全上下文
     // 也可以使用 getHtml()，但要注意标签干扰
     
@@ -218,7 +222,12 @@ const requestCompletion = async () => {
   }
 }
 
-// 更新光标位置用于显示 Overlay
+// 拖拽相关状态
+const isDragging = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
+const initialPosition = ref({ top: 0, left: 0 })
+
+// 更新光标位置用于显示 Overlay（使用 Fixed 定位）
 const updateCursorPosition = () => {
   try {
     const selection = window.getSelection()
@@ -226,22 +235,75 @@ const updateCursorPosition = () => {
       const range = selection.getRangeAt(0)
       const rect = range.getBoundingClientRect()
       
-      // 获取编辑器容器的位置，计算相对坐标
-      const containerRect = editorDomRef.value.getBoundingClientRect()
+      // 视口尺寸
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
       
-      // 计算相对位置（在光标右侧或下方）
-      // 这里简单处理：显示在光标后面
-      completionPosition.value = {
-        top: rect.top - containerRect.top + rect.height, // 显示在光标下方一行
-        left: rect.left - containerRect.left
+      // 预估弹窗尺寸（或默认尺寸）
+      const popupWidth = 300 // max-width
+      const popupHeight = 100 // 预估高度
+      
+      // 初步位置：光标下方
+      let top = rect.bottom + 5
+      let left = rect.left
+      
+      // 纵向防遮挡：如果下方空间不足，显示在上方
+      if (top + popupHeight > viewportHeight) {
+        top = rect.top - popupHeight - 5
       }
       
-      // 如果需要显示在行内（overlay效果），需要更精细的CSS处理
-      // 现在的策略是显示在光标下方，避免遮挡输入
+      // 横向防遮挡：如果右侧空间不足，向左偏移
+      if (left + popupWidth > viewportWidth) {
+        left = viewportWidth - popupWidth - 20
+      }
+      
+      // 确保不超出左边界
+      if (left < 10) left = 10
+      
+      completionPosition.value = {
+        top: top,
+        left: left
+      }
     }
   } catch (e) {
     console.error('获取光标位置失败', e)
   }
+}
+
+// 开始拖拽
+const startDrag = (e) => {
+  e.preventDefault() // 防止失焦
+  e.stopPropagation() // 防止冒泡
+  
+  isDragging.value = true
+  dragStart.value = { x: e.clientX, y: e.clientY }
+  initialPosition.value = { ...completionPosition.value }
+  
+  // 添加全局事件监听
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', endDrag)
+}
+
+// 拖拽中
+const onDrag = (e) => {
+  if (!isDragging.value) return
+  
+  e.preventDefault() // 防止选中文本
+  
+  const dx = e.clientX - dragStart.value.x
+  const dy = e.clientY - dragStart.value.y
+  
+  completionPosition.value = {
+    top: initialPosition.value.top + dy,
+    left: initialPosition.value.left + dx
+  }
+}
+
+// 结束拖拽
+const endDrag = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', endDrag)
 }
 
 // 隐藏补全
@@ -385,21 +447,54 @@ defineExpose({
 }
 
 /* AI 补全 Overlay 样式 */
+/* AI 补全 Overlay 样式 */
 .ai-completion-overlay {
-  position: absolute;
-  z-index: 100;
-  background-color: rgba(255, 255, 255, 0.9);
+  position: fixed; /* 改为 fixed 定位 */
+  z-index: 9999; /* 确保层级最高 */
+  background-color: rgba(255, 255, 255, 0.95);
   border: 1px solid #e4e7ed;
   border-radius: 4px;
-  padding: 4px 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  pointer-events: auto; /* 允许交互（拖拽、调整大小） */
+  transition: opacity 0.2s;
+  min-width: 200px;
+  max-width: 500px;
+  min-height: 40px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  
+  /* 支持缩放 */
+  resize: both;
+  overflow: hidden;
+}
+
+.drag-handle {
+  height: 12px;
+  background-color: #f0f2f5;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #ebeef5;
+  flex-shrink: 0;
+}
+
+.drag-bar {
+  width: 30px;
+  height: 4px;
+  background-color: #dcdfe6;
+  border-radius: 2px;
+}
+
+.completion-content {
+  padding: 8px 12px;
   font-size: 14px;
   color: #606266;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  pointer-events: none; /* 允许点击穿透 */
-  transition: opacity 0.2s;
-  max-width: 300px;
   white-space: pre-wrap;
   word-break: break-all;
+  overflow-y: auto;
+  flex-grow: 1;
 }
 
 .completion-tip {
@@ -407,6 +502,7 @@ defineExpose({
   font-size: 12px;
   margin-left: 4px;
   font-weight: bold;
+  user-select: none;
 }
 
 /* 调整 placeholder 位置 */
@@ -414,20 +510,14 @@ defineExpose({
   top: 8px;
 }
 
-/* AI Loading Styles */
-.ai-completion-loading {
-  position: absolute;
-  z-index: 100;
+
+.loading-content {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 6px 10px;
-  background-color: rgba(255, 255, 255, 0.95);
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  pointer-events: none;
-  transition: opacity 0.2s;
+  padding: 10px;
+  flex-grow: 1;
 }
 
 .dot {

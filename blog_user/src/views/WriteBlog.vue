@@ -380,12 +380,16 @@ const saveBlog = async (status, isAutoSave = false) => {
   
   // 验证必要内容
   if (!blogForm.title?.trim()) {
-    ElMessage.error('请输入博客标题')
+    if (!isAutoSave) {
+      ElMessage.error('请输入博客标题')
+    }
     return
   }
   
   if (!blogForm.content?.trim()) {
-    ElMessage.error('请输入博客内容')
+    if (!isAutoSave) {
+      ElMessage.error('请输入博客内容')
+    }
     return
   }
   
