@@ -107,11 +107,24 @@ onMounted(() => {
   // 编辑器配置
   const editorConfig = {
     placeholder: '请输入内容...',
+    autoFocus: true, // 自动聚焦
     MENU_CONF: {
       uploadImage: {
         customUpload
       }
     }
+  }
+  
+  // 工具栏配置：失焦时不禁用
+  const toolbarConfig = {
+    // 排除不需要的功能
+    excludeKeys: [
+      'fullScreen',      // 移除全屏
+      'insertVideo',     // 移除插入视频
+      'uploadVideo',     // 移除上传视频
+      'insertImage',     // 移除插入网络图片（保留uploadImage上传本地图片）
+      'group-video'      // 移除视频菜单组
+    ]
   }
 
   // 创建编辑器
@@ -123,20 +136,27 @@ onMounted(() => {
     html: props.modelValue, // 初始化内容
   })
 
-  // 创建工具栏
+  // 创建工具栏（使用上面定义的toolbarConfig）
   const toolbar = createToolbar({
     editor,
     selector: toolbarDomRef.value,
     mode: 'default',
-    config: {} // 工具栏配置
+    config: toolbarConfig
   })
 
-  // 设置编辑器高度
-  editorDomRef.value.style.height = `${props.height}px`
+  // 设置编辑器高度（移除固定高度，改为min-height）
+  editorDomRef.value.style.minHeight = `${props.height}px`
 
   // 记录编辑器实例
   editorRef.value = editor
   toolbarRef.value = toolbar
+  
+  // 点击编辑器容器时自动聚焦（解决工具栏失焦变灰问题）
+  editorDomRef.value.addEventListener('click', () => {
+    if (editor && !editor.isDestroyed) {
+      editor.focus()
+    }
+  })
 
   // 监听编辑器内容变化
   editor.on('change', () => {
