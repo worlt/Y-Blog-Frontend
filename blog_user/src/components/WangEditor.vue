@@ -433,17 +433,22 @@ defineExpose({
 .wang-editor-container {
   border: 1px solid #dcdfe6;
   border-radius: 4px;
-  overflow: hidden;
-  position: relative; /* 为 absolute 定位的 overlay 提供参考 */
+  overflow: visible; /* 改为visible，让内容撑开页面 */
+  position: relative;
 }
 
 .editor-toolbar-container {
   border-bottom: 1px solid #dcdfe6;
+  background-color: #fff; /* 确保背景不透明 */
+  position: sticky; /* 滚动时固定在顶部 */
+  top: 0; /* 固定在视口顶部 */
+  z-index: 100; /* 确保在内容之上 */
 }
 
 .editor-content-container {
-  height: v-bind('`${props.height}px`');
-  overflow-y: auto;
+  /* 高度自适应内容，不设固定高度 */
+  min-height: v-bind('`${props.height}px`');
+  overflow: visible; /* 不产生自己的滚动条 */
 }
 
 /* AI 补全 Overlay 样式 */

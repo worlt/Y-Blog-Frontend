@@ -726,7 +726,7 @@ watch(editorRef, (newEditor) => {
                 <el-input
                   v-model="blogForm.summary"
                   type="textarea"
-                  :rows="4"
+                  :rows="6"
                   placeholder="请输入博客摘要，不填将自动提取正文前200字"
                   maxlength="200"
                   show-word-limit
@@ -764,6 +764,7 @@ watch(editorRef, (newEditor) => {
 <style scoped>
 .write-blog-container {
   padding: 20px;
+  padding-right: 390px; /* 为固定右侧栏留出空间 */
   background-color: #f5f7fa;
   min-height: calc(100vh - 60px);
 }
@@ -789,10 +790,33 @@ watch(editorRef, (newEditor) => {
 
 .editor-area {
   flex: 1;
+  min-width: 0; /* 防止flex子项溢出 */
 }
 
 .settings-area {
+  position: fixed;
+  right: 20px;
+  top: 80px;
+  bottom: 20px;
   width: 350px;
+  overflow-y: auto;
+  overflow-x: hidden; /* 防止横向滚动条 */
+  z-index: 100;
+  background-color: #f5f7fa; /* 背景色与页面一致 */
+}
+
+/* 确保 settings-area 的滚动条只在内容超出时显示 */
+.settings-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-area::-webkit-scrollbar-thumb {
+  background-color: #c0c4cc;
+  border-radius: 3px;
+}
+
+.settings-area::-webkit-scrollbar-track {
+  background-color: transparent;
 }
 
 .title-input {
@@ -816,9 +840,54 @@ watch(editorRef, (newEditor) => {
   margin-bottom: 20px;
 }
 
+/* 编辑器内容区：高度自适应内容，无独立滚动条 */
+.editor-wrap :deep(.editor-content-container) {
+  height: auto !important;
+  min-height: 600px !important; /* 基础最小高度 */
+  overflow: visible !important; /* 不产生滚动条，内容自然撑开 */
+}
+
+/* 编辑器内容区域 */
+.editor-wrap :deep(.w-e-text-container) {
+  min-height: 600px;
+}
+
+/* 工具栏Sticky效果 */
+.editor-wrap :deep(.editor-toolbar-container) {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  background-color: #fff !important;
+}
+
+/* 编辑器容器样式 */
+.editor-wrap :deep(.wang-editor-container) {
+  overflow: visible !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
 .settings-card {
-  position: sticky;
-  top: 20px;
+  height: auto; /* 自适应内容高度 */
+  overflow: visible !important;
+}
+
+/* 彻底清除el-card所有内部滚动 */
+.settings-card :deep(.el-card__body) {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* 清除el-card可能的默认样式 */
+.settings-card :deep(.el-scrollbar) {
+  overflow: visible !important;
+}
+
+.settings-card :deep(.el-scrollbar__wrap) {
+  overflow: visible !important;
+}
+
+.settings-card :deep(.el-scrollbar__view) {
+  overflow: visible !important;
 }
 
 .card-header {
@@ -828,7 +897,8 @@ watch(editorRef, (newEditor) => {
 }
 
 .settings-section {
-  margin-bottom: 30px;
+  margin-bottom: 20px; /* 减小间距，避免内容过长 */
+  overflow: visible !important;
 }
 
 .tags-container {
