@@ -736,17 +736,17 @@ const stripHtml = (html) => {
           
           <!-- 输入区域 -->
           <div class="messages-composer">
-            <div class="composer-tools">
-              <el-tooltip content="表情" placement="top">
-                <el-button type="text" icon="SmileFilled" class="tool-button" />
-              </el-tooltip>
-              <el-tooltip content="图片" placement="top">
-                <el-button type="text" icon="PictureFilled" class="tool-button" />
-              </el-tooltip>
-              <el-tooltip content="文件" placement="top">
-                <el-button type="text" icon="Document" class="tool-button" />
-              </el-tooltip>
-            </div>
+<!--            <div class="composer-tools">-->
+<!--              <el-tooltip content="表情" placement="top">-->
+<!--                <el-button type="text" icon="SmileFilled" class="tool-button" />-->
+<!--              </el-tooltip>-->
+<!--              <el-tooltip content="图片" placement="top">-->
+<!--                <el-button type="text" icon="PictureFilled" class="tool-button" />-->
+<!--              </el-tooltip>-->
+<!--              <el-tooltip content="文件" placement="top">-->
+<!--                <el-button type="text" icon="Document" class="tool-button" />-->
+<!--              </el-tooltip>-->
+<!--            </div>-->
             
             <div class="composer-input">
               <el-input
