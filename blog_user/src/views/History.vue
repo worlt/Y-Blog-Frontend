@@ -279,13 +279,17 @@ const viewBlog = (blogId) => {
 }
 
 // 从历史记录中移除
-const removeFromHistory = (blogId) => {
+const removeFromHistory = async (blogId) => {
   try {
-    historyList.value = historyList.value.filter(blog => blog.id !== blogId)
-    ElMessage.success('已从历史记录中移除')
-    
-    // TODO: 如果后端支持删除单个历史记录接口，可在此调用
-    // await blogApi.removeFromHistory(blogId)
+    // 调用后端API删除浏览记录
+    const result = await blogApi.deleteViewHistory(blogId)
+    if (result.code === 0) {
+      // 前端同步移除
+      historyList.value = historyList.value.filter(blog => blog.id !== blogId)
+      ElMessage.success('已从历史记录中移除')
+    } else {
+      ElMessage.error(result.msg || '移除历史记录失败')
+    }
   } catch (error) {
     console.error('移除历史记录失败:', error)
     ElMessage.error('移除历史记录失败')
@@ -305,11 +309,14 @@ const clearHistory = async () => {
       }
     )
 
-    historyList.value = []
-    ElMessage.success('历史记录已清空')
-    
-    // TODO: 如果后端支持清空历史记录接口，可在此调用
-    // await blogApi.clearHistory()
+    // 调用后端API清空浏览历史
+    const result = await blogApi.clearViewHistory()
+    if (result.code === 0) {
+      historyList.value = []
+      ElMessage.success('历史记录已清空')
+    } else {
+      ElMessage.error(result.msg || '清空历史记录失败')
+    }
   } catch (error) {
     if (error !== 'cancel') {
       console.error('清空历史记录失败:', error)

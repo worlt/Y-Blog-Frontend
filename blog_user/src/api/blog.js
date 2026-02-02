@@ -287,3 +287,20 @@ export const getRecommendedBlogs = (params = {}) => {
     }
   });
 };
+
+/**
+ * 删除单条浏览历史记录
+ * @param {Number} blogId - 博客ID
+ * @returns {Promise} - 返回操作结果的Promise
+ */
+export const deleteViewHistory = (blogId) => {
+  return request.delete(`${URL}/viewHistory/${blogId}`);
+};
+
+/**
+ * 清空用户所有浏览历史记录
+ * @returns {Promise} - 返回删除记录数的Promise
+ */
+export const clearViewHistory = () => {
+  return request.delete(`${URL}/viewHistory/clear`);
+};
