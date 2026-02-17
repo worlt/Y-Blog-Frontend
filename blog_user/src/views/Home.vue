@@ -385,30 +385,50 @@ const handleLoginSuccess = (userData) => {
 
 
 <style scoped>
+/* 像素风头部导航 */
+:deep(.el-header) {
+  padding: 12px 20px !important;
+  background: var(--pixel-bg-secondary) !important;
+  border-bottom: 4px solid #000 !important;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2) !important;
+}
+
 :deep(.el-main) {
-  padding: 0 !important; /* 去除 el-main 的内边距 */
-  overflow-y: auto !important; /* 确保内容可滚动 */
+  padding: 0 !important;
+  overflow-y: auto !important;
 }
 
 .header {
   width: 100vw;
-  height: 60px;
-  padding: 15px;
+  height: 56px;
+  padding: 0 20px;
   display: flex;
   flex-direction: row;
+  align-items: center;
+  background: var(--pixel-bg-secondary);
+  border-bottom: 4px solid #000;
 }
 
 .main {
-  height: calc(100vh - 60px);
+  height: calc(100vh - 56px);
   width: 100vw;
-  overflow-y: auto; /* 确保可以滚动 */
+  overflow-y: auto;
+  background: var(--pixel-bg-primary);
 }
 
 .left {
   flex: 1;
-  font-size: 28px;
-  font-weight: 900;
+  font-family: var(--pixel-font-display);
+  font-size: 18px;
+  color: var(--pixel-primary-light);
   cursor: pointer;
+  text-shadow: 2px 2px 0 #000;
+  transition: all 0.1s ease;
+}
+
+.left:hover {
+  color: var(--pixel-secondary);
+  transform: translateY(-2px);
 }
 
 .middle {
@@ -422,10 +442,21 @@ const handleLoginSuccess = (userData) => {
 }
 
 .middle :deep(.el-input__wrapper) {
-  border-radius: 20px !important;
+  border-radius: 0 !important;
+  border: 2px solid #000 !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  background: var(--pixel-bg-card) !important;
 }
 
-/* 修复深层选择器语法 */
+.middle :deep(.el-input__inner) {
+  font-family: var(--pixel-font-body);
+  color: var(--pixel-text-primary) !important;
+}
+
+.middle :deep(.el-input__inner::placeholder) {
+  color: var(--pixel-text-muted) !important;
+}
+
 :deep(.el-input__wrapper) {
   padding: 0 15px;
 }
@@ -436,65 +467,90 @@ const handleLoginSuccess = (userData) => {
   flex-direction: row;
   align-items: center;
   text-align: center;
+  gap: 8px;
 }
 
 .input {
   margin-left: 20px;
   width: 40%;
-  height: 30px;
+  height: 32px;
   padding: 0 15px;
 }
 
+/* 像素风搜索按钮 */
 .search-btn {
-  background-color: #b885e8;
-  color: #ffffff;
-  border-radius: 20px;
-  margin-left: -5px;
+  background: var(--pixel-primary) !important;
+  color: #fff !important;
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  font-family: var(--pixel-font-body);
+  font-size: 14px;
+  transition: all 0.1s ease;
+}
+
+.search-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000 !important;
+}
+
+.search-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none !important;
 }
 
 .avatar {
-  margin-left: 20px;
+  margin-left: 16px;
 }
 
+/* 像素风登录头像 */
 .login {
-  border-radius: 100%;
-  border: #cecdcd 1px solid;
-  background-color: #cecdcd;
-  height: 35px;
-  width: 35px;
-  display: flex; /* 使用 flexbox 布局 */
-  justify-content: center; /* 水平居中 */
-  align-items: center; /* 垂直居中 */
+  border-radius: 0 !important;
+  border: 2px solid #000 !important;
+  background: var(--pixel-bg-card) !important;
+  height: 36px;
+  width: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   text-align: center;
-  cursor: pointer; /* 增加鼠标指针样式 */
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+  font-family: var(--pixel-font-display);
+  font-size: 10px;
+  color: var(--pixel-primary-light);
 }
 
-.message-container {
+/* 像素风导航菜单项 */
+.message-container,
+.history,
+.creation {
   position: relative;
-  margin-left: 20px;
+  margin-left: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  padding: 8px 12px;
+  border: 2px solid transparent;
+  font-family: var(--pixel-font-body);
+  font-size: 14px;
+  color: var(--pixel-text-secondary);
+  transition: all 0.1s ease;
+}
+
+.message-container:hover,
+.history:hover,
+.creation:hover {
+  color: var(--pixel-text-primary);
+  background: var(--pixel-bg-card);
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
 }
 
 .message-badge {
   position: absolute;
-  top: -10px;
-  right: -15px;
-}
-
-.history {
-  margin-left: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.creation {
-  margin-left: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
+  top: -8px;
+  right: -8px;
 }
 
 /* 右侧导航菜单的文本元素样式 */
@@ -505,21 +561,93 @@ const handleLoginSuccess = (userData) => {
 }
 
 .create {
-  margin-left: 20px;
+  margin-left: 12px;
   cursor: pointer;
 }
 
+/* 像素风创作按钮 */
 .create-btn {
-  border-radius: 20px;
-  background-color: #b885e8;
-  color: white;
-  display: flex;
-  align-items: center;
+  border-radius: 0 !important;
+  background: var(--pixel-accent) !important;
+  color: #000 !important;
+  border: 2px solid #000 !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  font-family: var(--pixel-font-body);
+  font-size: 14px;
+  transition: all 0.1s ease;
+}
+
+.create-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000 !important;
+}
+
+.create-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none !important;
 }
 
 /* 所有图标垂直居中 */
 :deep(.iconify) {
   display: inline-flex;
   vertical-align: middle;
+  font-size: 18px;
+}
+
+/* 像素风下拉菜单 */
+:deep(.el-dropdown-menu) {
+  background: var(--pixel-bg-card) !important;
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #000 !important;
+  padding: 4px 0 !important;
+}
+
+:deep(.el-dropdown-menu__item) {
+  font-family: var(--pixel-font-body) !important;
+  font-size: 14px !important;
+  color: var(--pixel-text-primary) !important;
+  padding: 8px 16px !important;
+  border-bottom: 1px solid var(--pixel-bg-secondary) !important;
+}
+
+:deep(.el-dropdown-menu__item:hover) {
+  background: var(--pixel-primary) !important;
+  color: #fff !important;
+}
+
+/* 像素风头像 */
+:deep(.el-avatar) {
+  border: 2px solid #000 !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  border-radius: 0 !important;
+}
+
+/* 像素风徽章 */
+:deep(.el-badge__content) {
+  font-family: var(--pixel-font-display) !important;
+  font-size: 8px !important;
+  border: 2px solid #000 !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  border-radius: 0 !important;
+  background: var(--pixel-accent) !important;
+  color: #000 !important;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 10px;
+  }
+  
+  .left {
+    font-size: 14px;
+  }
+  
+  .message-container span,
+  .history span,
+  .creation span {
+    display: none;
+  }
 }
 </style>

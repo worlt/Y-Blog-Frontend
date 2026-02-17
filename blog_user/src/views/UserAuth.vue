@@ -718,21 +718,34 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* 像素风登录注册页面 */
 .auth-container {
   display: flex;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 56px);
   overflow: hidden;
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
 }
 
 .left-section {
   width: 55%;
-  background: linear-gradient(135deg, #aa9ef5 0%, #7a71e8 100%);
+  background: linear-gradient(135deg, var(--pixel-primary) 0%, var(--pixel-primary-dark) 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 40px;
   color: white;
+  border-right: 4px solid #000;
+  position: relative;
+}
+
+.left-section::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(0,0,0,0.1) 0%, transparent 100%);
 }
 
 .logo-container {
@@ -745,12 +758,16 @@ onMounted(() => {
   width: 80px;
   height: 80px;
   margin-right: 20px;
+  border: 4px solid #000;
+  box-shadow: 4px 4px 0 #000;
 }
 
 .site-name {
-  font-size: 36px;
+  font-family: var(--pixel-font-display);
+  font-size: 24px;
   color: white;
   margin: 0;
+  text-shadow: 3px 3px 0 #000;
 }
 
 .slogan {
@@ -758,12 +775,15 @@ onMounted(() => {
 }
 
 .slogan h2 {
-  font-size: 32px;
+  font-family: var(--pixel-font-display);
+  font-size: 20px;
   color: white;
   margin-bottom: 20px;
+  text-shadow: 2px 2px 0 #000;
 }
 
 .slogan p {
+  font-family: var(--pixel-font-body);
   font-size: 18px;
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.6;
@@ -775,14 +795,23 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   padding: 40px;
+  background: var(--pixel-bg-primary);
 }
 
+/* 像素风认证卡片 */
 .auth-card {
   width: 100%;
-  max-width: 450px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
-  border: none;
+  max-width: 420px;
+  border: 4px solid #000 !important;
+  box-shadow: 6px 6px 0 #000 !important;
+  border-radius: 0 !important;
+  background: var(--pixel-bg-card) !important;
+}
+
+:deep(.el-card__header) {
+  border-bottom: 4px solid #000 !important;
+  background: var(--pixel-primary) !important;
+  padding: 16px !important;
 }
 
 .card-header {
@@ -792,13 +821,29 @@ onMounted(() => {
 }
 
 .header-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
+  font-family: var(--pixel-font-display);
+  font-size: 12px;
+  color: #fff;
+  text-shadow: 2px 2px 0 #000;
+  text-transform: uppercase;
 }
 
 .login-tabs {
   margin-bottom: 10px;
+}
+
+:deep(.el-tabs__item) {
+  font-family: var(--pixel-font-body) !important;
+  font-size: 14px !important;
+}
+
+:deep(.el-tabs__item.is-active) {
+  color: var(--pixel-primary) !important;
+}
+
+:deep(.el-tabs__active-bar) {
+  background: var(--pixel-primary) !important;
+  border: 2px solid #000 !important;
 }
 
 .form-actions {
@@ -808,13 +853,45 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+/* 像素风按钮 */
 .full-width-button {
   width: 100%;
   margin-bottom: 20px;
-  height: 40px;
-  font-size: 16px;
-  background: linear-gradient(135deg, #aa9ef5 0%, #7a71e8 100%);
-  border: none;
+  height: 44px !important;
+  font-family: var(--pixel-font-body) !important;
+  font-size: 16px !important;
+  background: var(--pixel-primary) !important;
+  border: 3px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 #000 !important;
+  transition: all 0.1s ease !important;
+}
+
+.full-width-button:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #000 !important;
+}
+
+.full-width-button:active {
+  transform: translate(3px, 3px);
+  box-shadow: none !important;
+}
+
+/* 像素风输入框 */
+:deep(.el-input__wrapper) {
+  border-radius: 0 !important;
+  border: 2px solid #000 !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  background: var(--pixel-bg-secondary) !important;
+}
+
+:deep(.el-input__inner) {
+  font-family: var(--pixel-font-body) !important;
+  color: var(--pixel-text-primary) !important;
+}
+
+:deep(.el-input__inner::placeholder) {
+  color: var(--pixel-text-muted) !important;
 }
 
 .form-footer {
@@ -824,12 +901,21 @@ onMounted(() => {
   margin-top: 10px;
 }
 
+:deep(.el-button--text) {
+  font-family: var(--pixel-font-body) !important;
+  color: var(--pixel-primary-light) !important;
+}
+
+:deep(.el-button--text:hover) {
+  color: var(--pixel-primary) !important;
+}
+
 .code-input-group {
   display: flex;
   width: 100%;
 }
 
-.code-input-group .el-input {
+.code-input-group :deep(.el-input) {
   margin-right: 10px;
   flex: 1;
 }
@@ -837,62 +923,103 @@ onMounted(() => {
 .code-input-group .el-button {
   width: 100px;
   flex-shrink: 0;
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
+  background: var(--pixel-secondary) !important;
+  color: #000 !important;
+  font-family: var(--pixel-font-body);
+  box-shadow: 2px 2px 0 #000 !important;
+}
+
+.code-input-group .el-button:hover:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000 !important;
+}
+
+.code-input-group .el-button:disabled {
+  background: var(--pixel-bg-secondary) !important;
+  color: var(--pixel-text-muted) !important;
 }
 
 .appeal-info {
   margin-bottom: 20px;
 }
 
+/* 像素风复选框 */
+:deep(.el-checkbox__inner) {
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
+  background: var(--pixel-bg-secondary) !important;
+}
+
+:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  background: var(--pixel-primary) !important;
+  border-color: #000 !important;
+}
+
+:deep(.el-checkbox__label) {
+  font-family: var(--pixel-font-body) !important;
+  color: var(--pixel-text-secondary) !important;
+}
+
 .full-width {
   width: 100%;
 }
 
-/* 输入框样式优化 */
-:deep(.el-input__wrapper) {
-  border-radius: 4px;
-  padding: 0 15px;
+/* 像素风对话框 */
+:deep(.el-dialog) {
+  border: 4px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: 8px 8px 0 #000 !important;
+  background: var(--pixel-bg-card) !important;
 }
 
-:deep(.el-tabs__nav-wrap::after) {
-  height: 1px;
-  background-color: #e8e8e8;
+:deep(.el-dialog__header) {
+  border-bottom: 4px solid #000 !important;
+  background: var(--pixel-primary) !important;
 }
 
-:deep(.el-tabs__active-bar) {
-  background-color: #aa9ef5;
+:deep(.el-dialog__title) {
+  font-family: var(--pixel-font-display) !important;
+  font-size: 10px !important;
+  color: #fff !important;
+  text-shadow: 1px 1px 0 #000;
 }
 
-:deep(.el-tabs__item.is-active) {
-  color: #aa9ef5;
+:deep(.el-dialog__body) {
+  background: var(--pixel-bg-card) !important;
 }
 
-:deep(.el-tabs__item:hover) {
-  color: #aa9ef5;
+/* 像素风警告框 */
+:deep(.el-alert) {
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
 }
 
-/* 适配小屏幕 */
-@media (max-width: 992px) {
+/* 响应式 */
+@media (max-width: 768px) {
   .auth-container {
     flex-direction: column;
   }
   
   .left-section {
     width: 100%;
-    padding: 20px;
-    height: auto;
-    min-height: 200px;
+    padding: 30px;
+    border-right: none;
+    border-bottom: 4px solid #000;
   }
   
   .right-section {
     width: 100%;
+    padding: 20px;
+  }
+  
+  .site-name {
+    font-size: 18px;
   }
   
   .slogan h2 {
-    font-size: 24px;
-  }
-  
-  .slogan p {
-    font-size: 16px;
+    font-size: 14px;
   }
 }
 </style>
