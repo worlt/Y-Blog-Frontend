@@ -434,7 +434,7 @@ onUnmounted(() => {
 }
 
 .page-title {
-  color: #333;
+  color: var(--pixel-text-primary);
   margin: 0;
   font-size: 24px;
 }
@@ -453,7 +453,7 @@ onUnmounted(() => {
 
 .sort-label {
   margin-right: 8px;
-  color: #666;
+  color: var(--pixel-text-secondary);
 }
 
 .disliked-blog-list-container {
@@ -479,14 +479,15 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   padding: 16px;
-  border-radius: 8px;
-  background-color: white;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.05);
+  border-radius: 0;
+  background-color: var(--pixel-bg-card);
+  box-shadow: 3px 3px 0 #000;
   transition: box-shadow 0.3s;
+  border: 2px solid #000;
 }
 
 .blog-item:hover {
-  box-shadow: 0 4px 16px 0 rgba(0,0,0,0.1);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .blog-info {
@@ -498,7 +499,7 @@ onUnmounted(() => {
   margin: 0 0 12px;
   font-size: 18px;
   cursor: pointer;
-  color: #333;
+  color: var(--pixel-text-primary);
   transition: color 0.3s;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -506,12 +507,12 @@ onUnmounted(() => {
 }
 
 .blog-title:hover {
-  color: #409eff;
+  color: var(--pixel-primary-light);
 }
 
 .blog-summary {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   margin-bottom: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -524,15 +525,16 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  font-size: 13px;
-  color: #999;
+  font-size: 15px;
+  color: var(--pixel-text-muted);
   gap: 12px;
 }
 
 .blog-category {
   padding: 2px 8px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
+  background-color: var(--pixel-primary);
+  color: #fff;
+  border-radius: 0;
 }
 
 .blog-stats {
@@ -565,7 +567,7 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   gap: 8px;
-  color: #909399;
+  color: var(--pixel-text-muted);
 }
 
 .loading-icon {
@@ -579,7 +581,7 @@ onUnmounted(() => {
 
 .no-more-data {
   text-align: center;
-  color: #909399;
+  color: var(--pixel-text-muted);
   margin-top: 24px;
   padding: 12px 0;
 }

@@ -425,26 +425,17 @@ const hasValidCover = (cover) => {
   return cover && cover.trim() && cover !== 'null' && cover !== 'undefined';
 };
 
-// 随机渐变背景数组
-const gradients = [
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',
-  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
-  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',
-  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',
-  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
-  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+// 像素风纯色背景数组
+const pixelColors = [
+  '#6C5CE7', '#FF7675', '#00CEC9', '#FDCB6E',
+  '#00B894', '#74B9FF', '#A29BFE', '#E17055',
+  '#FD79A8', '#55EFC4', '#FFEAA7', '#DDA0DD'
 ];
 
-// 获取渐变背景
+// 获取纯色背景
 const getRandomGradient = (blogId) => {
-  const index = blogId % gradients.length;
-  return gradients[index];
+  const index = blogId % pixelColors.length;
+  return pixelColors[index];
 };
 
 // 图片加载错误处理
@@ -660,10 +651,10 @@ const handleImageError = (event) => {
   text-align: center;
   margin-bottom: 30px;
   padding: 30px 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
+  background: var(--pixel-primary);
+  border-radius: 0;
   color: white;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .page-header h2 {
@@ -680,12 +671,12 @@ const handleImageError = (event) => {
 
 /* 筛选工具栏样式 */
 .filter-toolbar {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
   padding: 20px;
   margin-bottom: 30px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f2f5;
+  box-shadow: 3px 3px 0 #000;
+  border: 2px solid #000;
 }
 
 .filter-section {
@@ -703,7 +694,7 @@ const handleImageError = (event) => {
 
 .filter-label {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -722,11 +713,11 @@ const handleImageError = (event) => {
 
 /* 搜索结果样式 */
 .search-results {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
   padding: 30px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f2f5;
+  box-shadow: 3px 3px 0 #000;
+  border: 2px solid #000;
 }
 
 .results-header {
@@ -740,21 +731,21 @@ const handleImageError = (event) => {
 
 .results-count {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
 }
 
 .results-info {
-  font-size: 13px;
-  color: #999;
+  font-size: 15px;
+  color: var(--pixel-text-muted);
 }
 
 .highlight {
-  color: #409eff;
+  color: var(--pixel-primary-light);
   font-weight: 600;
 }
 
 .tip-text {
-  color: #999;
+  color: var(--pixel-text-muted);
   font-style: italic;
 }
 
@@ -767,7 +758,7 @@ const handleImageError = (event) => {
 .empty-tip {
   margin-top: 10px;
   font-size: 14px;
-  color: #999;
+  color: var(--pixel-text-muted);
 }
 
 /* 博客列表样 (复用首页样式) */
@@ -779,14 +770,17 @@ const handleImageError = (event) => {
 .article-item {
   display: flex;
   padding: 20px 0;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 2px solid #000;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.1s;
   gap: 20px;
+  background-color: var(--pixel-bg-card);
 }
 
 .article-item:hover {
-  background-color: #f9fafc;
+  background-color: var(--pixel-bg-secondary);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .article-item:last-child {
@@ -808,14 +802,17 @@ const handleImageError = (event) => {
 .article-item {
   display: flex;
   padding: 20px 0;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 2px solid #000;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.1s;
   gap: 20px;
+  background-color: var(--pixel-bg-card);
 }
 
 .article-item:hover {
-  background-color: #f9fafc;
+  background-color: var(--pixel-bg-secondary);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .article-item:last-child {
@@ -831,22 +828,21 @@ const handleImageError = (event) => {
   font-size: 18px;
   margin: 0 0 10px 0;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .article-title:hover {
-  color: #409eff;
+  color: var(--pixel-primary-light);
 }
 
 .article-summary {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   margin: 0 0 10px 0;
   line-height: 1.6;
-  /* 多行省略 */
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -858,8 +854,8 @@ const handleImageError = (event) => {
 .article-info {
   display: flex;
   align-items: center;
-  font-size: 13px;
-  color: #999;
+  font-size: 15px;
+  color: var(--pixel-text-muted);
 }
 
 .article-author {
@@ -871,7 +867,7 @@ const handleImageError = (event) => {
 }
 
 .article-author:hover {
-  color: #409eff;
+  color: var(--pixel-primary-light);
 }
 
 .article-date {
@@ -887,7 +883,7 @@ const handleImageError = (event) => {
 
 .article-count .iconify {
   font-size: 14px;
-  color: #999;
+  color: var(--pixel-text-muted);
   width: 14px;
   height: 14px;
 }
@@ -926,12 +922,13 @@ const handleImageError = (event) => {
 }
 
 .article-category {
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: var(--pixel-primary);
+  color: white;
   padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
+  border-radius: 0;
+  font-size: 14px;
   margin-left: 10px;
+  border: 2px solid #000;
 }
 
 @media (max-width: 768px) {
@@ -949,7 +946,7 @@ const handleImageError = (event) => {
 .loading-status {
   padding: 20px 0;
   text-align: center;
-  color: #909399;
+  color: var(--pixel-text-muted);
   font-size: 14px;
 }
 
@@ -975,13 +972,13 @@ const handleImageError = (event) => {
 }
 
 .no-more-data {
-  color: #909399;
+  color: var(--pixel-text-muted);
   display: inline-block;
   position: relative;
 }
 
 .no-more-data span {
-  background-color: #f9fafc;
+  background-color: var(--pixel-bg-card);
   padding: 0 10px;
   position: relative;
 }
@@ -992,8 +989,8 @@ const handleImageError = (event) => {
   left: 0;
   top: 50%;
   width: 100%;
-  height: 1px;
-  background-color: #ebeef5;
+  height: 2px;
+  background-color: #000;
   z-index: -1;
 }
 

@@ -390,7 +390,7 @@ const handleLoginSuccess = (userData) => {
   padding: 12px 20px !important;
   background: var(--pixel-bg-secondary) !important;
   border-bottom: 4px solid #000 !important;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 4px 0 #000 !important;
 }
 
 :deep(.el-main) {
@@ -466,8 +466,9 @@ const handleLoginSuccess = (userData) => {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: flex-end;
   text-align: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .input {
@@ -477,7 +478,7 @@ const handleLoginSuccess = (userData) => {
   padding: 0 15px;
 }
 
-/* 像素风搜索按钮 */
+/* 像素风搜索按钮 - 强制2px整数边框 */
 .search-btn {
   background: var(--pixel-primary) !important;
   color: #fff !important;
@@ -486,7 +487,8 @@ const handleLoginSuccess = (userData) => {
   box-shadow: 2px 2px 0 #000 !important;
   font-family: var(--pixel-font-body);
   font-size: 14px;
-  transition: all 0.1s ease;
+  transition: all 0.1s step-end;
+  box-sizing: border-box !important;
 }
 
 .search-btn:hover {
@@ -503,7 +505,7 @@ const handleLoginSuccess = (userData) => {
   margin-left: 16px;
 }
 
-/* 像素风登录头像 */
+/* 像素风登录头像 - 强制2px整数边框 */
 .login {
   border-radius: 0 !important;
   border: 2px solid #000 !important;
@@ -519,23 +521,27 @@ const handleLoginSuccess = (userData) => {
   font-family: var(--pixel-font-display);
   font-size: 10px;
   color: var(--pixel-primary-light);
+  box-sizing: border-box !important;
 }
 
-/* 像素风导航菜单项 */
+/* 像素风导航菜单项 - 强制2px整数边框 */
 .message-container,
 .history,
 .creation {
   position: relative;
-  margin-left: 12px;
+  margin-left: 8px;
   cursor: pointer;
   display: flex;
+  flex-direction: row;
   align-items: center;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 2px solid transparent;
   font-family: var(--pixel-font-body);
-  font-size: 14px;
+  font-size: 16px;
   color: var(--pixel-text-secondary);
-  transition: all 0.1s ease;
+  transition: all 0.1s step-end;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .message-container:hover,
@@ -565,7 +571,7 @@ const handleLoginSuccess = (userData) => {
   cursor: pointer;
 }
 
-/* 像素风创作按钮 */
+/* 像素风创作按钮 - 强制2px整数边框 */
 .create-btn {
   border-radius: 0 !important;
   background: var(--pixel-accent) !important;
@@ -574,7 +580,8 @@ const handleLoginSuccess = (userData) => {
   box-shadow: 2px 2px 0 #000 !important;
   font-family: var(--pixel-font-body);
   font-size: 14px;
-  transition: all 0.1s ease;
+  transition: all 0.1s step-end;
+  box-sizing: border-box !important;
 }
 
 .create-btn:hover {

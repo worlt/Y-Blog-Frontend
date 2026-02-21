@@ -292,26 +292,26 @@ const hasValidCover = (cover) => {
   return cover && cover.trim() && cover !== 'null' && cover !== 'undefined';
 };
 
-// 随机渐变背景数组（多色系协调配色）
-const gradients = [
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',  // 紫色
-  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',  // 粉红
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',  // 天蓝
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',  // 青绿
-  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',  // 橙粉
-  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',  // 青紫
-  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',  // 草绿
-  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',  // 橙红
-  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',  // 蓝紫
-  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',  // 蓝绿
-  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',  // 橙黄
-  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'   // 紫粉
+// 像素风纯色背景数组（替代渐变）
+const pixelColors = [
+  '#6C5CE7',  // 紫色
+  '#FF7675',  // 珊瑚红
+  '#00CEC9',  // 青色
+  '#FDCB6E',  // 金色
+  '#00B894',  // 绿色
+  '#74B9FF',  // 蓝色
+  '#A29BFE',  // 浅紫色
+  '#E17055',  // 红色
+  '#FD79A8',  // 粉色
+  '#55EFC4',  // 薄荷绿
+  '#FFEAA7',  // 浅黄
+  '#DDA0DD'   // 梅红色
 ];
 
-// 根据博客ID获取固定的渐变背景（确保同一博客每次显示相同的渐变）
+// 根据博客ID获取固定的纯色背景（确保同一博客每次显示相同的颜色）
 const getRandomGradient = (blogId) => {
-  const index = blogId % gradients.length;
-  return gradients[index];
+  const index = blogId % pixelColors.length;
+  return pixelColors[index];
 };
 
 // 图片加载错误处理
@@ -673,11 +673,11 @@ onUnmounted(() => {
   background-color: var(--pixel-bg-primary);
 }
 
-/* 像素风横幅 */
+/* 像素风横幅 - 使用纯色块替代渐变 */
 .banner {
   height: 280px;
-  background: linear-gradient(135deg, var(--pixel-primary) 0%, var(--pixel-primary-dark) 100%);
-  margin-bottom: 20px;
+  background: var(--pixel-primary);
+  margin-bottom: 12px;
   border: 4px solid #000;
   box-shadow: 4px 4px 0 #000;
   display: flex;
@@ -694,12 +694,14 @@ onUnmounted(() => {
   right: 0;
   width: 40%;
   height: 100%;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><path fill="rgba(255,255,255,0.15)" d="M37.5,186c-12.1-10.5-11.8-32.3-7.2-46.7c4.8-15,13.1-17.8,30.1-36.7C91,68.8,83.5,56.7,103.4,45 c22.2-13.1,51.1-9.5,69.6-1.6c18.1,7.8,15.7,15.3,43.3,33.2c28.8,18.8,37.2,14.3,46.7,27.9c15.6,22.3,6.4,53.3,4.4,60.2 c-3.3,11.2-7.1,23.9-18.5,32c-16.3,11.5-29.5,0.7-48.6,11c-16.2,8.7-12.6,19.7-28.2,33.2c-22.7,19.7-63.8,25.7-79.9,9.7 c-15.2-15.1,0.3-41.7-16.6-54.9C63,186,49.7,196.7,37.5,186z"/></svg>');
-  background-repeat: no-repeat;
-  background-position: right center;
-  background-size: contain;
-  opacity: 0.8;
-  transform: rotate(180deg);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--pixel-primary-light),
+    var(--pixel-primary-light) 10px,
+    var(--pixel-primary) 10px,
+    var(--pixel-primary) 20px
+  );
+  clip-path: polygon(30% 0, 100% 0, 100% 100%, 0% 100%);
 }
 
 .banner-content {
@@ -825,7 +827,7 @@ onUnmounted(() => {
 .sidebar-header h3 {
   margin: 0;
   font-family: var(--pixel-font-display);
-  font-size: 10px;
+  font-size: 16px;
   color: #fff;
   text-shadow: 2px 2px 0 #000;
   white-space: nowrap;
@@ -847,7 +849,7 @@ onUnmounted(() => {
   position: relative;
   border-bottom: 2px solid transparent;
   font-family: var(--pixel-font-body);
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .collapsed .menu-item {
@@ -876,7 +878,7 @@ onUnmounted(() => {
   transform: translateY(-50%);
   width: 4px;
   height: 60%;
-  background-color: #fff;
+  background-color: var(--pixel-primary);
 }
 
 .menu-icon {
@@ -886,7 +888,7 @@ onUnmounted(() => {
 }
 
 .menu-text {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   white-space: nowrap;
   transition: opacity 0.3s ease;
@@ -906,7 +908,7 @@ onUnmounted(() => {
   background-color: #000;
   color: #fff;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 16px;
   white-space: nowrap;
   z-index: 1000;
   margin-left: 10px;
@@ -922,9 +924,9 @@ onUnmounted(() => {
 }
 
 .right-sidebar {
-  background-color: var(--pixel-bg-card);
-  border-left: 4px solid #000;
-  margin-left: 0;
+  //background-color: var(--pixel-bg-card);
+  //border-left: 4px solid #000;
+  //margin-left: 0;
 }
 
 /* 像素风分类标签 */
@@ -933,7 +935,7 @@ onUnmounted(() => {
   border: 4px solid #000;
   box-shadow: 4px 4px 0 #000;
   padding: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .categories ul {
@@ -980,7 +982,7 @@ onUnmounted(() => {
 
 .section-title {
   font-family: var(--pixel-font-display);
-  font-size: 12px;
+  font-size: 16px;
   margin-top: 0;
   margin-bottom: 20px;
   position: relative;
@@ -1007,7 +1009,7 @@ onUnmounted(() => {
 /* 像素风文章卡片 */
 .article-item {
   display: flex;
-  padding: 16px 0;
+  padding: 16px 12px;
   border-bottom: 4px solid #000;
   cursor: pointer;
   transition: all 0.1s ease;
@@ -1054,9 +1056,10 @@ onUnmounted(() => {
 .article-info {
   display: flex;
   align-items: center;
-  font-size: 13px;
-  color: var(--pixel-text-muted);
+  font-size: 17px;
+  color: var(--pixel-text-secondary);
   font-family: var(--pixel-font-body);
+  font-weight: 500;
 }
 
 .article-author {
@@ -1075,10 +1078,10 @@ onUnmounted(() => {
 }
 
 .article-count .iconify {
-  font-size: 14px;
-  color: var(--pixel-text-muted);
-  width: 14px;
-  height: 14px;
+  font-size: 18px;
+  color: var(--pixel-text-secondary);
+  width: 18px;
+  height: 18px;
 }
 
 .article-count.clickable {
@@ -1110,30 +1113,33 @@ onUnmounted(() => {
   image-rendering: pixelated;
 }
 
-/* 文章封面占位图样式 */
+/* 像素风文章封面占位图 - 纯色背景 */
 .article-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 2px solid #000;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.1);
 }
 
 .placeholder-text {
   color: #fff;
   font-family: var(--pixel-font-display);
-  font-size: 12px;
+  font-size: 22px;
   text-shadow: 2px 2px 0 #000;
 }
 
-/* 推荐阅读区域占位图样式 */
+/* 像素风推荐阅读占位图 */
 .recommend-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid #000;
 }
 
 .recommend-placeholder .placeholder-text {
-  font-size: 10px;
+  font-size: 20px;
 }
 
 .load-more {
@@ -1187,7 +1193,7 @@ onUnmounted(() => {
 
 .card-title {
   font-family: var(--pixel-font-display);
-  font-size: 10px;
+  font-size: 16px;
   margin-top: 0;
   margin-bottom: 16px;
   position: relative;
@@ -1257,6 +1263,8 @@ onUnmounted(() => {
 
 .hot-article-info {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .hot-article-title {
@@ -1268,6 +1276,8 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--pixel-font-body);
+  display: block;
+  max-width: 100%;
 }
 
 .hot-article-count {
@@ -1319,6 +1329,7 @@ onUnmounted(() => {
   overflow: hidden;
   transition: all 0.1s ease;
   background-color: var(--pixel-bg-secondary);
+  min-width: 0;
 }
 
 .recommend-item:hover {
@@ -1355,6 +1366,9 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: var(--pixel-font-body);
+  display: block;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .recommend-title.no-image {
@@ -1371,7 +1385,7 @@ onUnmounted(() => {
   color: #fff;
   padding: 4px 10px;
   border: 2px solid #000;
-  font-size: 12px;
+  font-size: 16px;
   margin-left: 10px;
   font-family: var(--pixel-font-body);
 }

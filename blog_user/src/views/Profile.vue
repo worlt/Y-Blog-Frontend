@@ -830,7 +830,7 @@ const formatDate = (dateString) => {
 .page-with-sidebar {
   display: flex;
   min-height: calc(100vh - 80px);
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
 }
 
 .profile-page {
@@ -841,11 +841,12 @@ const formatDate = (dateString) => {
 }
 
 .profile-card {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
+  box-shadow: 4px 4px 0 #000;
   padding: 30px;
   margin-bottom: 20px;
+  border: 2px solid #000;
 }
 
 .profile-header {

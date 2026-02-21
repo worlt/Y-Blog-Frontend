@@ -252,7 +252,7 @@ const formatDate = (dateString) => {
 .page-with-sidebar {
   display: flex;
   min-height: calc(100vh - 80px);
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
 }
 
 .followed-users-page {
@@ -270,7 +270,7 @@ const formatDate = (dateString) => {
 }
 
 .page-title {
-  color: #333;
+  color: var(--pixel-text-primary);
   margin: 0;
   font-size: 22px;
   font-weight: 600;
@@ -291,20 +291,22 @@ const formatDate = (dateString) => {
   display: flex;
   align-items: flex-start;
   padding: 16px;
-  border-radius: 8px;
-  background-color: #fff;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+  background-color: var(--pixel-bg-card);
+  box-shadow: 4px 4px 0 #000;
   transition: all 0.3s;
+  border: 2px solid #000;
 }
 
 .user-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .user-avatar {
   margin-right: 16px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .user-info {
@@ -317,7 +319,7 @@ const formatDate = (dateString) => {
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
 }
 
 .user-meta {
@@ -326,7 +328,7 @@ const formatDate = (dateString) => {
   gap: 12px;
   margin-bottom: 8px;
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
 }
 
 .follow-count, .fans-count {
@@ -336,21 +338,21 @@ const formatDate = (dateString) => {
 
 .count-label {
   margin-right: 2px;
-  color: #888;
+  color: var(--pixel-text-muted);
 }
 
 .count-value {
   font-weight: 500;
-  color: #409EFF;
+  color: var(--pixel-primary-light);
 }
 
 .follow-time {
-  color: #888;
+  color: var(--pixel-text-muted);
 }
 
 .user-bio {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   margin-top: 8px;
   white-space: pre-line;
   line-height: 1.5;
@@ -361,8 +363,10 @@ const formatDate = (dateString) => {
   flex-direction: column;
   gap: 8px;
   margin-left: 16px;
+  flex-shrink: 0;
 }
 
+/* 响应式调整 */
 @media (max-width: 768px) {
   .user-item {
     flex-direction: column;

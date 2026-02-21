@@ -216,7 +216,7 @@ const formatDate = (dateString) => {
 .page-with-sidebar {
   display: flex;
   min-height: calc(100vh - 80px);
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
 }
 
 .followers-page {
@@ -234,9 +234,9 @@ const formatDate = (dateString) => {
 }
 
 .page-title {
-  color: #333;
+  color: var(--pixel-text-primary);
   margin: 0;
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .loading-container {
@@ -258,14 +258,15 @@ const formatDate = (dateString) => {
   display: flex;
   align-items: center;
   padding: 16px;
-  border-radius: 8px;
-  background-color: white;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.05);
+  border-radius: 0;
+  background-color: var(--pixel-bg-card);
+  box-shadow: 3px 3px 0 #000;
   transition: box-shadow 0.3s;
+  border: 2px solid #000;
 }
 
 .user-item:hover {
-  box-shadow: 0 4px 16px 0 rgba(0,0,0,0.1);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .user-avatar {
@@ -282,7 +283,7 @@ const formatDate = (dateString) => {
 .user-name {
   margin: 0 0 8px;
   font-size: 18px;
-  color: #333;
+  color: var(--pixel-text-primary);
 }
 
 .user-meta {
@@ -291,12 +292,12 @@ const formatDate = (dateString) => {
   gap: 16px;
   margin-bottom: 8px;
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
 }
 
 .user-bio {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;

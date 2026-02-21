@@ -351,7 +351,7 @@ const stripHtml = (html) => {
 .page-with-sidebar {
   display: flex;
   min-height: calc(100vh - 80px);
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
 }
 
 .my-collections-page {
@@ -373,7 +373,7 @@ const stripHtml = (html) => {
   font-size: 22px;
   margin: 0;
   font-weight: 600;
-  color: #303133;
+  color: var(--pixel-text-primary);
 }
 
 .sort-selector {
@@ -384,22 +384,23 @@ const stripHtml = (html) => {
 }
 
 .sort-label {
-  color: #606266;
+  color: var(--pixel-text-secondary);
   font-size: 14px;
   white-space: nowrap;
 }
 
 .header-divider {
-  height: 1px;
-  background: linear-gradient(to right, transparent, #e4e7ed, transparent);
+  height: 2px;
+  background: #000;
   margin: 15px 0;
 }
 
 .collection-list-container {
-  background-color: white;
-  border-radius: 8px;
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
   padding: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 4px 4px 0 #000;
+  border: 2px solid #000;
 }
 
 .loading-container,
@@ -418,14 +419,17 @@ const stripHtml = (html) => {
 .article-item {
   display: flex;
   padding: 20px 0;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 2px solid #000;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.1s;
   gap: 20px;
+  background-color: var(--pixel-bg-card);
 }
 
 .article-item:hover {
-  background-color: #f9fafc;
+  background-color: var(--pixel-bg-secondary);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .article-item:last-child {
@@ -441,19 +445,19 @@ const stripHtml = (html) => {
   font-size: 18px;
   margin: 0 0 10px 0;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .article-title:hover {
-  color: #409eff;
+  color: var(--pixel-primary-light);
 }
 
 .article-summary {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   margin: 0 0 10px 0;
   line-height: 24px;
   height: 48px;
@@ -469,7 +473,7 @@ const stripHtml = (html) => {
   display: flex;
   align-items: center;
   font-size: 13px;
-  color: #999;
+  color: var(--pixel-text-muted);
   flex-wrap: wrap;
 }
 
@@ -482,7 +486,7 @@ const stripHtml = (html) => {
 }
 
 .article-author:hover {
-  color: #409eff;
+  color: var(--pixel-primary-light);
 }
 
 .article-date {
@@ -494,6 +498,17 @@ const stripHtml = (html) => {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.article-count .iconify {
+  font-size: 14px;
+  color: var(--pixel-text-muted);
+  width: 14px;
+  height: 14px;
+}
+
+.article-count.clickable:hover {
+  color: var(--pixel-gold);
 }
 
 .article-count .iconify {
@@ -527,9 +542,10 @@ const stripHtml = (html) => {
 .article-image {
   width: 180px;
   height: 120px;
-  border-radius: 4px;
+  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
+  border: 2px solid #000;
 }
 
 .article-image img {
@@ -553,23 +569,24 @@ const stripHtml = (html) => {
   color: #fff;
   font-size: 18px;
   font-weight: 600;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  text-shadow: 2px 2px 0 #000;
   letter-spacing: 1px;
 }
 
 .article-category {
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: var(--pixel-primary);
+  color: #fff;
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: 0;
   font-size: 12px;
   margin-right: 15px;
+  border: 2px solid #000;
 }
 
 .collect-time {
-  color: #909399;
+  color: var(--pixel-text-muted);
   font-size: 12px;
-  margin-left: auto; /* Push to right if space permits */
+  margin-left: auto;
 }
 
 .collected-icon.loading {

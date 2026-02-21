@@ -803,7 +803,7 @@ const stripHtml = (html) => {
 <style scoped>
 /* 消息链接样式 - 使用 :deep 穿透 scopes */
 .message-text :deep(.msg-link) {
-  color: #409EFF;
+  color: var(--pixel-primary-light);
   cursor: pointer;
   text-decoration: none;
   font-weight: 500;
@@ -811,13 +811,13 @@ const stripHtml = (html) => {
 
 .message-text :deep(.msg-link:hover) {
   text-decoration: underline;
-  color: #66b1ff;
+  color: var(--pixel-primary);
 }
 
 .messages-container {
   height: calc(100vh - 60px);
   width: 100%;
-  background-color: #f0f2f5;
+  background-color: var(--pixel-bg-primary);
   overflow: hidden;
 }
 
@@ -827,8 +827,8 @@ const stripHtml = (html) => {
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
-  background-color: #fff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: var(--pixel-bg-card);
+  box-shadow: 4px 4px 0 #000;
 }
 
 /* 左侧会话列表面板 */
@@ -837,8 +837,8 @@ const stripHtml = (html) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #e0e0e0;
-  background-color: #fff;
+  border-right: 2px solid #000;
+  background-color: var(--pixel-bg-card);
 }
 
 .conversations-header {
@@ -846,14 +846,14 @@ const stripHtml = (html) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 2px solid #000;
 }
 
 .conversations-header h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
 }
 
 .conversations-actions {
@@ -863,7 +863,7 @@ const stripHtml = (html) => {
 
 .conversations-search {
   padding: 12px 16px;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 2px solid #000;
 }
 
 .conversations-list {
@@ -880,20 +880,21 @@ const stripHtml = (html) => {
   align-items: center;
   padding: 12px 16px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.1s;
   position: relative;
+  border-bottom: 1px solid #000;
 }
 
 .conversation-item:hover {
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-secondary);
 }
 
 .conversation-item.active {
-  background-color: #e6f1fc;
+  background-color: var(--pixel-primary);
 }
 
 .conversation-item.unread {
-  background-color: #f0f9eb;
+  background-color: var(--pixel-bg-secondary);
 }
 
 .conversation-avatar {
@@ -1016,7 +1017,7 @@ const stripHtml = (html) => {
   align-items: center;
   justify-content: center;
   padding: 20px 0;
-  color: #909399;
+  color: var(--pixel-text-muted);
   font-size: 14px;
 }
 
@@ -1044,13 +1045,13 @@ const stripHtml = (html) => {
 .date-divider span {
   display: inline-block;
   padding: 0 10px;
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-secondary);
   position: relative;
   z-index: 1;
   font-size: 12px;
-  color: #909399;
-  border-radius: 10px;
-  border: 1px solid #ebeef5;
+  color: var(--pixel-text-muted);
+  border-radius: 0;
+  border: 2px solid #000;
 }
 
 .time-divider {
@@ -1062,9 +1063,9 @@ const stripHtml = (html) => {
   display: inline-block;
   padding: 2px 8px;
   font-size: 12px;
-  color: #909399;
-  background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
+  color: var(--pixel-text-muted);
+  background-color: var(--pixel-bg-secondary);
+  border-radius: 0;
 }
 
 .message-item {

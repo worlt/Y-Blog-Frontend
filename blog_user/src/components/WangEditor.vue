@@ -451,15 +451,15 @@ defineExpose({
 
 <style scoped>
 .wang-editor-container {
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
+  border: 2px solid #000;
+  border-radius: 0;
   overflow: visible; /* 改为visible，让内容撑开页面 */
   position: relative;
 }
 
 .editor-toolbar-container {
-  border-bottom: 1px solid #dcdfe6;
-  background-color: #fff; /* 确保背景不透明 */
+  border-bottom: 2px solid #000;
+  background-color: var(--pixel-bg-card); /* 确保背景不透明 */
   position: sticky; /* 滚动时固定在顶部 */
   top: 0; /* 固定在视口顶部 */
   z-index: 100; /* 确保在内容之上 */
@@ -476,10 +476,10 @@ defineExpose({
 .ai-completion-overlay {
   position: fixed; /* 改为 fixed 定位 */
   z-index: 9999; /* 确保层级最高 */
-  background-color: rgba(255, 255, 255, 0.95);
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  background-color: var(--pixel-bg-card);
+  border: 2px solid #000;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 #000;
   pointer-events: auto; /* 允许交互（拖拽、调整大小） */
   transition: opacity 0.2s;
   min-width: 200px;
@@ -496,26 +496,26 @@ defineExpose({
 
 .drag-handle {
   height: 12px;
-  background-color: #f0f2f5;
+  background-color: var(--pixel-bg-secondary);
   cursor: move;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 2px solid #000;
   flex-shrink: 0;
 }
 
 .drag-bar {
   width: 30px;
   height: 4px;
-  background-color: #dcdfe6;
-  border-radius: 2px;
+  background-color: var(--pixel-primary);
+  border-radius: 0;
 }
 
 .completion-content {
   padding: 8px 12px;
   font-size: 14px;
-  color: #606266;
+  color: var(--pixel-text-primary);
   white-space: pre-wrap;
   word-break: break-all;
   overflow-y: auto;
@@ -523,7 +523,7 @@ defineExpose({
 }
 
 .completion-tip {
-  color: #409eff;
+  color: var(--pixel-primary-light);
   font-size: 12px;
   margin-left: 4px;
   font-weight: bold;
@@ -548,8 +548,8 @@ defineExpose({
 .dot {
   width: 6px;
   height: 6px;
-  background-color: #409eff;
-  border-radius: 50%;
+  background-color: var(--pixel-primary-light);
+  border-radius: 0;
   animation: bounce 1.4s infinite ease-in-out both;
 }
 

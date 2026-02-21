@@ -104,13 +104,14 @@ const navigateTo = (path) => {
 .user-center-sidebar {
   width: 200px;
   min-height: calc(100vh - 80px);
-  background-color: #fff;
-  border-right: 1px solid #e4e7ed;
+  background-color: var(--pixel-bg-card);
+  border-right: 4px solid #000;
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
   position: relative;
   flex-shrink: 0;
+  box-shadow: 4px 4px 0 #000;
 }
 
 .user-center-sidebar.collapsed {
@@ -125,14 +126,16 @@ const navigateTo = (path) => {
   padding: 20px 10px;
   cursor: pointer;
   transition: background-color 0.2s;
+  border-bottom: 4px solid #000;
 }
 
 .user-info:hover {
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-secondary);
 }
 
 .user-avatar {
-  border: 2px solid #409eff;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
   transition: all 0.3s ease;
 }
 
@@ -140,7 +143,7 @@ const navigateTo = (path) => {
   margin-top: 10px;
   font-size: 14px;
   font-weight: 500;
-  color: #303133;
+  color: var(--pixel-text-primary);
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -150,15 +153,15 @@ const navigateTo = (path) => {
 
 /* 分割线 */
 .sidebar-divider {
-  height: 1px;
-  background: linear-gradient(to right, transparent, #e4e7ed, transparent);
-  margin: 0 15px 10px;
+  height: 4px;
+  background: #000;
+  margin: 0 10px 10px;
 }
 
 /* 菜单列表 */
 .sidebar-menu {
   flex: 1;
-  padding: 0 8px;
+  padding: 8px;
 }
 
 .menu-item {
@@ -166,20 +169,24 @@ const navigateTo = (path) => {
   align-items: center;
   padding: 12px 15px;
   margin-bottom: 4px;
-  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #606266;
+  transition: all 0.1s ease;
+  color: var(--pixel-text-secondary);
+  border: 2px solid transparent;
+  font-size: 16px;
 }
 
 .menu-item:hover {
-  background-color: #ecf5ff;
-  color: #409eff;
+  background-color: var(--pixel-bg-secondary);
+  color: var(--pixel-text-primary);
+  border: 2px solid #000;
 }
 
 .menu-item.active {
-  background-color: #409eff;
+  background-color: var(--pixel-primary);
   color: #fff;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
 }
 
 .menu-item.active .menu-icon {
@@ -209,22 +216,22 @@ const navigateTo = (path) => {
   transform: translateY(-50%);
   width: 24px;
   height: 24px;
-  background-color: #fff;
-  border: 1px solid #e4e7ed;
-  border-radius: 50%;
+  background-color: var(--pixel-primary);
+  border: 2px solid #000;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 10;
   transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 2px 0 #000;
+  color: #fff;
 }
 
 .collapse-btn:hover {
-  background-color: #409eff;
-  color: #fff;
-  border-color: #409eff;
+  background-color: var(--pixel-primary-dark);
+  transform: translateY(-50%) translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
 }
 
 /* 折叠状态下的样式调整 */

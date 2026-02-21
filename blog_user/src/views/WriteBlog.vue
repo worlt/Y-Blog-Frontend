@@ -765,7 +765,7 @@ watch(editorRef, (newEditor) => {
 .write-blog-container {
   padding: 20px;
   padding-right: 390px; /* 为固定右侧栏留出空间 */
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
   min-height: calc(100vh - 60px);
 }
 
@@ -780,7 +780,7 @@ watch(editorRef, (newEditor) => {
 .title {
   font-size: 22px;
   font-weight: bold;
-  color: #303133;
+  color: var(--pixel-text-primary);
 }
 
 .content-wrapper {
@@ -802,7 +802,7 @@ watch(editorRef, (newEditor) => {
   overflow-y: auto;
   overflow-x: hidden; /* 防止横向滚动条 */
   z-index: 100;
-  background-color: #f5f7fa; /* 背景色与页面一致 */
+  background-color: var(--pixel-bg-card); /* 背景色与页面一致 */
 }
 
 /* 确保 settings-area 的滚动条只在内容超出时显示 */
@@ -833,7 +833,7 @@ watch(editorRef, (newEditor) => {
   font-size: 24px;
   height: 56px;
   padding: 0 15px;
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 .editor-wrap {
@@ -857,7 +857,7 @@ watch(editorRef, (newEditor) => {
   position: sticky !important;
   top: 0 !important;
   z-index: 100 !important;
-  background-color: #fff !important;
+  background-color: var(--pixel-bg-card) !important;
 }
 
 /* 编辑器容器样式 */
@@ -918,8 +918,8 @@ watch(editorRef, (newEditor) => {
 
 .tag-tips {
   margin-top: 5px;
-  font-size: 12px;
-  color: #909399;
+  font-size: 14px;
+  color: var(--pixel-text-muted);
 }
 
 .cover-container {
@@ -954,8 +954,8 @@ watch(editorRef, (newEditor) => {
 }
 
 .upload-tips {
-  font-size: 12px;
-  color: #909399;
+  font-size: 14px;
+  color: var(--pixel-text-muted);
   line-height: 1.5;
 }
 
@@ -965,8 +965,8 @@ watch(editorRef, (newEditor) => {
 }
 
 .ai-tips {
-  font-size: 12px;
-  color: #909399;
+  font-size: 14px;
+  color: var(--pixel-text-muted);
   line-height: 1.4;
   margin-top: 5px;
 }
@@ -984,15 +984,16 @@ watch(editorRef, (newEditor) => {
 .ai-tip-content p {
   margin-bottom: 10px;
   line-height: 1.6;
-  color: #606266;
+  color: var(--pixel-text-secondary);
 }
 
 .highlight {
-  color: #409eff;
+  color: var(--pixel-primary-light);
   font-weight: bold;
-  background-color: #ecf5ff;
+  background-color: var(--pixel-bg-secondary);
   padding: 5px 10px;
-  border-radius: 4px;
+  border-radius: 0;
+  border: 2px solid #000;
   display: inline-block;
   margin-top: 10px;
 }

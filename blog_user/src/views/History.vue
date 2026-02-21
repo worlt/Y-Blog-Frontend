@@ -392,7 +392,7 @@ onUnmounted(() => {
 .page-with-sidebar {
   display: flex;
   min-height: calc(100vh - 80px);
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
 }
 
 .history-container {
@@ -411,9 +411,9 @@ onUnmounted(() => {
 
 .page-title {
   margin: 0;
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
 }
 
 .history-content {
@@ -438,15 +438,16 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   padding: 16px;
-  border-radius: 8px;
-  background-color: #fff;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+  background-color: var(--pixel-bg-card);
+  box-shadow: 4px 4px 0 #000;
   transition: all 0.3s ease;
+  border: 2px solid #000;
 }
 
 .history-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .blog-content {
@@ -457,9 +458,9 @@ onUnmounted(() => {
 
 .blog-title {
   margin: 0 0 12px;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
-  color: #303133;
+  color: var(--pixel-text-primary);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -471,7 +472,7 @@ onUnmounted(() => {
 .blog-excerpt {
   margin-bottom: 12px;
   font-size: 14px;
-  color: #606266;
+  color: var(--pixel-text-secondary);
   line-height: 1.6;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -485,8 +486,8 @@ onUnmounted(() => {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  font-size: 13px;
-  color: #909399;
+  font-size: 15px;
+  color: var(--pixel-text-muted);
 }
 
 .blog-author {
@@ -497,14 +498,14 @@ onUnmounted(() => {
 
 .blog-category {
   padding: 2px 8px;
-  background-color: #ecf5ff;
-  color: #409eff;
-  border-radius: 4px;
-  font-size: 12px;
+  background-color: var(--pixel-primary);
+  color: white;
+  border-radius: 0;
+  font-size: 14px;
 }
 
 .view-time {
-  color: #67c23a;
+  color: var(--pixel-primary);
   font-weight: 500;
 }
 
@@ -521,9 +522,9 @@ onUnmounted(() => {
 }
 
 .stat-item svg {
-  width: 16px;
-  height: 16px;
-  color: #909399;
+  width: 18px;
+  height: 18px;
+  color: var(--pixel-text-muted);
 }
 
 .remove-btn {
@@ -553,7 +554,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #909399;
+  color: var(--pixel-text-muted);
 }
 
 .loading-more .is-loading {
@@ -567,7 +568,7 @@ onUnmounted(() => {
 
 .no-more {
   text-align: center;
-  color: #909399;
+  color: var(--pixel-text-muted);
   padding: 16px 0;
   font-size: 14px;
 }

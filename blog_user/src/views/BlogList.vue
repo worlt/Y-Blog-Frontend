@@ -355,26 +355,17 @@ const hasValidCover = (cover) => {
   return cover && cover.trim() && cover !== 'null' && cover !== 'undefined';
 };
 
-// 随机渐变背景数组
-const gradients = [
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',
-  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
-  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',
-  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',
-  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
-  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+// 像素风纯色背景数组
+const pixelColors = [
+  '#6C5CE7', '#FF7675', '#00CEC9', '#FDCB6E',
+  '#00B894', '#74B9FF', '#A29BFE', '#E17055',
+  '#FD79A8', '#55EFC4', '#FFEAA7', '#DDA0DD'
 ];
 
-// 获取渐变背景
+// 获取纯色背景
 const getRandomGradient = (blogId) => {
-  const index = blogId % gradients.length;
-  return gradients[index];
+  const index = blogId % pixelColors.length;
+  return pixelColors[index];
 };
 
 // 图片加载错误处理
@@ -601,12 +592,12 @@ const handleImageError = (event) => {
 
 /* 搜索区域样式 */
 .search-section {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
   padding: 25px;
   margin-bottom: 25px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f2f5;
+  box-shadow: 4px 4px 0 #000;
+  border: 2px solid #000;
 }
 
 .search-container {
@@ -616,26 +607,26 @@ const handleImageError = (event) => {
 }
 
 .search-input {
-  border-radius: 25px;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 3px 3px 0 #000;
 }
 
 .search-input :deep(.el-input__wrapper) {
-  border-radius: 25px 0 0 25px;
-  border: 1px solid #dcdfe6;
+  border-radius: 0 0 0 25px;
+  border: 2px solid #000;
   transition: all 0.3s ease;
 }
 
 .search-input :deep(.el-input__wrapper):hover {
-  border-color: #409eff;
+  border-color: var(--pixel-primary);
 }
 
 .search-input :deep(.el-input-group__append) {
   border-radius: 0 25px 25px 0;
-  border: 1px solid #409eff;
+  border: 2px solid var(--pixel-primary);
   border-left: none;
-  background-color: #409eff;
+  background-color: var(--pixel-primary);
 }
 
 .search-input :deep(.el-input-group__append .el-button) {
@@ -649,12 +640,12 @@ const handleImageError = (event) => {
 
 /* 筛选条件样式 */
 .filter-container {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
   padding: 20px;
   margin-bottom: 25px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f2f5;
+  box-shadow: 4px 4px 0 #000;
+  border: 2px solid #000;
 }
 
 .filter-section {
@@ -674,13 +665,13 @@ const handleImageError = (event) => {
   align-items: center;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
   margin: 0;
 }
 
 .filter-title :deep(svg) {
   margin-right: 8px;
-  color: #409eff;
+  color: var(--pixel-primary-light);
   font-size: 18px;
   width: 18px;
   height: 18px;
@@ -694,40 +685,40 @@ const handleImageError = (event) => {
 
 .filter-tag {
   padding: 8px 16px;
-  border-radius: 20px;
+  border-radius: 0;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid #e4e7ed;
-  background-color: #f8f9fa;
-  color: #606266;
+  border: 2px solid #000;
+  background-color: var(--pixel-bg-card);
+  color: var(--pixel-text-primary);
   user-select: none;
 }
 
 .filter-tag:hover {
-  border-color: #409eff;
-  color: #409eff;
-  background-color: #ecf5ff;
+  border-color: var(--pixel-primary);
+  color: var(--pixel-primary);
+  background-color: var(--pixel-bg-card);
 }
 
 .filter-tag.active {
-  background-color: #409eff;
+  background-color: var(--pixel-primary);
   color: white;
-  border-color: #409eff;
+  border-color: var(--pixel-primary);
 }
 
 .tag-item {
-  font-size: 13px;
+  font-size: 15px;
   padding: 6px 12px;
 }
 
 /* 博客内容区域样式 */
 .blog-content {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
   padding: 30px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f2f5;
+  box-shadow: 4px 4px 0 #000;
+  border: 2px solid #000;
 }
 
 .content-header {
@@ -748,7 +739,7 @@ const handleImageError = (event) => {
   font-size: 24px;
   margin: 0 0 8px 0;
   font-weight: 700;
-  color: #333;
+  color: var(--pixel-text-primary);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -756,16 +747,16 @@ const handleImageError = (event) => {
 
 .blog-count {
   font-size: 16px;
-  color: #999;
+  color: var(--pixel-text-muted);
   font-weight: 400;
 }
 
 .content-subtitle {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   margin: 0;
   line-height: 1.5;
-}
+}}
 
 .content-actions {
   display: flex;
@@ -781,14 +772,14 @@ const handleImageError = (event) => {
 .selected-tags {
   margin-bottom: 25px;
   padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
+  border: 2px solid #000;
 }
 
 .tags-label {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   margin-right: 10px;
   font-weight: 500;
 }
@@ -807,7 +798,7 @@ const handleImageError = (event) => {
 .empty-tip {
   margin-top: 15px;
   font-size: 14px;
-  color: #999;
+  color: var(--pixel-text-muted);
 }
 
 /* 博客网格样式 */
@@ -819,19 +810,19 @@ const handleImageError = (event) => {
 }
 
 .blog-card {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid #f0f2f5;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 #000;
 }
 
 .blog-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: #409eff;
+  box-shadow: 4px 4px 0 #000;
+  border-color: var(--pixel-primary);
 }
 
 .blog-cover {
@@ -839,7 +830,8 @@ const handleImageError = (event) => {
   width: 100%;
   height: 200px;
   overflow: hidden;
-  background-color: #f8f9fa;
+  background-color: var(--pixel-bg-card);
+  border: 2px solid #000;
 }
 
 .blog-cover img {
@@ -862,7 +854,7 @@ const handleImageError = (event) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--pixel-primary);
   color: white;
 }
 
@@ -876,12 +868,12 @@ const handleImageError = (event) => {
   top: 12px;
   right: 12px;
   padding: 4px 8px;
-  background-color: rgba(64, 158, 255, 0.9);
+  background-color: var(--pixel-primary);
   color: white;
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: 0;
+  font-size: 14px;
   font-weight: 500;
-  backdrop-filter: blur(5px);
+  ;
 }
 
 .blog-info {
@@ -892,7 +884,7 @@ const handleImageError = (event) => {
   font-size: 18px;
   margin: 0 0 12px 0;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -903,17 +895,17 @@ const handleImageError = (event) => {
 }
 
 .blog-card:hover .blog-title {
-  color: #409eff;
+  color: var(--pixel-primary-light);
 }
 
 
 
 .blog-summary {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   margin-bottom: 15px;
   line-height: 1.6;
-  height: 4.8em; /* 1.6 * 3行 */
+  height: 4.8em;
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -931,23 +923,23 @@ const handleImageError = (event) => {
 }
 
 .blog-tag {
-  font-size: 12px;
+  font-size: 14px;
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: 0;
   transition: all 0.3s ease;
 }
 
 .blog-tag:hover {
-  color: #409eff;
-  border-color: #409eff;
+  color: var(--pixel-primary-light);
+  border-color: var(--pixel-primary-light);
 }
 
 .more-tags {
-  font-size: 12px;
-  color: #999;
-  background-color: #f0f2f5;
+  font-size: 14px;
+  color: var(--pixel-text-muted);
+  background-color: var(--pixel-bg-secondary);
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .blog-meta {
@@ -956,7 +948,7 @@ const handleImageError = (event) => {
   align-items: center;
   margin-top: auto;
   padding-top: 10px;
-  border-top: 1px solid #f0f2f5;
+  border-top: 2px solid #000;
 }
 
 .author-info {
@@ -967,30 +959,30 @@ const handleImageError = (event) => {
 }
 
 .author-info:hover {
-  color: #409eff;
+  color: var(--pixel-primary-light);
 }
 
 .author-name {
   margin-left: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: var(--pixel-text-primary);
 }
 
 .meta-stats {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 12px;
-  color: #999;
+  font-size: 14px;
+  color: var(--pixel-text-muted);
 }
 
 .meta-item {
   display: flex;
   align-items: center;
   margin-right: 12px;
-  font-size: 13px;
-  color: #666;
+  font-size: 15px;
+  color: var(--pixel-text-secondary);
 }
 
 .meta-item :deep(svg) {
@@ -1001,8 +993,8 @@ const handleImageError = (event) => {
 }
 
 .publish-date {
-  font-size: 12px;
-  color: #999;
+  font-size: 14px;
+  color: var(--pixel-text-muted);
 }
 
 /* 分页样式 */
@@ -1053,7 +1045,7 @@ const handleImageError = (event) => {
   }
   
   .blog-card {
-    border-radius: 8px;
+    border-radius: 0;
   }
   
   .blog-cover {
@@ -1070,11 +1062,11 @@ const handleImageError = (event) => {
   
   .filter-tag {
     padding: 6px 12px;
-    font-size: 13px;
+    font-size: 15px;
   }
   
   .tag-item {
-    font-size: 12px;
+    font-size: 14px;
     padding: 4px 8px;
   }
 }
@@ -1099,7 +1091,7 @@ const handleImageError = (event) => {
   }
   
   .blog-summary {
-    font-size: 13px;
+    font-size: 15px;
   }
   
   .content-title {
@@ -1144,67 +1136,68 @@ const handleImageError = (event) => {
 }
 
 :deep(.el-pagination) {
-  --el-pagination-bg-color: white;
-  --el-pagination-button-color: #666;
+  --el-pagination-bg-color: var(--pixel-bg-card);
+  --el-pagination-button-color: var(--pixel-text-secondary);
+  --el-pagination-button-disabled-color: var(--pixel-text-muted);
 }
 
 :deep(.el-pagination .btn-next),
 :deep(.el-pagination .btn-prev) {
-  background-color: white;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
+  background-color: var(--pixel-bg-card);
+  border: 2px solid #000;
+  border-radius: 0;
 }
 
 :deep(.el-pagination .btn-next:hover),
 :deep(.el-pagination .btn-prev:hover) {
-  color: #409eff;
-  border-color: #409eff;
+  color: var(--pixel-primary-light);
+  border-color: var(--pixel-primary);
 }
 
 :deep(.el-pager li) {
-  background-color: white;
-  border: 1px solid #dcdfe6;
+  background-color: var(--pixel-bg-card);
+  border: 2px solid #000;
   margin: 0 2px;
-  border-radius: 6px;
+  border-radius: 0;
 }
 
 :deep(.el-pager li:hover) {
-  color: #409eff;
-  border-color: #409eff;
+  color: var(--pixel-primary-light);
+  border-color: var(--pixel-primary);
   }
 
 :deep(.el-pager li.is-active) {
   color: white;
-  background-color: #409eff;
-  border-color: #409eff;
+  background-color: var(--pixel-primary);
+  border-color: var(--pixel-primary);
 }
 
 :deep(.el-skeleton__item) {
-  background: linear-gradient(90deg, #f2f2f2 25%, #e6e6e6 37%, #f2f2f2 63%);
-      border-radius: 8px;
-  }
+  background: var(--pixel-bg-secondary);
+  border-radius: 0;
+}
 
 .user-blogs-header {
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 2px solid #000;
 }
 
 .user-blogs-title {
   font-size: 18px;
-  color: #333;
+  color: var(--pixel-text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .user-blogs-title .el-icon {
-  color: #409EFF;
+  color: var(--pixel-primary-light);
   font-size: 18px;
 }
 
 .username-highlight {
-  color: #409EFF;
+  color: var(--pixel-primary-light);
   font-weight: 600;
 }
 
@@ -1230,7 +1223,7 @@ const handleImageError = (event) => {
 }
 
 .article-item:hover {
-  background-color: #f9fafc;
+  background-color: var(--pixel-bg-hover);
 }
 
 .article-item:last-child {
@@ -1246,22 +1239,21 @@ const handleImageError = (event) => {
   font-size: 18px;
   margin: 0 0 10px 0;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .article-title:hover {
-  color: #409eff;
+  color: var(--pixel-primary-light);
 }
 
 .article-summary {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   margin: 0 0 10px 0;
   line-height: 1.6;
-  /* 多行省略 */
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -1273,8 +1265,8 @@ const handleImageError = (event) => {
 .article-info {
   display: flex;
   align-items: center;
-  font-size: 13px;
-  color: #999;
+  font-size: 15px;
+  color: var(--pixel-text-muted);
 }
 
 .article-author {
@@ -1286,7 +1278,7 @@ const handleImageError = (event) => {
 }
 
 .article-author:hover {
-  color: #409eff;
+  color: var(--pixel-primary-light);
 }
 
 .article-date {
@@ -1302,7 +1294,7 @@ const handleImageError = (event) => {
 
 .article-count .iconify {
   font-size: 14px;
-  color: #999;
+  color: var(--pixel-text-muted);
   width: 14px;
   height: 14px;
 }
@@ -1310,7 +1302,7 @@ const handleImageError = (event) => {
 .article-image {
   width: 180px;
   height: 120px;
-  border-radius: 4px;
+  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -1341,12 +1333,13 @@ const handleImageError = (event) => {
 }
 
 .article-category {
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: var(--pixel-bg-card);
+  color: var(--pixel-text-primary);
   padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
+  border-radius: 0;
+  font-size: 14px;
   margin-left: 10px;
+  border: 2px solid #000;
 }
 
 @media (max-width: 768px) {

@@ -431,7 +431,7 @@ const handleImageError = (event) => {
 .page-with-sidebar {
   display: flex;
   min-height: calc(100vh - 80px);
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
 }
 
 .my-blogs-page {
@@ -457,10 +457,11 @@ const handleImageError = (event) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  background-color: white;
+  background-color: var(--pixel-bg-card);
   padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 #000;
+  border: 2px solid #000;
 }
 
 .sort-selector {
@@ -470,15 +471,16 @@ const handleImageError = (event) => {
 
 .sort-label {
   margin-right: 8px;
-  color: #606266;
+  color: var(--pixel-text-primary);
   font-size: 14px;
 }
 
 .blog-list-container {
-  background-color: white;
-  border-radius: 8px;
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
   padding: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 3px 3px 0 #000;
+  border: 2px solid #000;
 }
 
 .loading-container,
@@ -495,7 +497,7 @@ const handleImageError = (event) => {
 .blog-title {
   cursor: pointer;
   margin-right: 10px;
-  color: #409eff;
+  color: var(--pixel-primary);
   transition: color 0.2s;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -503,16 +505,16 @@ const handleImageError = (event) => {
 }
 
 .blog-title:hover {
-  color: #66b1ff;
+  color: var(--pixel-primary-light);
   text-decoration: underline;
 }
 
 .draft-title {
-  color: #606266;
+  color: var(--pixel-text-muted);
 }
 
 .draft-title:hover {
-  color: #909399;
+  color: var(--pixel-text-secondary);
 }
 
 .action-buttons {
