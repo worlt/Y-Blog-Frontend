@@ -814,12 +814,6 @@ watch(editorRef, (newEditor) => {
 }
 
 :deep(.el-dialog__title) {
-  color: var(--pixel-text-primary) !important;
-  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif !important;
-  font-size: 18px !important;
-  line-height: 1.5 !important;
-  text-align: center !important;
-  display: block !important;
   width: 100%;
 }
 

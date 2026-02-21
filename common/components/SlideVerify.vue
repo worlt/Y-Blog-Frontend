@@ -380,10 +380,11 @@ defineExpose({
   justify-content: center;
   gap: 12px;
   padding: 16px;
-  background-color: #f0f9ff;
-  border: 1px solid #b3e5fc;
-  border-radius: 4px;
-  color: #0277bd;
+  background-color: var(--pixel-bg-card, #f0f9ff);
+  border: 2px solid #000;
+  border-radius: 0;
+  color: var(--pixel-primary, #0277bd);
+  box-shadow: 3px 3px 0 #000;
 }
 
 .success-icon {
@@ -394,7 +395,8 @@ defineExpose({
   height: 24px;
   background-color: #67c23a;
   color: white;
-  border-radius: 50%;
+  border-radius: 0;
+  border: 2px solid #000;
   font-weight: bold;
   font-size: 14px;
 }
@@ -410,10 +412,11 @@ defineExpose({
   justify-content: center;
   gap: 8px;
   padding: 16px;
-  background-color: #f5f7fa;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  color: #606266;
+  background-color: var(--pixel-bg-secondary, #f5f7fa);
+  border: 2px solid #000;
+  border-radius: 0;
+  color: var(--pixel-text-primary, #606266);
+  box-shadow: 3px 3px 0 #000;
 }
 
 .is-loading {
@@ -442,9 +445,10 @@ defineExpose({
 
 .puzzle-container {
   position: relative;
-  border-radius: 4px;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 3px 3px 0 #000;
+  border: 2px solid #000;
   user-select: none;
 }
 
@@ -470,28 +474,31 @@ defineExpose({
 .slider-track {
   position: relative;
   height: 40px;
-  background-color: #f5f7fa;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  overflow: hidden;
+  background-color: var(--pixel-bg-secondary, #f5f7fa);
+  border: 2px solid #000;
+  border-radius: 0;
+  /* overflow: hidden; */ /* Removing overflow hidden to allow shadow to show if needed */
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.1);
 }
 
 .slider-button {
   position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
+  top: -2px; /* Adjust for border */
+  left: -2px;
+  height: calc(100% + 4px);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   color: white;
-  font-weight: 500;
-  font-size: 14px;
-  border-radius: 4px;
+  font-weight: bold;
+  font-size: 16px;
+  border-radius: 0;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
   transition: all 0.2s ease;
   user-select: none;
 }
@@ -501,14 +508,15 @@ defineExpose({
 }
 
 .slider-button:hover:not(:disabled) {
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+  background-color: var(--pixel-primary-light) !important;
 }
 
 .slider-text {
   position: absolute;
   width: 100%;
   text-align: center;
-  color: #909399;
+  color: var(--pixel-text-primary, #606266);
+  font-family: var(--pixel-font-body, 'Pixel', sans-serif);
   font-size: 14px;
   white-space: nowrap;
   pointer-events: none; /* 确保文字不影响鼠标事件 */
@@ -526,22 +534,24 @@ defineExpose({
 /* 错误提示 */
 .error-message {
   padding: 8px 12px;
-  background-color: #fef0f0;
-  border: 1px solid #fde2e2;
-  border-radius: 4px;
+  background-color: var(--pixel-bg-card, #fef0f0);
+  border: 2px solid #000;
+  border-radius: 0;
   color: #f56c6c;
   font-size: 12px;
   text-align: center;
+  box-shadow: 2px 2px 0 #000;
 }
 
 /* 开发模式提示 */
 .dev-mode-tip {
   padding: 8px 12px;
-  background-color: #fdf6ec;
-  border: 1px solid #f5dab1;
-  border-radius: 4px;
-  color: #e6a23c;
+  background-color: var(--pixel-bg-card, #fdf6ec);
+  border: 2px solid #000;
+  border-radius: 0;
+  color: var(--pixel-gold, #e6a23c);
   font-size: 12px;
   text-align: center;
+  box-shadow: 2px 2px 0 #000;
 }
 </style>

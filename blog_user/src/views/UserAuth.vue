@@ -822,7 +822,7 @@ onMounted(() => {
 
 .header-title {
   font-family: var(--pixel-font-display);
-  font-size: 12px;
+  font-size: 20px;
   color: #fff;
   text-shadow: 2px 2px 0 #000;
   text-transform: uppercase;
@@ -834,7 +834,7 @@ onMounted(() => {
 
 :deep(.el-tabs__item) {
   font-family: var(--pixel-font-body) !important;
-  font-size: 14px !important;
+  font-size: 16px !important;
 }
 
 :deep(.el-tabs__item.is-active) {
@@ -980,10 +980,7 @@ onMounted(() => {
 }
 
 :deep(.el-dialog__title) {
-  font-family: var(--pixel-font-display) !important;
-  font-size: 10px !important;
-  color: #fff !important;
-  text-shadow: 1px 1px 0 #000;
+  text-shadow: 2px 2px 0 #000;
 }
 
 :deep(.el-dialog__body) {
