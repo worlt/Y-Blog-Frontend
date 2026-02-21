@@ -916,11 +916,12 @@ const formatDate = (dateString) => {
   font-size: 20px;
   margin: 0 0 10px 0;
   font-weight: 600;
+  color: var(--pixel-text-primary);
 }
 
 .bio {
   font-size: 14px;
-  color: #606266;
+  color: var(--pixel-text-secondary);
   margin: 0;
   line-height: 1.6;
 }
@@ -951,12 +952,12 @@ const formatDate = (dateString) => {
 .stat-value {
   font-size: 24px;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
 }
 
 .stat-label {
   font-size: 14px;
-  color: #909399;
+  color: var(--pixel-text-secondary);
   margin-top: 5px;
 }
 
@@ -980,14 +981,14 @@ const formatDate = (dateString) => {
 .detail-label {
   width: 100px;
   font-size: 14px;
-  color: #909399;
+  color: var(--pixel-text-secondary);
   line-height: 32px;
   flex-shrink: 0;
 }
 
 .detail-value {
   font-size: 14px;
-  color: #606266;
+  color: var(--pixel-text-primary);
   flex: 1;
 }
 
@@ -1062,5 +1063,29 @@ const formatDate = (dateString) => {
   .detail-value {
     width: 100%;
   }
+}
+
+/* 按钮全局覆盖以解决白色背景不可见问题 */
+:deep(.el-button) {
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif !important;
+  border-radius: 0 !important;
+  border: 2px solid #000 !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+}
+
+:deep(.el-button:hover) {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 0 0 0 #000 !important;
+}
+
+:deep(.el-button--default), :deep(.el-button.is-plain) {
+  background-color: var(--pixel-bg-primary) !important;
+  color: var(--pixel-text-primary) !important;
+}
+
+:deep(.el-button--primary) {
+  background-color: var(--pixel-primary) !important;
+  color: #fff !important;
 }
 </style> 

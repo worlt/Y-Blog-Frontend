@@ -382,11 +382,13 @@ const formatDate = (dateString) => {
 }
 
 .profile-card {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
+  border: 4px solid #000;
+  box-shadow: 6px 6px 0 #000;
   padding: 30px;
   margin-bottom: 20px;
+  color: var(--pixel-text-primary);
 }
 
 .profile-header {
@@ -432,11 +434,12 @@ const formatDate = (dateString) => {
   font-size: 20px;
   margin: 0 0 10px 0;
   font-weight: 600;
+  color: var(--pixel-text-primary);
 }
 
 .bio {
   font-size: 14px;
-  color: #606266;
+  color: var(--pixel-text-secondary);
   margin: 0;
   line-height: 1.6;
 }
@@ -457,22 +460,22 @@ const formatDate = (dateString) => {
 }
 
 .stat-item:hover {
-  color: #409EFF;
+  color: var(--pixel-primary-light);
 }
 
 .stat-value {
   font-size: 24px;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
 }
 
 .stat-item:hover .stat-value {
-  color: #409EFF;
+  color: var(--pixel-primary-light);
 }
 
 .stat-label {
   font-size: 14px;
-  color: #909399;
+  color: var(--pixel-text-secondary);
   margin-top: 5px;
 }
 
@@ -496,14 +499,14 @@ const formatDate = (dateString) => {
 .detail-label {
   width: 100px;
   font-size: 14px;
-  color: #909399;
+  color: var(--pixel-text-secondary);
   line-height: 32px;
   flex-shrink: 0;
 }
 
 .detail-value {
   font-size: 14px;
-  color: #606266;
+  color: var(--pixel-text-primary);
   flex: 1;
 }
 

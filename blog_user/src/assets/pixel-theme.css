@@ -10,46 +10,65 @@
    ============================================ */
 :root {
   /* 主色调 - 复古游戏风格 */
-  --pixel-primary: #6C5CE7;        /* 紫色 */
-  --pixel-primary-dark: #5849BE;   /* 深紫色 */
-  --pixel-primary-light: #A29BFE;  /* 浅紫色 */
-  
+  --pixel-primary: #6C5CE7;
+  /* 紫色 */
+  --pixel-primary-dark: #5849BE;
+  /* 深紫色 */
+  --pixel-primary-light: #A29BFE;
+  /* 浅紫色 */
+
   /* 辅助色 */
-  --pixel-secondary: #00CEC9;     /* 青色 */
-  --pixel-accent: #FF7675;         /* 珊瑚红 */
-  --pixel-gold: #FDCB6E;          /* 金色 */
-  --pixel-green: #00B894;         /* 绿色 */
-  --pixel-red: #E17055;            /* 红色 */
-  --pixel-blue: #74B9FF;           /* 蓝色 */
-  
+  --pixel-secondary: #00CEC9;
+  /* 青色 */
+  --pixel-accent: #FF7675;
+  /* 珊瑚红 */
+  --pixel-gold: #FDCB6E;
+  /* 金色 */
+  --pixel-green: #00B894;
+  /* 绿色 */
+  --pixel-red: #E17055;
+  /* 红色 */
+  --pixel-blue: #74B9FF;
+  /* 蓝色 */
+
   /* 背景色 */
-  --pixel-bg-primary: #1E1E2E;     /* 深色背景 */
-  --pixel-bg-secondary: #2D2D44;   /* 次级背景 */
-  --pixel-bg-card: #363654;        /* 卡片背景 */
-  --pixel-bg-light: #F8F8F8;       /* 浅色背景 */
-  
+  --pixel-bg-primary: #1E1E2E;
+  /* 深色背景 */
+  --pixel-bg-secondary: #2D2D44;
+  /* 次级背景 */
+  --pixel-bg-card: #363654;
+  /* 卡片背景 */
+  --pixel-bg-light: #F8F8F8;
+  /* 浅色背景 */
+
   /* 文字色 */
-  --pixel-text-primary: #FFFFFF;   /* 主要文字 */
-  --pixel-text-secondary: #B8B8D0; /* 次级文字 */
-  --pixel-text-muted: #6C6C8A;    /* 弱化文字 */
-  
+  --pixel-text-primary: #FFFFFF;
+  /* 主要文字 */
+  --pixel-text-secondary: #B8B8D0;
+  /* 次级文字 */
+  --pixel-text-muted: #6C6C8A;
+  /* 弱化文字 */
+
   /* 边框和阴影 */
   --pixel-border: 4px solid #000000;
   --pixel-border-light: 2px solid #4A4A6A;
   --pixel-shadow: 4px 4px 0px #000000;
   --pixel-shadow-sm: 2px 2px 0px #000000;
   --pixel-shadow-light: 2px 2px 0px rgba(0, 0, 0, 0.3);
-  
+
   /* 字体 */
-  --pixel-font-display: 'Press Start 2P', cursive;        /* 标题字体 */
-  --pixel-font-body: 'VT323', 'Noto Sans SC', monospace;  /* 正文字体 */
-  --pixel-font-chinese: 'ZCOOL KuaiLe', 'Noto Sans SC', cursive; /* 中文装饰字体 */
-  
+  --pixel-font-display: 'Press Start 2P', cursive;
+  /* 标题字体 */
+  --pixel-font-body: 'VT323', 'Noto Sans SC', monospace;
+  /* 正文字体 */
+  --pixel-font-chinese: 'ZCOOL KuaiLe', 'Noto Sans SC', cursive;
+  /* 中文装饰字体 */
+
   /* 圆角 - 像素风使用小圆角或无圆角 */
   --pixel-radius: 0px;
   --pixel-radius-sm: 2px;
   --pixel-radius-md: 4px;
-  
+
   /* 间距 */
   --pixel-space-xs: 4px;
   --pixel-space-sm: 8px;
@@ -67,13 +86,15 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   font-family: var(--pixel-font-body);
   font-size: 18px;
   line-height: 1.6;
   background: var(--pixel-bg-primary);
   color: var(--pixel-text-primary);
-  -webkit-font-smoothing: none; /* 像素风不需要抗锯齿 */
+  -webkit-font-smoothing: none;
+  /* 像素风不需要抗锯齿 */
   -moz-osx-font-smoothing: unset;
   image-rendering: pixelated;
 }
@@ -191,28 +212,63 @@ html, body {
    像素风格动画
    ============================================ */
 @keyframes pixel-fade-in {
-  0% { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pixel-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 @keyframes pixel-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 @keyframes pixel-slide-up {
-  0% { transform: translateY(20px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes pixel-glow {
-  0%, 100% { box-shadow: 0 0 5px var(--pixel-primary); }
-  50% { box-shadow: 0 0 20px var(--pixel-primary), 0 0 30px var(--pixel-primary-light); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px var(--pixel-primary);
+  }
+
+  50% {
+    box-shadow: 0 0 20px var(--pixel-primary), 0 0 30px var(--pixel-primary-light);
+  }
 }
 
 .pixel-animate-fade-in {
@@ -281,11 +337,15 @@ html, body {
   box-shadow: 3px 3px 0 #000 !important;
   transition: all 0.1s step-end !important;
   box-sizing: border-box !important;
+  background-color: var(--pixel-bg-card) !important;
+  color: var(--pixel-text-primary) !important;
 }
 
 .el-button:hover {
   transform: translate(1px, 1px) !important;
   box-shadow: 2px 2px 0 #000 !important;
+  background-color: var(--pixel-bg-secondary) !important;
+  color: var(--pixel-primary-light) !important;
 }
 
 .el-button:active {
@@ -296,6 +356,11 @@ html, body {
 .el-button--primary {
   background: var(--pixel-primary) !important;
   border: 2px solid #000 !important;
+  color: #fff !important;
+}
+
+.el-button--primary:hover {
+  background: var(--pixel-primary-light) !important;
   color: #fff !important;
 }
 
@@ -492,7 +557,7 @@ html, body {
 .el-aside,
 .el-header,
 .el-footer,
-.el-main > *,
+.el-main>*,
 .page-container,
 .content-wrapper,
 .main-content {
@@ -525,13 +590,16 @@ html, body {
 .el-autocomplete-suggestion,
 .el-cascader__dropdown,
 .el-date-picker,
-.el-time-picker__wrapper {
+.el-time-picker__wrapper,
+.el-input__count,
+.el-input__count-inner,
+.el-textarea__count {
   background-color: var(--pixel-bg-card) !important;
   border-color: #000 !important;
 }
 
 /* 表格斑马纹和hover效果 */
-.el-table--enable-row-hover .el-table__body tr:hover > td {
+.el-table--enable-row-hover .el-table__body tr:hover>td {
   background-color: var(--pixel-bg-secondary) !important;
 }
 
@@ -546,6 +614,16 @@ html, body {
   color: var(--pixel-text-primary) !important;
 }
 
+/* 消除浏览器自动填充背景色问题 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--pixel-bg-secondary) inset !important;
+  -webkit-text-fill-color: var(--pixel-text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 /* 输入框整体包装器 */
 .el-input__wrapper,
 .el-textarea__inner {
@@ -553,10 +631,30 @@ html, body {
   box-shadow: 2px 2px 0 #000 !important;
 }
 
+/* 输入框字数统计 */
+.el-input__count,
+.el-textarea__count {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--pixel-text-muted) !important;
+}
+
+.el-input__count-inner {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 /* 全局文字颜色覆盖 */
 body,
-h1, h2, h3, h4, h5, h6,
-p, span, div,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+div,
 a,
 .el-text,
 .el-link__inner {
@@ -1052,11 +1150,12 @@ a:hover {
     --pixel-space-md: 12px;
     --pixel-space-lg: 16px;
   }
-  
-  html, body {
+
+  html,
+  body {
     font-size: 16px;
   }
-  
+
   .pixel-btn {
     padding: 6px 12px;
     font-size: 14px;

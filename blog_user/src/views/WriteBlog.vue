@@ -800,9 +800,43 @@ watch(editorRef, (newEditor) => {
   bottom: 20px;
   width: 350px;
   overflow-y: auto;
-  overflow-x: hidden; /* 防止横向滚动条 */
+  overflow-x: hidden;
   z-index: 100;
-  background-color: var(--pixel-bg-card); /* 背景色与页面一致 */
+  background-color: var(--pixel-bg-card);
+}
+
+/* AI提示弹窗样式覆盖 */
+:deep(.el-dialog) {
+  background-color: var(--pixel-bg-card) !important;
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: 6px 6px 0 #000 !important;
+}
+
+:deep(.el-dialog__title) {
+  color: var(--pixel-text-primary) !important;
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif !important;
+  font-size: 18px !important;
+  line-height: 1.5 !important;
+  text-align: center !important;
+  display: block !important;
+  width: 100%;
+}
+
+:deep(.el-dialog__header) {
+  text-align: center !important;
+  border-bottom: 2px solid #000 !important;
+  margin-right: 0 !important;
+  padding: 20px !important;
+}
+
+:deep(.el-dialog__body) {
+  color: var(--pixel-text-primary) !important;
+}
+
+:deep(.el-dialog__footer) {
+  border-top: 2px solid #000 !important;
+  padding-top: 15px !important;
 }
 
 /* 确保 settings-area 的滚动条只在内容超出时显示 */

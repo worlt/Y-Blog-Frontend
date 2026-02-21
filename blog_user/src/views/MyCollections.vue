@@ -180,26 +180,17 @@ const hasValidCover = (cover) => {
   return cover && cover.trim() && cover !== 'null' && cover !== 'undefined';
 };
 
-// 随机渐变背景数组
-const gradients = [
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',
-  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
-  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',
-  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',
-  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
-  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+// 像素风纯色背景数组
+const pixelColors = [
+  '#6C5CE7', '#FF7675', '#00CEC9', '#FDCB6E',
+  '#00B894', '#74B9FF', '#A29BFE', '#E17055',
+  '#FD79A8', '#55EFC4', '#FFEAA7', '#DDA0DD'
 ];
 
-// 获取渐变背景
+// 获取纯色背景
 const getRandomGradient = (blogId) => {
-  const index = (blogId || 0) % gradients.length;
-  return gradients[index];
+  const index = (blogId || 0) % pixelColors.length;
+  return pixelColors[index];
 };
 
 // 图片加载错误处理
@@ -465,6 +456,7 @@ const stripHtml = (html) => {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   text-overflow: ellipsis;
   word-break: break-all;
 }
@@ -483,6 +475,7 @@ const stripHtml = (html) => {
   display: flex;
   align-items: center;
   gap: 5px;
+  color: var(--pixel-text-primary);
 }
 
 .article-author:hover {
@@ -571,6 +564,7 @@ const stripHtml = (html) => {
   font-weight: 600;
   text-shadow: 2px 2px 0 #000;
   letter-spacing: 1px;
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif;
 }
 
 .article-category {

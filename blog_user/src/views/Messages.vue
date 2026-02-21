@@ -882,7 +882,7 @@ const stripHtml = (html) => {
   cursor: pointer;
   transition: all 0.1s;
   position: relative;
-  border-bottom: 1px solid #000;
+  border-bottom: 2px solid #000;
 }
 
 .conversation-item:hover {
@@ -891,6 +891,7 @@ const stripHtml = (html) => {
 
 .conversation-item.active {
   background-color: var(--pixel-primary);
+  color: var(--pixel-text-primary);
 }
 
 .conversation-item.unread {
@@ -931,7 +932,7 @@ const stripHtml = (html) => {
 
 .conversation-name {
   font-weight: 500;
-  color: #333;
+  color: var(--pixel-text-primary);
   font-size: 15px;
   white-space: nowrap;
   overflow: hidden;
@@ -947,7 +948,7 @@ const stripHtml = (html) => {
 
 .conversation-preview {
   font-size: 13px;
-  color: #666;
+  color: var(--pixel-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -964,7 +965,7 @@ const stripHtml = (html) => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
   overflow: hidden;
   width: 100%;
 }
@@ -974,8 +975,8 @@ const stripHtml = (html) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: var(--pixel-bg-card);
+  border-bottom: 2px solid #000;
   z-index: 10;
 }
 
@@ -991,7 +992,7 @@ const stripHtml = (html) => {
 .user-name {
   font-weight: 500;
   font-size: 16px;
-  color: #333;
+  color: var(--pixel-text-primary);
 }
 
 .user-status {
@@ -1114,21 +1115,20 @@ const stripHtml = (html) => {
 
 .message-bubble {
   padding: 10px 15px;
-  border-radius: 16px;
+  border-radius: 0;
   position: relative;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 2px 2px 0 #000;
+  border: 2px solid #000;
 }
 
 .message-self .message-bubble {
-  background-color: #95ec69;
-  color: #000;
-  border-top-right-radius: 4px;
+  background-color: var(--pixel-primary);
+  color: #fff;
 }
 
 .message-other .message-bubble {
-  background-color: #fff;
-  color: #000;
-  border-top-left-radius: 4px;
+  background-color: var(--pixel-bg-card);
+  color: var(--pixel-text-primary);
 }
 
 .message-retracted .message-bubble {
@@ -1190,8 +1190,8 @@ const stripHtml = (html) => {
 
 /* 编辑器区域 */
 .messages-composer {
-  background-color: #fff;
-  border-top: 1px solid #eaeaea;
+  background-color: var(--pixel-bg-card);
+  border-top: 2px solid #000;
   padding: 16px 20px;
   display: flex;
   flex-direction: column;
@@ -1218,20 +1218,24 @@ const stripHtml = (html) => {
 
 .composer-input :deep(.el-textarea__inner) {
   resize: none;
-  border-radius: 8px;
+  border-radius: 0;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000 !important;
+  background-color: var(--pixel-bg-primary);
+  color: var(--pixel-text-primary);
   padding: 12px;
   font-size: 15px;
   line-height: 1.5;
-  border-color: #dcdfe6;
   transition: all 0.2s;
   width: 100%;
   box-sizing: border-box;
   max-width: 100%;
+  font-family: inherit;
 }
 
 .composer-input :deep(.el-textarea__inner:focus) {
-  border-color: #409eff;
-  box-shadow: 0 0 0 2px rgba(64, 159, 255, 0.1);
+  border-color: var(--pixel-primary);
+  outline: none;
 }
 
 .composer-actions {
@@ -1254,9 +1258,9 @@ const stripHtml = (html) => {
   align-items: center;
   height: 100%;
   text-align: center;
-  color: #909399;
+  color: var(--pixel-text-muted);
   padding: 20px;
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
   width: 100%;
 }
 
@@ -1265,13 +1269,14 @@ const stripHtml = (html) => {
   height: 100px;
   margin-bottom: 30px;
   opacity: 0.5;
+  filter: contrast(0.5);
 }
 
 .empty-state h3 {
   margin: 0 0 12px;
   font-size: 20px;
   font-weight: 500;
-  color: #606266;
+  color: var(--pixel-text-primary);
 }
 
 .empty-state p {
@@ -1281,7 +1286,7 @@ const stripHtml = (html) => {
 
 .empty-tip {
   margin-top: 8px;
-  color: #909399;
+  color: var(--pixel-text-muted);
 }
 
 /* 响应式样式 */

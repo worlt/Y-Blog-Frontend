@@ -144,13 +144,14 @@ export default {
 }
 
 .report-dialog {
-  background: white;
-  border-radius: 8px;
+  background: var(--pixel-bg-card);
+  border: 2px solid #000;
+  border-radius: 0;
   width: 500px;
   max-width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 6px 6px 0 #000;
 }
 
 .dialog-header {
@@ -158,12 +159,14 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 2px solid #000;
+  background-color: var(--pixel-primary);
 }
 
 .dialog-header h3 {
   margin: 0;
-  color: #333;
+  color: #fff;
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif;
 }
 
 .close-btn {
@@ -171,7 +174,7 @@ export default {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #999;
+  color: #fff;
   padding: 0;
   width: 30px;
   height: 30px;
@@ -181,7 +184,7 @@ export default {
 }
 
 .close-btn:hover {
-  color: #666;
+  color: var(--pixel-red);
 }
 
 .dialog-body {
@@ -200,11 +203,11 @@ export default {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #333;
+  color: var(--pixel-text-primary);
 }
 
 .report-type span {
-  color: #666;
+  color: var(--pixel-text-primary);
   font-size: 14px;
 }
 
@@ -218,18 +221,28 @@ export default {
 
 .report-description textarea {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 12px;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
+  border-radius: 0;
   font-size: 14px;
   resize: vertical;
   min-height: 80px;
+  background-color: var(--pixel-bg-primary);
+  color: var(--pixel-text-primary);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.report-description textarea:focus {
+  border-color: var(--pixel-primary);
+  outline: none;
 }
 
 .char-count {
   text-align: right;
   font-size: 12px;
-  color: #999;
+  color: var(--pixel-text-muted);
   margin-top: 4px;
 }
 
@@ -238,41 +251,50 @@ export default {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid #eee;
+  border-top: 2px solid #000;
+  background-color: var(--pixel-bg-primary);
 }
 
 .cancel-btn,
 .submit-btn {
   padding: 8px 16px;
-  border-radius: 4px;
-  border: 1px solid;
+  border-radius: 0;
+  border: 2px solid #000;
   cursor: pointer;
   font-size: 14px;
+  box-shadow: 2px 2px 0 #000;
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif;
+  transition: all 0.2s;
 }
 
 .cancel-btn {
-  background: white;
-  border-color: #ddd;
-  color: #666;
+  background: var(--pixel-bg-secondary);
+  color: var(--pixel-text-primary);
 }
 
 .cancel-btn:hover {
-  background: #f5f5f5;
+  background: var(--pixel-bg-card);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 #000;
 }
 
 .submit-btn {
-  background: #ff4757;
-  border-color: #ff4757;
-  color: white;
+  background: var(--pixel-red);
+  color: #fff;
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #ff3742;
+  background: var(--pixel-red);
+  filter: brightness(1.1);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 #000;
 }
 
 .submit-btn:disabled {
-  background: #ccc;
-  border-color: #ccc;
+  background: var(--pixel-bg-secondary);
+  color: var(--pixel-text-muted);
+  border-color: var(--pixel-text-muted);
+  box-shadow: none;
   cursor: not-allowed;
 }
 </style> 

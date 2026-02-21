@@ -12,7 +12,7 @@ import * as blogApi from '@/api/blog.js'
 import * as commentApi from '@/api/comment.js'
 import * as userApi from '@/api/user.js'
 import * as messageApi from '@/api/message.js'
-import 'highlight.js/styles/github.css'
+import 'highlight.js/styles/github-dark.css'
 import hljs from 'highlight.js'
 import { marked } from 'marked'
 
@@ -1310,6 +1310,7 @@ const totalCommentsCount = computed(() => {
                     :style="{ paddingLeft: (item.level - 1) * 12 + 'px' }"
                     class="toc-item"
                     @click="handleTocItemClick(index, item.id)"
+                    :title="item.text"
                   >
                     <a :href="`#${item.id}`" @click.prevent>{{ item.text }}</a>
                   </li>
@@ -1523,6 +1524,40 @@ html {
   margin-top: 15px;
 }
 
+.author-btn-group :deep(.el-button) {
+  border-radius: 0;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif;
+  transition: all 0.1s;
+}
+
+.author-btn-group :deep(.el-button:hover) {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 #000;
+}
+
+/* 按钮文字颜色修复：深色模式需要区分前景色 */
+.author-btn-group :deep(.el-button--default) {
+  background-color: var(--pixel-bg-primary);
+  color: var(--pixel-text-primary);
+}
+
+.author-btn-group :deep(.el-button--primary) {
+  background-color: var(--pixel-primary);
+  color: #fff;
+}
+
+.author-btn-group :deep(.el-button--success) {
+  background-color: var(--pixel-accent);
+  color: #000;
+}
+
+.author-btn-group :deep(.el-button--info) {
+  background-color: var(--pixel-bg-secondary);
+  color: var(--pixel-text-primary);
+}
+
 .follow-btn {
   flex: 1;
 }
@@ -1600,6 +1635,7 @@ html {
   display: flex;
   align-items: center;
   cursor: pointer;
+  color: var(--pixel-text-primary);
 }
 
 .author-detail {
@@ -1625,8 +1661,14 @@ html {
   margin-bottom: 20px;
 }
 
-.blog-tag {
+.blog-tag, :deep(.el-tag) {
   cursor: pointer;
+  background-color: var(--pixel-bg-primary);
+  color: var(--pixel-text-primary);
+  border: 1px solid #000;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 #000;
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif;
 }
 
 .content {
@@ -1770,7 +1812,8 @@ html {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;  
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -1778,8 +1821,8 @@ html {
   display: flex;
   justify-content: space-around;
   padding: 15px 0;
-  border-top: 1px solid #f0f2f5;
-  border-bottom: 1px solid #f0f2f5;
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
   margin-bottom: 15px;
 }
 
@@ -1934,7 +1977,7 @@ html {
 }
 
 .toc-item:hover {
-  background-color: var(--pixel-bg-secondary);
+  background-color: var(--pixel-primary-light);
 }
 
 .toc-item.toc-active {
@@ -1953,7 +1996,7 @@ html {
 .toc-item a {
   display: block;
   padding: 6px 10px;
-  color: var(--pixel-text-secondary);
+  color: var(--pixel-text-primary);
   text-decoration: none;
   font-size: 15px;
   line-height: 1.3;
@@ -1964,14 +2007,10 @@ html {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  
-  /* Flex布局对齐 */
-  display: flex;
-  align-items: center;
 }
 
-.toc-item a:hover {
-  color: var(--pixel-primary-light);
+.toc-item:hover a {
+  color: #fff !important;
 }
 
 /* 滚动条美化 */
@@ -2083,7 +2122,7 @@ html {
 }
 
 .reply-tip strong {
-  color: var(--pixel-primary);
+  color: var(--pixel-primary-light);
 }
 
 .empty-comments {
@@ -2091,6 +2130,21 @@ html {
   justify-content: center;
   align-items: center;
   height: 200px;
+  background-color: var(--pixel-bg-card);
+}
+
+:deep(.el-drawer) {
+  background-color: var(--pixel-bg-primary);
+  border-left: 2px solid #000;
+}
+
+:deep(.el-drawer__header) {
+  padding: 15px 20px;
+  margin-bottom: 0;
+  border-bottom: 2px solid #000;
+  color: var(--pixel-text-primary);
+  background-color: var(--pixel-bg-card);
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif;
 }
 
 /* 中等屏幕：隐藏目录但保留侧边栏 */

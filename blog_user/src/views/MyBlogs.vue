@@ -283,6 +283,7 @@ const handleImageError = (event) => {
           v-model="currentSort"
           size="small"
           @change="handleSortChange"
+          style="width: 100px"
         >
           <el-option
             v-for="option in sortOptions"
@@ -437,6 +438,7 @@ const handleImageError = (event) => {
 .my-blogs-page {
   flex: 1;
   padding: 20px;
+  min-width: 0; /* 防止子元素撑破 flex 容器 */
 }
 
 .page-header {
@@ -450,18 +452,29 @@ const handleImageError = (event) => {
   font-size: 24px;
   margin: 0;
   font-weight: 600;
+  color: var(--pixel-text-primary);
 }
 
 .filter-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
   margin-bottom: 20px;
   background-color: var(--pixel-bg-card);
   padding: 15px;
   border-radius: 0;
   box-shadow: 3px 3px 0 #000;
   border: 2px solid #000;
+  overflow-x: auto;
+}
+
+:deep(.el-radio-group) {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-radius: 0;
 }
 
 .sort-selector {
@@ -473,6 +486,10 @@ const handleImageError = (event) => {
   margin-right: 8px;
   color: var(--pixel-text-primary);
   font-size: 14px;
+  /* 确保横向排列 */
+  writing-mode: horizontal-tb;  /* 水平书写模式 */
+  white-space: nowrap;          /* 防止文字换行 */
+  display: inline-block;        /* 或 inline-flex */
 }
 
 .blog-list-container {
@@ -555,5 +572,79 @@ const handleImageError = (event) => {
   font-size: 12px;
   font-weight: bold;
   text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Deep Element Plus Form & Table UI Overrides */
+:deep(.el-radio-button__inner) {
+  background-color: var(--pixel-bg-primary);
+  border-color: #000;
+  color: var(--pixel-text-secondary);
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif;
+  box-shadow: none !important;
+  white-space: nowrap;
+}
+:deep(.el-radio-button:first-child .el-radio-button__inner) {
+  border-left: 2px solid #000;
+}
+:deep(.el-radio-button:last-child .el-radio-button__inner) {
+  border-right: 2px solid #000;
+}
+:deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  background-color: var(--pixel-primary);
+  border-color: #000;
+  color: #fff;
+  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.3) !important;
+}
+
+:deep(.el-select .el-input__wrapper) {
+  background-color: var(--pixel-bg-primary);
+  box-shadow: 2px 2px 0 #000 !important;
+  border: 2px solid #000;
+  border-radius: 0;
+}
+:deep(.el-select .el-input__inner) {
+  color: var(--pixel-text-primary);
+}
+
+:deep(.el-table) {
+  background-color: var(--pixel-bg-primary);
+  color: var(--pixel-text-primary);
+  border: 2px solid #000;
+  border-radius: 0;
+  --el-table-border-color: #000;
+  --el-table-header-bg-color: var(--pixel-bg-card);
+  --el-table-header-text-color: var(--pixel-primary);
+  --el-table-row-hover-bg-color: var(--pixel-bg-primary);
+  --el-table-current-row-bg-color: var(--pixel-bg-primary);
+}
+
+:deep(.el-table th.el-table__cell) {
+  background-color: var(--pixel-bg-card) !important;
+  color: var(--pixel-text-primary);
+  border-bottom: 2px solid #000 !important;
+  border-right: 2px solid #000 !important;
+  font-weight: bold;
+}
+
+:deep(.el-table td.el-table__cell) {
+  border-bottom: 1px solid #000 !important;
+  border-right: 2px solid #000 !important;
+  background-color: var(--pixel-bg-primary) !important;
+}
+
+:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
+  background-color: var(--pixel-primary);
+  border: 2px solid #000;
+  border-radius: 0;
+  color: white;
+}
+:deep(.el-pagination.is-background .btn-next),
+:deep(.el-pagination.is-background .btn-prev),
+:deep(.el-pagination.is-background .el-pager li) {
+  background-color: var(--pixel-bg-card);
+  border: 2px solid #000;
+  border-radius: 0;
+  color: var(--pixel-text-primary);
+  box-shadow: 2px 2px 0 #000;
 }
 </style> 

@@ -260,26 +260,17 @@ const hasValidCover = (cover) => {
   return cover && cover.trim() && cover !== 'null' && cover !== 'undefined';
 };
 
-// 随机渐变背景数组
-const gradients = [
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-  'linear-gradient(135deg, #a8eb12 0%, #58c322 100%)',
-  'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
-  'linear-gradient(135deg, #21d4fd 0%, #b721ff 100%)',
-  'linear-gradient(135deg, #08aeea 0%, #2af598 100%)',
-  'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
-  'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+// 像素风纯色背景数组
+const pixelColors = [
+  '#6C5CE7', '#FF7675', '#00CEC9', '#FDCB6E',
+  '#00B894', '#74B9FF', '#A29BFE', '#E17055',
+  '#FD79A8', '#55EFC4', '#FFEAA7', '#DDA0DD'
 ];
 
-// 获取渐变背景
+// 获取纯色背景
 const getRandomGradient = (blogId) => {
-  const index = blogId % gradients.length;
-  return gradients[index];
+  const index = blogId % pixelColors.length;
+  return pixelColors[index];
 };
 
 // 图片加载错误处理
@@ -432,7 +423,7 @@ onUnmounted(() => {
 .page-with-sidebar {
   display: flex;
   min-height: calc(100vh - 80px);
-  background-color: #f5f7fa;
+  background-color: var(--pixel-bg-primary);
 }
 
 .liked-blogs-container {
@@ -453,7 +444,8 @@ onUnmounted(() => {
   margin: 0;
   font-size: 22px;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif;
 }
 
 .filter-bar {
@@ -474,10 +466,11 @@ onUnmounted(() => {
 }
 
 .blog-list-wrapper {
-  background-color: white;
-  border-radius: 8px;
+  background-color: var(--pixel-bg-card);
+  border-radius: 0;
   padding: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 4px 4px 0 #000;
+  border: 2px solid #000;
 }
 
 .loading-state, .empty-state {
@@ -495,14 +488,15 @@ onUnmounted(() => {
 .article-item {
   display: flex;
   padding: 20px 0;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 2px dashed #000;
   cursor: pointer;
   transition: all 0.3s;
   gap: 20px;
 }
 
 .article-item:hover {
-  background-color: #f9fafc;
+  background-color: var(--pixel-bg-primary);
+  transform: translateX(4px);
 }
 
 .article-item:last-child {
@@ -518,7 +512,7 @@ onUnmounted(() => {
   font-size: 18px;
   margin: 0 0 10px 0;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -530,13 +524,14 @@ onUnmounted(() => {
 
 .article-summary {
   font-size: 14px;
-  color: #666;
+  color: var(--pixel-text-secondary);
   margin: 0 0 10px 0;
   line-height: 1.6;
   /* 多行省略 */
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-all;
@@ -632,10 +627,12 @@ onUnmounted(() => {
 }
 
 .article-category {
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: var(--pixel-bg-primary);
+  color: var(--pixel-text-primary);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: 0;
+  border: 1px solid #000;
+  box-shadow: 2px 2px 0 #000;
   font-size: 12px;
   margin-left: 10px;
 }

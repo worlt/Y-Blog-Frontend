@@ -103,15 +103,17 @@ const navigateTo = (path) => {
 <style scoped>
 .user-center-sidebar {
   width: 200px;
-  min-height: calc(100vh - 80px);
+  height: calc(100vh - 80px);
   background-color: var(--pixel-bg-card);
   border-right: 4px solid #000;
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
-  position: relative;
+  position: sticky;
+  top: 0;
   flex-shrink: 0;
   box-shadow: 4px 4px 0 #000;
+  z-index: 20;
 }
 
 .user-center-sidebar.collapsed {

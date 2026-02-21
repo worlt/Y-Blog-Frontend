@@ -756,7 +756,7 @@ const handleImageError = (event) => {
   color: var(--pixel-text-secondary);
   margin: 0;
   line-height: 1.5;
-}}
+}
 
 .content-actions {
   display: flex;
@@ -890,6 +890,7 @@ const handleImageError = (event) => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   transition: color 0.3s ease;
 }

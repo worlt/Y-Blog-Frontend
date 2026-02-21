@@ -407,6 +407,12 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--pixel-bg-primary);
+  padding: 10px 0;
+  border-bottom: 2px dashed #000;
 }
 
 .page-title {
@@ -466,6 +472,7 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
 }
 
@@ -478,6 +485,7 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 

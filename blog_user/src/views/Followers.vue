@@ -302,6 +302,7 @@ const formatDate = (dateString) => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -320,5 +321,39 @@ const formatDate = (dateString) => {
 .user-actions .el-button {
   width: 90px;
   justify-content: center;
+}
+
+/* 按钮全局覆盖以解决白色背景不可见问题 */
+:deep(.el-button) {
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif !important;
+  border-radius: 0 !important;
+  border: 2px solid #000 !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+}
+
+:deep(.el-button:hover) {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 0 0 0 #000 !important;
+}
+
+:deep(.el-button--default), :deep(.el-button.is-plain) {
+  background-color: var(--pixel-bg-primary) !important;
+  color: var(--pixel-text-primary) !important;
+}
+
+:deep(.el-button--primary) {
+  background-color: var(--pixel-primary) !important;
+  color: #fff !important;
+}
+
+:deep(.el-button--success.is-plain), :deep(.el-button--info.is-plain) {
+  background-color: var(--pixel-bg-card) !important;
+  color: var(--pixel-text-primary) !important;
+  border-color: #000 !important;
+}
+
+:deep(.el-button--success.is-plain:hover), :deep(.el-button--info.is-plain:hover) {
+  background-color: var(--pixel-bg-secondary) !important;
 }
 </style> 

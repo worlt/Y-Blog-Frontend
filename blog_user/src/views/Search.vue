@@ -451,10 +451,10 @@ const handleImageError = (event) => {
 <template>
   <div class="search-page">
     <!-- 页面标题 -->
-    <div class="page-header">
-      <h2>搜索结果</h2>
-      <p class="page-subtitle">筛选和浏览感兴趣的技术文章</p>
-    </div>
+<!--    <div class="page-header">-->
+<!--      <h2>搜索结果</h2>-->
+<!--      <p class="page-subtitle">筛选和浏览感兴趣的技术文章</p>-->
+<!--    </div>-->
     
     <!-- 筛选工具栏 -->
     <div class="filter-toolbar">

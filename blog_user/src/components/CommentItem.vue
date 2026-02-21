@@ -137,8 +137,10 @@ const viewUserProfile = (userId) => {
 
 .comment-content-wrapper {
   padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 6px;
+  background-color: var(--pixel-bg-secondary);
+  border-radius: 0;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
 }
 
 .comment-user {
@@ -154,7 +156,7 @@ const viewUserProfile = (userId) => {
 .comment-username {
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-primary-light);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -162,13 +164,13 @@ const viewUserProfile = (userId) => {
 
 .comment-time {
   font-size: 11px;
-  color: #999;
+  color: var(--pixel-text-muted);
   margin-top: 1px;
 }
 
 .comment-content {
   font-size: 13px;
-  color: #333;
+  color: var(--pixel-text-primary);
   line-height: 1.5;
   margin-bottom: 6px;
   word-break: break-word;
@@ -187,13 +189,13 @@ const viewUserProfile = (userId) => {
 }
 
 .reply-to {
-  color: #909399;
+  color: var(--pixel-text-muted);
   font-size: 11px;
   margin-left: 4px;
 }
 
 .replied-user {
-  color: #409eff;
+  color: var(--pixel-primary-light);
   font-weight: 600;
   font-size: 11px;
   cursor: pointer;
@@ -207,7 +209,7 @@ const viewUserProfile = (userId) => {
   margin-top: 8px;
   margin-left: 25px;
   padding-left: 10px;
-  border-left: 2px solid #e8eaec;
+  border-left: 2px solid var(--pixel-bg-secondary);
 }
 
 .clickable-avatar {

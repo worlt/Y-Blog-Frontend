@@ -569,4 +569,44 @@ defineExpose({
     transform: scale(1);
   }
 }
+
+/* 覆盖 WangEditor 内部样式 */
+:deep(.w-e-toolbar) {
+  background-color: var(--pixel-bg-card) !important;
+  color: var(--pixel-text-primary) !important;
+  border-bottom: 2px solid #000 !important;
+}
+
+:deep(.w-e-toolbar *) {
+  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif !important;
+}
+
+:deep(.w-e-bar-item svg) {
+  fill: var(--pixel-text-primary) !important;
+}
+
+:deep(.w-e-text-container) {
+  background-color: var(--pixel-bg-primary) !important;
+  color: var(--pixel-text-primary) !important;
+}
+
+:deep(.w-e-text-container [data-slate-editor]) {
+  color: var(--pixel-text-primary) !important;
+  background-color: transparent !important;
+}
+
+:deep(.w-e-bar-item button) {
+  color: var(--pixel-text-primary) !important;
+}
+
+:deep(.w-e-bar-item button:hover) {
+  background-color: var(--pixel-bg-secondary) !important;
+}
+
+:deep(.w-e-menu-panel) {
+  background-color: var(--pixel-bg-card) !important;
+  border: 2px solid #000 !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  color: var(--pixel-text-primary) !important;
+}
 </style> 
