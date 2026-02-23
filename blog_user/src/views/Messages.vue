@@ -538,6 +538,14 @@ const stripHtml = (html) => {
   if (!html) return ''
   return html.replace(/<[^>]+>/g, '')
 }
+
+// 跳转到用户主页
+const goToUserProfile = (userId) => {
+  // 对于系统通知(通常id为0或'0')，不进行跳转
+  if (userId && userId !== 0 && userId !== '0') {
+    router.push(`/user/${userId}`)
+  }
+}
 </script>
 
 <template>
@@ -548,14 +556,14 @@ const stripHtml = (html) => {
         <div class="conversations-header">
           <h2>消息中心</h2>
           <div class="conversations-actions">
-            <el-button 
-              type="primary" 
-              size="small"
-              plain
-              @click="createNewConversation"
-            >
-              <el-icon><Plus /></el-icon>新会话
-            </el-button>
+<!--            <el-button -->
+<!--              type="primary" -->
+<!--              size="small"-->
+<!--              plain-->
+<!--              @click="createNewConversation"-->
+<!--            >-->
+<!--              <el-icon><Plus /></el-icon>新会话-->
+<!--            </el-button>-->
             <el-button 
               type="primary" 
               size="small"
@@ -636,6 +644,8 @@ const stripHtml = (html) => {
               <el-avatar 
                 :size="36" 
                 :src="getOtherUser(currentConversation).avatar"
+                @click="goToUserProfile(getOtherUser(currentConversation).id)"
+                :style="getOtherUser(currentConversation).id && getOtherUser(currentConversation).id !== 0 && getOtherUser(currentConversation).id !== '0' ? 'cursor: pointer;' : ''"
               />
               <div class="user-details">
                 <div class="user-name">{{ getOtherUser(currentConversation).username }}</div>
@@ -643,26 +653,26 @@ const stripHtml = (html) => {
               </div>
             </div>
             
-            <div class="messages-actions">
-              <el-tooltip content="查看用户资料" placement="bottom">
-                <el-button type="text" icon="User" />
-              </el-tooltip>
-              <el-tooltip content="查看历史消息" placement="bottom">
-                <el-button type="text" icon="Calendar" />
-              </el-tooltip>
-              <el-tooltip content="更多操作" placement="bottom">
-                <el-dropdown trigger="click">
-                  <el-button type="text" icon="MoreFilled" />
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item>清空消息</el-dropdown-item>
-                      <el-dropdown-item>举报用户</el-dropdown-item>
-                      <el-dropdown-item>屏蔽用户</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </el-tooltip>
-            </div>
+<!--            <div class="messages-actions">-->
+<!--              <el-tooltip content="查看用户资料" placement="bottom">-->
+<!--                <el-button type="text" icon="User" />-->
+<!--              </el-tooltip>-->
+<!--              <el-tooltip content="查看历史消息" placement="bottom">-->
+<!--                <el-button type="text" icon="Calendar" />-->
+<!--              </el-tooltip>-->
+<!--              <el-tooltip content="更多操作" placement="bottom">-->
+<!--                <el-dropdown trigger="click">-->
+<!--                  <el-button type="text" icon="MoreFilled" />-->
+<!--                  <template #dropdown>-->
+<!--                    <el-dropdown-menu>-->
+<!--                      <el-dropdown-item>清空消息</el-dropdown-item>-->
+<!--                      <el-dropdown-item>举报用户</el-dropdown-item>-->
+<!--                      <el-dropdown-item>屏蔽用户</el-dropdown-item>-->
+<!--                    </el-dropdown-menu>-->
+<!--                  </template>-->
+<!--                </el-dropdown>-->
+<!--              </el-tooltip>-->
+<!--            </div>-->
           </div>
           
           <!-- 消息列表 -->
@@ -716,6 +726,8 @@ const stripHtml = (html) => {
                       <el-avatar 
                         :size="36" 
                         :src="getOtherUser(currentConversation).avatar"
+                        @click="goToUserProfile(message.senderId)"
+                        :style="message.senderId && message.senderId !== 0 && message.senderId !== '0' ? 'cursor: pointer;' : ''"
                       />
                     </div>
                     
