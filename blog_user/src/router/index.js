@@ -100,6 +100,16 @@ const routes = [
                 path: '/appeal',
                 component: () => import('@/views/Appeal.vue'),
                 meta: { requiresAuth: true }
+            },
+            {
+                path: '/notfound',
+                name: 'not-found',
+                component: () => import('@/views/NotFound.vue')
+            },
+            {
+                // 通配符路由 - 捕获所有未匹配的路径
+                path: '/:pathMatch(.*)*',
+                redirect: '/notfound'
             }
         ]
     }

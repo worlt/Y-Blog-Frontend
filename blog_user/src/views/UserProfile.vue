@@ -71,9 +71,8 @@ const openReportDialog = () => {
 onBeforeMount(() => {
   // 从路由参数获取用户ID
   const userId = route.params.userId
-  if (!userId) {
-    ElMessage.error('用户ID不存在')
-    router.push('/index')
+  if (!userId || isNaN(Number(userId))) {
+    router.replace('/notfound?type=user')
     return
   }
 })
@@ -105,13 +104,13 @@ const loadUserProfile = async () => {
       userForm.createTime = profile.createTime
       userForm.updateTime = profile.updateTime
     } else {
-      ElMessage.error(result.msg || '获取用户资料失败')
-      router.push('/index')
+      // 用户不存在或获取失败，跳转到 NotFound 页面
+      router.replace('/notfound?type=user')
     }
   } catch (error) {
     console.error('获取用户资料失败:', error)
-    ElMessage.error('获取用户资料失败，请稍后重试')
-    router.push('/index')
+    // 请求异常（含用户不存在 HTTP 500），跳转到 NotFound 页面
+    router.replace('/notfound?type=user')
   }
 }
 

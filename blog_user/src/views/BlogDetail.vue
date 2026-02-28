@@ -201,8 +201,7 @@ const loadBlogDetail = async () => {
   try {
     // 验证博客ID
     if (!blogId || isNaN(Number(blogId))) {
-      ElMessage.error('无效的博客ID')
-      router.push('/')
+      router.replace('/notfound?type=blog')
       return
     }
     
@@ -236,23 +235,13 @@ const loadBlogDetail = async () => {
       }
     } else {
       console.error('❌ 获取博客详情失败:', result.msg)
-      ElMessage.error(result.msg || '获取博客详情失败')
-      
-      // 如果是博客不存在或被删除，跳转回首页
-      if (result.code === 404 || result.msg?.includes('不存在')) {
-        setTimeout(() => {
-          router.push('/')
-        }, 2000)
-      }
+      // 博客不存在或获取失败，跳转到 NotFound 页面
+      router.replace('/notfound?type=blog')
     }
   } catch (error) {
     console.error('❌ 获取博客详情出错:', error)
-    ElMessage.error('获取博客详情失败，请稍后重试')
-    
-    // 网络错误时延迟跳转
-    setTimeout(() => {
-      router.push('/')
-    }, 3000)
+    // 请求异常（含博客不存在 HTTP 400/500），跳转到 NotFound 页面
+    router.replace('/notfound?type=blog')
   } finally {
     loading.value = false
     loadingRequest.value = false
