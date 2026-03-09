@@ -1154,10 +1154,16 @@ watch(messages, () => {
 .thinking-section {
   max-width: 100%;
   margin-bottom: 8px;
-  background: #f3f4f6;
-  border-radius: 8px;
+  background: var(--pixel-bg-primary);
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 2px dashed var(--pixel-text-muted);
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+
+.thinking-section:hover {
+  opacity: 1;
 }
 
 .thinking-header {
@@ -1166,24 +1172,27 @@ watch(messages, () => {
   gap: 4px;
   padding: 6px 10px;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--pixel-text-muted);
   cursor: pointer;
-  background: #f9fafb;
+  background: var(--pixel-bg-primary);
   user-select: none;
+  font-family: var(--pixel-font-body);
 }
 
 .thinking-header:hover {
-  background: #f3f4f6;
+  background: var(--pixel-bg-card);
+  color: var(--pixel-text-secondary);
 }
 
 .thinking-content {
   padding: 8px 10px;
   font-size: 12px;
-  color: #6b7280;
-  border-top: 1px solid #e5e7eb;
+  color: var(--pixel-text-muted);
+  border-top: 2px dashed var(--pixel-text-muted);
   white-space: pre-wrap;
-  background: #f9fafb;
+  background: var(--pixel-bg-primary);
   line-height: 1.4;
+  font-family: var(--pixel-font-body);
 }
 
 .cursor {
