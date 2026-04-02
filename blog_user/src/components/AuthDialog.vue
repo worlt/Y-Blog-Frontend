@@ -178,6 +178,7 @@ const appealFormRef = ref(null)
 const {
   verifyDialogVisible,
   slideVerifyRef,
+  captchaToken,
   triggerVerification,
   handleVerification
 } = useSlideVerify()
@@ -216,7 +217,7 @@ const submitPasswordLogin = async () => {
     const response = await userApi.loginByPassword({
       email: loginForm.email,
       password: loginForm.password,
-      captchaToken: slideVerifyRef.value?.captchaToken || ''
+      captchaToken: captchaToken.value || ''
     })
 
     if (response.code === 0) {
@@ -242,7 +243,7 @@ const submitCodeLogin = async () => {
     const response = await userApi.loginByCode({
       email: codeLoginForm.email,
       code: codeLoginForm.code,
-      captchaToken: slideVerifyRef.value?.captchaToken || ''
+      captchaToken: captchaToken.value || ''
     })
 
     if (response.code === 0) {
@@ -310,7 +311,7 @@ const submitRegister = async () => {
       username: registerForm.username,
       password: registerForm.password,
       code: registerForm.code,
-      captchaToken: slideVerifyRef.value?.captchaToken || ''
+      captchaToken: captchaToken.value || ''
     })
 
     if (response.code === 0) {
@@ -334,7 +335,7 @@ const submitResetPassword = async () => {
       email: resetForm.email,
       code: resetForm.code,
       password: resetForm.password,
-      captchaToken: slideVerifyRef.value?.captchaToken || ''
+      captchaToken: captchaToken.value || ''
     })
 
     if (response.code === 0) {

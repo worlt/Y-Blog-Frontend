@@ -338,10 +338,12 @@ const handleLoginSuccess = (userData) => {
                     <Icon icon="mdi:account-group" style="margin-right: 4px"/>
                     我的粉丝
                   </el-dropdown-item>
-                  <el-dropdown-item command="messages">
-                    <Icon icon="mdi:message-text" style="margin-right: 4px"/>
-                    消息
-                    <el-badge v-if="unreadMessageCount > 0" :value="unreadMessageCount" class="message-badge" />
+                  <el-dropdown-item command="messages" class="dropdown-item-with-badge">
+                    <div style="display: flex; align-items: center;">
+                      <Icon icon="mdi:message-text" style="margin-right: 4px"/>
+                      <span>消息</span>
+                    </div>
+                    <el-badge v-if="unreadMessageCount > 0" :value="unreadMessageCount" class="menu-item-badge" />
                   </el-dropdown-item>
                   <el-dropdown-item command="logout">
                     <Icon icon="mdi:logout" style="margin-right: 4px"/>
@@ -354,7 +356,7 @@ const handleLoginSuccess = (userData) => {
           <div class="message-container" @click="goToMessages">
             <Icon icon="mdi:message-text" style="margin-right: 4px"/>
             <span>消息</span>
-            <el-badge v-if="unreadMessageCount > 0" :value="unreadMessageCount" :max="99" class="message-badge" />
+            <el-badge v-if="unreadMessageCount > 0" :value="unreadMessageCount" :max="99" class="header-message-badge" />
           </div>
           <div class="history" @click="goToHistory">
             <Icon icon="mdi:history" style="margin-right: 4px"/>
@@ -553,10 +555,21 @@ const handleLoginSuccess = (userData) => {
   box-shadow: 2px 2px 0 #000;
 }
 
-.message-badge {
+.header-message-badge {
   position: absolute;
   top: -8px;
   right: -8px;
+}
+
+.menu-item-badge {
+  margin-left: 8px;
+}
+
+.dropdown-item-with-badge {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-width: 120px;
 }
 
 /* 右侧导航菜单的文本元素样式 */
