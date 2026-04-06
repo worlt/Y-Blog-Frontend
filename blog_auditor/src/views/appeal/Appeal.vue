@@ -206,6 +206,14 @@ const tableRowClassName = ({ row }) => {
   return ''
 }
 
+// 检查是否可以处理
+const canHandle = (row) => {
+  if (row.status === 1) {
+    return row.reviewerId && auditorStore.info && row.reviewerId === auditorStore.info.id;
+  }
+  return false;
+}
+
 // 初始加载数据
 getList();
 </script>
@@ -279,12 +287,12 @@ getList();
               size="small" 
               type="success" 
               @click="openHandleDialog(scope.row, 2)"
-              :disabled="scope.row.status === 2 || scope.row.status === 3">通过</el-button>
+              :disabled="!canHandle(scope.row)">通过</el-button>
             <el-button 
               size="small" 
               type="danger" 
               @click="openHandleDialog(scope.row, 3)"
-              :disabled="scope.row.status === 2 || scope.row.status === 3">拒绝</el-button>
+              :disabled="!canHandle(scope.row)">拒绝</el-button>
           </template>
         </el-table-column>
       </el-table>

@@ -233,9 +233,10 @@ const markAsInProcess = async (row) => {
 
 // 检查是否可以处理
 const canHandle = (row) => {
-  // 允许待处理(0)和处理中(1)状态进行操作
-  // TODO: 后续需要添加处理人权限检查
-  return row.status === 0 || row.status === 1;
+  if (row.status === 1) {
+    return row.reviewerId && auditorStore.info && row.reviewerId === auditorStore.info.id;
+  }
+  return false;
 }
 
 const auditorStore = useAuditorInfoStore()

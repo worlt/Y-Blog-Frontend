@@ -210,9 +210,10 @@ const markAsInProcess = async (blog) => {
 
 // 检查是否可以审核
 const canAudit = (blog) => {
-  // 允许待审核(0)和处理中(5)状态进行操作
-  // TODO: 后续需要添加处理人权限检查
-  return blog.status === AUDIT_STATUS.PENDING || blog.status === AUDIT_STATUS.IN_PROCESS;
+  if (blog.status === AUDIT_STATUS.IN_PROCESS) {
+    return blog.reviewerId && auditorStore.info && blog.reviewerId === auditorStore.info.id;
+  }
+  return false;
 }
 
 import { useAuditorInfoStore } from '@/stores/auditorInfo'
