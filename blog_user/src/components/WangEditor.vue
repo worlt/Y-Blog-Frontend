@@ -455,6 +455,22 @@ defineExpose({
   border-radius: 0;
   overflow: visible; /* 改为visible，让内容撑开页面 */
   position: relative;
+  
+  /* ============================================
+     WangEditor 官方主题变量覆盖 (暗色模式)
+     ============================================ */
+  --w-e-textarea-bg-color: var(--pixel-bg-primary);
+  --w-e-textarea-color: var(--pixel-text-primary);
+  --w-e-toolbar-bg-color: var(--pixel-bg-card);
+  --w-e-toolbar-color: var(--pixel-text-primary);
+  --w-e-toolbar-active-bg-color: var(--pixel-bg-secondary);
+  --w-e-toolbar-active-color: var(--pixel-primary-light);
+  --w-e-toolbar-border-color: #000;
+  --w-e-menu-drop-bg-color: var(--pixel-bg-card);
+  --w-e-menu-drop-border-color: #000;
+  --w-e-menu-drop-shadow: 4px 4px 0 #000;
+  --w-e-modal-button-bg-color: var(--pixel-primary);
+  --w-e-modal-button-border-color: #000;
 }
 
 .editor-toolbar-container {
@@ -471,7 +487,6 @@ defineExpose({
   overflow: visible; /* 不产生自己的滚动条 */
 }
 
-/* AI 补全 Overlay 样式 */
 /* AI 补全 Overlay 样式 */
 .ai-completion-overlay {
   position: fixed; /* 改为 fixed 定位 */
@@ -570,21 +585,63 @@ defineExpose({
   }
 }
 
-/* 覆盖 WangEditor 内部样式 */
+/* ============================================
+   WangEditor 内部样式深度穿透覆盖
+   ============================================ */
+
+/* 1. 工具栏基础 */
 :deep(.w-e-toolbar) {
   background-color: var(--pixel-bg-card) !important;
   color: var(--pixel-text-primary) !important;
   border-bottom: 2px solid #000 !important;
 }
 
-:deep(.w-e-toolbar *) {
-  font-family: 'Pixel', 'Zpix', 'Minecraft', sans-serif !important;
-}
-
+/* 2. 所有图标和按钮 */
 :deep(.w-e-bar-item svg) {
   fill: var(--pixel-text-primary) !important;
 }
 
+:deep(.w-e-bar-item button) {
+  color: var(--pixel-text-primary) !important;
+  cursor: pointer !important;
+}
+
+:deep(.w-e-bar-item button:hover) {
+  background-color: var(--pixel-bg-secondary) !important;
+}
+
+/* 激活状态样式 */
+:deep(.w-e-active) {
+  background-color: var(--pixel-bg-secondary) !important;
+  color: var(--pixel-primary-light) !important;
+}
+
+/* 3. 核心：浮动工具栏 (Hover Bar) - 解决选中文字后的白色长条 */
+:deep(.w-e-hover-bar) {
+  background-color: var(--pixel-bg-card) !important;
+  border: 2px solid #000 !important;
+  box-shadow: 4px 4px 0 #000 !important;
+  color: var(--pixel-text-primary) !important;
+}
+
+/* 4. 核心：下拉列表和下拉容器 - 解决截图中的白色区域 */
+:deep(.w-e-select-list),
+:deep(.w-e-bar-item-menus-container),
+:deep(.w-e-drop-panel) {
+  background-color: var(--pixel-bg-card) !important;
+  border: 2px solid #000 !important;
+  box-shadow: 4px 4px 0 #000 !important;
+  color: var(--pixel-text-primary) !important;
+}
+
+/* 下拉项 Hover */
+:deep(.w-e-select-list ul li:hover),
+:deep(.w-e-panel-content-color ul li:hover) {
+  background-color: var(--pixel-primary) !important;
+  color: #fff !important;
+}
+
+/* 5. 编辑区域 */
 :deep(.w-e-text-container) {
   background-color: var(--pixel-bg-primary) !important;
   color: var(--pixel-text-primary) !important;
@@ -595,18 +652,32 @@ defineExpose({
   background-color: transparent !important;
 }
 
-:deep(.w-e-bar-item button) {
-  color: var(--pixel-text-primary) !important;
-}
-
-:deep(.w-e-bar-item button:hover) {
-  background-color: var(--pixel-bg-secondary) !important;
-}
-
-:deep(.w-e-menu-panel) {
+/* 6. 模态框与输入框 */
+:deep(.w-e-modal) {
   background-color: var(--pixel-bg-card) !important;
-  border: 2px solid #000 !important;
-  box-shadow: 2px 2px 0 #000 !important;
+  border: 4px solid #000 !important;
+  box-shadow: 8px 8px 0 #000 !important;
   color: var(--pixel-text-primary) !important;
 }
-</style> 
+
+:deep(.w-e-modal input) {
+  background-color: var(--pixel-bg-secondary) !important;
+  border: 2px solid #000 !important;
+  color: var(--pixel-text-primary) !important;
+  border-radius: 0 !important;
+}
+
+/* 7. 针对图片和表格的特定修复 */
+:deep(.w-e-panel-content-table),
+:deep(.w-e-panel-content-image) {
+  background-color: var(--pixel-bg-card) !important;
+  color: var(--pixel-text-primary) !important;
+}
+
+/* 修复编辑器内的文字选中颜色 */
+:deep([data-slate-editor] ::selection) {
+  background-color: var(--pixel-primary-light) !important;
+  color: #fff !important;
+}
+</style>
+ 

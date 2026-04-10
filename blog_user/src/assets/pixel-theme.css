@@ -99,6 +99,17 @@ body {
   image-rendering: pixelated;
 }
 
+/* 全局文字选中样式 */
+::selection {
+  background: var(--pixel-primary-light);
+  color: #fff;
+}
+
+::-moz-selection {
+  background: var(--pixel-primary-light);
+  color: #fff;
+}
+
 /* ============================================
    像素风基础组件
    ============================================ */
