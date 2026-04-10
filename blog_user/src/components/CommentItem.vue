@@ -67,7 +67,9 @@ const viewUserProfile = (userId) => {
           :src="comment.userAvatar || ''" 
           @click="viewUserProfile(comment.userId)"
           class="clickable-avatar"
-        />
+        >
+          <span v-if="!comment.userAvatar" class="avatar-fallback-text">{{ (comment.username || 'U').charAt(0).toUpperCase() }}</span>
+        </el-avatar>
         <div class="comment-user-info">
           <div class="comment-username">
             <span 

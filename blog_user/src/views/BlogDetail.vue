@@ -1160,7 +1160,9 @@ const totalCommentsCount = computed(() => {
         <el-affix :offset="80">
           <div class="sidebar-card author-card">
             <div class="author-header" @click="router.push(`/user/${author.id}`)" style="cursor: pointer;">
-              <el-avatar :size="60" :src="author.avatar || ''" />
+              <el-avatar :size="60" :src="author.avatar || ''" class="avatar-large">
+                <span v-if="!author.avatar" class="avatar-fallback-text">{{ (author.username || 'U').charAt(0).toUpperCase() }}</span>
+              </el-avatar>
               <div class="author-info">
                 <div class="author-name">{{ author.username || '未知作者' }}</div>
               </div>
@@ -1254,7 +1256,9 @@ const totalCommentsCount = computed(() => {
               
               <div class="blog-meta">
                 <div class="author-info" @click="router.push(`/user/${blog.userId}`)">
-                  <el-avatar :size="40" :src="author.avatar || ''" />
+                  <el-avatar :size="40" :src="author.avatar || ''">
+                    <span v-if="!author.avatar" class="avatar-fallback-text">{{ (author.username || 'U').charAt(0).toUpperCase() }}</span>
+                  </el-avatar>
                   <div class="author-detail">
                     <div class="author-name">{{ author.username || '未知作者' }}</div>
                     <div class="publish-time">{{ formatDate(blog.createTime) }}</div>

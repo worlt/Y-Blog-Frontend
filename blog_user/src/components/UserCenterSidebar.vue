@@ -70,7 +70,7 @@ const navigateTo = (path) => {
         :src="userAvatar"
         class="user-avatar"
       >
-        <Icon icon="mdi:account" :style="{ fontSize: isCollapsed ? '20px' : '30px' }" />
+        <span class="avatar-fallback-text">{{ (username || 'U').charAt(0).toUpperCase() }}</span>
       </el-avatar>
       <span v-show="!isCollapsed" class="username">{{ username }}</span>
     </div>

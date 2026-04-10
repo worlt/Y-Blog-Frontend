@@ -51,7 +51,9 @@
               
               <div class="blog-meta">
                 <span class="blog-author">
-                  <el-avatar :size="20" :src="blog.avatar">{{ blog.username?.substring(0, 1) }}</el-avatar>
+                  <el-avatar :size="20" :src="blog.avatar">
+                    <span v-if="!blog.avatar" class="avatar-fallback-text">{{ (blog.username || blog.author || 'U').charAt(0).toUpperCase() }}</span>
+                  </el-avatar>
                   {{ blog.username || blog.author || '未知作者' }}
                 </span>
                 

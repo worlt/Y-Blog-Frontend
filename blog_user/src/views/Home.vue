@@ -305,7 +305,7 @@ const handleLoginSuccess = (userData) => {
             <el-dropdown v-else @command="handleCommand">
               <div class="login">
                 <el-avatar :src="userAvatar" style="width: 35px; height: 35px">
-                  <span v-if="!userAvatar">{{ username.charAt(0).toUpperCase() }}</span>
+                  <span v-if="!userAvatar" class="avatar-fallback-text">{{ username.charAt(0).toUpperCase() }}</span>
                 </el-avatar>
               </div>
               <template #dropdown>

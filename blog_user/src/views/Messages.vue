@@ -461,7 +461,7 @@ const getOtherUser = (conversation) => {
   return {
     id: conversation.targetUserId,
     username: conversation.targetUsername || '未知用户',
-    avatar: conversation.targetAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+    avatar: conversation.targetAvatar || ''
   }
 }
 
@@ -611,7 +611,9 @@ const goToUserProfile = (userId) => {
                   <el-avatar 
                     :size="40" 
                     :src="getOtherUser(conversation).avatar"
-                  />
+                  >
+                    <span v-if="!getOtherUser(conversation).avatar" class="avatar-fallback-text">{{ getOtherUser(conversation).username.charAt(0).toUpperCase() }}</span>
+                  </el-avatar>
                   <div 
                     v-if="conversation.unreadCount > 0" 
                     class="unread-indicator"
@@ -646,7 +648,9 @@ const goToUserProfile = (userId) => {
                 :src="getOtherUser(currentConversation).avatar"
                 @click="goToUserProfile(getOtherUser(currentConversation).id)"
                 :style="getOtherUser(currentConversation).id && getOtherUser(currentConversation).id !== 0 && getOtherUser(currentConversation).id !== '0' ? 'cursor: pointer;' : ''"
-              />
+              >
+                <span v-if="!getOtherUser(currentConversation).avatar" class="avatar-fallback-text">{{ getOtherUser(currentConversation).username.charAt(0).toUpperCase() }}</span>
+              </el-avatar>
               <div class="user-details">
                 <div class="user-name">{{ getOtherUser(currentConversation).username }}</div>
 <!--                <div class="user-status">在线</div>-->
@@ -728,7 +732,9 @@ const goToUserProfile = (userId) => {
                         :src="getOtherUser(currentConversation).avatar"
                         @click="goToUserProfile(message.senderId)"
                         :style="message.senderId && message.senderId !== 0 && message.senderId !== '0' ? 'cursor: pointer;' : ''"
-                      />
+                      >
+                        <span v-if="!getOtherUser(currentConversation).avatar" class="avatar-fallback-text">{{ getOtherUser(currentConversation).username.charAt(0).toUpperCase() }}</span>
+                      </el-avatar>
                     </div>
                     
                     <!-- 消息内容 -->
@@ -750,8 +756,10 @@ const goToUserProfile = (userId) => {
                     <div class="message-avatar self-avatar" v-if="message.isMine">
                       <el-avatar 
                         :size="36" 
-                        :src="userInfoStore.userInfo?.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"
-                      />
+                        :src="userInfoStore.userInfo?.avatar"
+                      >
+                        <span v-if="!userInfoStore.userInfo?.avatar" class="avatar-fallback-text">{{ (userInfoStore.userInfo?.username || 'U').charAt(0).toUpperCase() }}</span>
+                      </el-avatar>
                     </div>
                   </div>
                 </div>

@@ -295,14 +295,16 @@ const formatDate = (dateString) => {
           <!-- 头像 -->
           <div class="avatar-container">
             <div class="avatar-wrapper">
-              <el-avatar :size="100" :src="userForm.avatar" />
+              <el-avatar :size="100" :src="userForm.avatar" class="avatar-huge">
+                <span v-if="!userForm.avatar" class="avatar-fallback-text">{{ (userForm.username || 'U').charAt(0).toUpperCase() }}</span>
+              </el-avatar>
             </div>
           </div>
           
           <!-- 用户名和简介 -->
           <div class="basic-info">
             <h2 class="username">{{ userForm.username }}</h2>
-            <p class="bio">这个人很懒，什么都没留下...</p>
+<!--            <p class="bio">这个人很懒，什么都没留下...</p>-->
           </div>
         </div>
       </div>

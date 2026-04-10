@@ -271,7 +271,9 @@ const stripHtml = (html) => {
             
             <div class="article-info">
               <span class="article-author">
-                <el-avatar :size="20" :src="blog.avatar">{{ (blog.username || blog.author || '未知').substring(0, 1) }}</el-avatar>
+                <el-avatar :size="20" :src="blog.authorAvatar" style="margin-right: 5px;">
+                  <span v-if="!blog.authorAvatar" class="avatar-fallback-text">{{ (blog.authorName || 'U').charAt(0).toUpperCase() }}</span>
+                </el-avatar>
                 <span style="margin-left: 5px">{{ blog.username || blog.author || '未知作者' }}</span>
               </span>
 

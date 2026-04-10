@@ -555,7 +555,9 @@ const formatDate = (dateString) => {
               :class="{ 'avatar-editable': editMode }"
               @click="editMode && showAvatarUploadDialog()"
             >
-              <el-avatar :size="100" :src="userForm.avatar" />
+              <el-avatar :size="100" :src="userInfoStore.info?.avatar" class="profile-avatar-img avatar-huge">
+                <span v-if="!userInfoStore.info?.avatar" class="avatar-fallback-text">{{ (userInfoStore.info?.username || 'U').charAt(0).toUpperCase() }}</span>
+              </el-avatar>
               <div 
                 v-if="editMode" 
                 class="avatar-edit-overlay"
@@ -577,7 +579,7 @@ const formatDate = (dateString) => {
             
             <template v-else>
               <h2 class="username">{{ userForm.username }}</h2>
-              <p class="bio">这个人很懒，什么都没留下...</p>
+<!--              <p class="bio">这个人很懒，什么都没留下...</p>-->
             </template>
           </div>
         </div>

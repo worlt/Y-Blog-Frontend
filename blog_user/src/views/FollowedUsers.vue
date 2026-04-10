@@ -190,8 +190,8 @@ const formatDate = (dateString) => {
         >
           <!-- 用户头像 -->
           <div class="user-avatar" @click="handleViewUser(user)">
-            <el-avatar :size="60" :src="user.avatar">
-              {{ (user.username || 'User').charAt(0).toUpperCase() }}
+            <el-avatar :size="60" :src="user.avatar" class="avatar-large">
+              <span v-if="!user.avatar" class="avatar-fallback-text">{{ (user.username || 'U').charAt(0).toUpperCase() }}</span>
             </el-avatar>
           </div>
           

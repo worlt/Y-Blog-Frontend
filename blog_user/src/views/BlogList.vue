@@ -533,7 +533,9 @@ const handleImageError = (event) => {
             <p class="article-summary">{{ stripHtml(blog.summary || blog.content) || '暂无摘要' }}</p>
             <div class="article-info">
               <span class="article-author" @click.stop="goUserProfile(blog.userId)">
-                <el-avatar :size="20" :src="blog.avatar" v-if="blog.avatar" class="author-avatar"/>
+                <el-avatar :size="20" :src="blog.avatar">
+                  <span v-if="!blog.avatar" class="avatar-fallback-text">{{ (blog.username || blog.author || 'U').charAt(0).toUpperCase() }}</span>
+                </el-avatar>
                 {{ blog.username || '匿名用户' }}
               </span>
               <span class="article-date">{{ formatDate(blog.publishTime || blog.createTime) }}</span>

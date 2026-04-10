@@ -422,6 +422,29 @@ body {
   border: 2px solid #000 !important;
   box-shadow: 2px 2px 0 #000 !important;
   box-sizing: border-box !important;
+  background-color: var(--pixel-bg-secondary) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 头像内容兜底文字样式 */
+.avatar-fallback-text {
+  font-family: var(--pixel-font-display);
+  font-weight: bold;
+  font-size: 18px; /* 默认中等大小 */
+  color: #fff;
+  user-select: none;
+  line-height: 1;
+}
+
+/* 针对不同场景的字号微调 */
+.avatar-large .avatar-fallback-text {
+  font-size: 36px;
+}
+
+.avatar-huge .avatar-fallback-text {
+  font-size: 48px;
 }
 
 /* 标签 */
