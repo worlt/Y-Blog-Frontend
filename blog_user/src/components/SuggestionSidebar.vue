@@ -351,10 +351,12 @@ onMounted(() => {
 
 <style scoped>
 .card-container {
-  background: white;
-  border-radius: 8px;
+  background: var(--pixel-bg-card);
+  border: var(--pixel-border);
+  box-shadow: var(--pixel-shadow);
   padding: 20px;
   min-height: 500px;
+  color: var(--pixel-text-primary);
 }
 
 .header {
@@ -362,15 +364,17 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: var(--pixel-border-light);
   padding-bottom: 15px;
 }
 
 .header h3 {
   margin: 0;
+  font-family: var(--pixel-font-display);
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--pixel-text-primary);
+  text-shadow: 2px 2px 0 #000;
 }
 
 .filters {
@@ -378,30 +382,31 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  background: #f9f9f9;
+  background: var(--pixel-bg-secondary);
   padding: 10px 15px;
-  border-radius: 6px;
+  border: var(--pixel-border-light);
 }
 
 .status-tabs, .sort-tabs {
   display: flex;
   gap: 20px;
-  color: #666;
+  color: var(--pixel-text-secondary);
+  font-family: var(--pixel-font-body);
 }
 
 .status-tabs span, .sort-tabs span {
   cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 4px;
-  transition: all 0.3s;
+  padding: 4px 12px;
+  transition: all 0.2s;
+  border: 2px solid transparent;
 }
 
 .status-tabs span:hover, .sort-tabs span:hover,
 .status-tabs span.active, .sort-tabs span.active {
-  color: #409eff;
-  background: white;
-  font-weight: 500;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  color: var(--pixel-primary-light);
+  background: var(--pixel-bg-card);
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
 }
 
 .list {
@@ -411,19 +416,18 @@ onMounted(() => {
 .item {
   display: flex; /* Flex layout */
   padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border: var(--pixel-border-light);
   cursor: pointer;
-  transition: background 0.2s;
-  border-radius: 8px;
+  transition: all 0.2s;
   margin-bottom: 15px;
-  background: #fff;
-  border: 1px solid #e4e7ed;
+  background: var(--pixel-bg-card);
+  box-shadow: var(--pixel-shadow-sm);
 }
 
 .item:hover {
-  background: #fcfcfc;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  border-color: #dcdfe6;
+  background: var(--pixel-bg-secondary);
+  box-shadow: var(--pixel-shadow);
+  transform: translate(-2px, -2px);
 }
 
 /* Details ... */
@@ -447,8 +451,8 @@ onMounted(() => {
 
 .title {
   font-weight: 600;
-  font-size: 16px;
-  color: #333;
+  font-size: 18px;
+  color: var(--pixel-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -456,8 +460,8 @@ onMounted(() => {
 }
 
 .item-content {
-  font-size: 14px;
-  color: #606266;
+  font-size: 16px;
+  color: var(--pixel-text-secondary);
   margin-bottom: 8px;
   line-height: 1.5;
   /* Multi-line ellipsis */
@@ -470,8 +474,8 @@ onMounted(() => {
 }
 
 .item-footer {
-  font-size: 12px;
-  color: #909399;
+  font-size: 14px;
+  color: var(--pixel-text-muted);
 }
 
 /* Right Actions */
@@ -481,9 +485,9 @@ onMounted(() => {
     flex-direction: column;
     justify-content: center;
     gap: 12px;
-    border-left: 1px solid #f0f0f0;
+    border-left: var(--pixel-border-light);
     padding-left: 20px;
-    min-width: 130px; 
+    min-width: 140px; 
 }
 
 .action-btn {
@@ -491,58 +495,60 @@ onMounted(() => {
     justify-content: center; 
     align-items: center;
     gap: 10px;
-    padding: 12px 16px;
-    border-radius: 8px; /* Slightly rounder */
-    border: 1px solid #dcdfe6;
+    padding: 10px 16px;
+    border: var(--pixel-border-light);
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.2s;
     font-weight: 500;
-    background: #fff;
+    background: var(--pixel-bg-secondary);
     position: relative;
     user-select: none;
+    font-family: var(--pixel-font-body);
 }
 
 .action-btn.disabled {
-    cursor: default;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .action-btn:not(.disabled):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transform: translate(-1px, -1px);
+    box-shadow: var(--pixel-shadow-sm);
+    border-color: var(--pixel-primary-light);
 }
 
 .want-btn {
-    border-color: #a0cfff;
-    color: #409eff;
+    border-color: var(--pixel-blue);
+    color: var(--pixel-blue);
 }
 
 .want-btn:not(.disabled):hover {
-    border-color: #409eff;
-    background-color: #ecf5ff;
+    border-color: var(--pixel-blue);
+    background-color: var(--pixel-bg-card);
 }
 
 .want-btn.active {
-    background-color: #409eff;
-    border-color: #409eff;
-    color: white;
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+    background-color: var(--pixel-blue);
+    border-color: #000;
+    color: #000;
+    box-shadow: var(--pixel-shadow-sm);
 }
 
 .not-want-btn {
-    border-color: #fab6b6;
-    color: #f56c6c;
+    border-color: var(--pixel-accent);
+    color: var(--pixel-accent);
 }
 
 .not-want-btn:not(.disabled):hover {
-    border-color: #f56c6c;
-    background-color: #fef0f0;
+    border-color: var(--pixel-accent);
+    background-color: var(--pixel-bg-card);
 }
 
 .not-want-btn.active {
-    background-color: #f56c6c;
-    border-color: #f56c6c;
-    color: white;
-    box-shadow: 0 4px 12px rgba(245, 108, 108, 0.3);
+    background-color: var(--pixel-accent);
+    border-color: #000;
+    color: #000;
+    box-shadow: var(--pixel-shadow-sm);
 }
 
 .btn-text {
@@ -558,22 +564,24 @@ onMounted(() => {
 /* Detail styles */
 .detail-content h3 {
     margin-top: 0;
-    font-size: 20px;
+    font-size: 22px;
+    font-family: var(--pixel-font-display);
     font-weight: 700;
-    color: #303133;
+    color: var(--pixel-text-primary);
     display: flex;
     align-items: flex-start; /* Align top for multi-line */
     justify-content: space-between; 
     gap: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
+    border-bottom: var(--pixel-border-light);
 }
 
 .detail-content h3 .title-text {
     flex: 1;
     word-break: break-all;
     line-height: 1.4;
+    text-shadow: 2px 2px 0 #000;
 }
 
 .detail-content h3 .status-tag {
@@ -584,19 +592,19 @@ onMounted(() => {
 .meta {
     display: flex;
     gap: 20px;
-    font-size: 13px;
-    color: #909399;
+    font-size: 14px;
+    color: var(--pixel-text-muted);
     margin-bottom: 20px;
 }
 
 .content-body {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.8;
-    color: #606266;
-    background: #fdfdfd; 
-    border: 1px solid #f2f2f2;
+    color: var(--pixel-text-primary);
+    background: var(--pixel-bg-secondary); 
+    border: var(--pixel-border-light);
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 0;
     margin-bottom: 25px;
     white-space: pre-wrap; /* Preserve line breaks */
     word-break: break-word;
