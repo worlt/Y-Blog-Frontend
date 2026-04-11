@@ -85,7 +85,6 @@
   padding: 0;
   box-sizing: border-box;
 }
-
 html,
 body {
   font-family: var(--pixel-font-body);
@@ -98,6 +97,7 @@ body {
   -moz-osx-font-smoothing: unset;
   image-rendering: pixelated;
 }
+
 
 /* 全局文字选中样式 */
 ::selection {
@@ -696,12 +696,12 @@ h3,
 h4,
 h5,
 h6,
-p,
-span,
-div,
 a,
 .el-text,
-.el-link__inner {
+.el-link__inner,
+p:not([data-slate-editor] *, .markdown-body *),
+span:not([data-slate-editor] *, .markdown-body *),
+div:not([data-slate-editor] *, .markdown-body *) {
   color: var(--pixel-text-primary) !important;
 }
 
@@ -1184,6 +1184,86 @@ a:hover {
 /* 扫描 */
 .el-scan {
   border-color: var(--pixel-primary) !important;
+}
+
+
+/* ============================================
+   富文本内容通用展示样式 (支持编辑器及详情页)
+   ============================================ */
+
+/* 1. 文字选中颜色 */
+[data-slate-editor] ::selection,
+.markdown-body ::selection {
+  background-color: var(--pixel-primary-light) !important;
+  color: #fff !important;
+}
+
+/* 2. 表格全局修复 (解决暗色模式白背景问题) */
+.w-e-text-container table,
+.markdown-body table {
+  border-collapse: collapse;
+  margin: 10px 0;
+  border: 1px solid var(--pixel-text-secondary) !important;
+  width: auto !important;
+}
+
+.w-e-text-container table td,
+.w-e-text-container table th,
+.markdown-body table td,
+.markdown-body table th {
+  border: 1px solid var(--pixel-text-secondary) !important;
+  min-width: 40px;
+  height: 30px;
+  padding: 4px 8px;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: var(--pixel-text-primary) !important;
+}
+
+/* 单元格选中反馈 */
+.w-e-text-container .w-e-table-selected-cell {
+  background-color: var(--pixel-bg-secondary) !important;
+  outline: 2px solid var(--pixel-primary) !important;
+}
+
+/* 3. 引用块 (Blockquote) */
+.w-e-text-container blockquote,
+.markdown-body blockquote {
+  border-left: 6px solid var(--pixel-text-muted) !important;
+  padding: 16px 24px !important;
+  background-color: var(--pixel-bg-secondary) !important;
+  color: var(--pixel-text-secondary) !important;
+  margin: 20px 0 !important;
+  /* 使用 Grid 及其对齐特性，确保无论内部有多少个 p，都能相对于容器垂直居中 */
+  display: grid !important;
+  align-content: center !important;
+  min-height: 3em !important; /* 给予最小高度，使其更有“块”的质感 */
+}
+
+/* 严格控制内部所有直接子元素的边距，彻底解决“上下不对称” */
+.w-e-text-container blockquote > p,
+.markdown-body blockquote > p,
+.w-e-text-container blockquote > div,
+.markdown-body blockquote > div {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.5 !important; /* 稍微紧凑的行高有助于视觉居中 */
+  display: block !important;
+}
+
+/* 针对 WangEditor 可能产生的空段落进行二次清理 */
+.w-e-text-container blockquote p:empty,
+.markdown-body blockquote p:empty,
+.w-e-text-container blockquote p br:only-child,
+.markdown-body blockquote p br:only-child {
+  display: none !important;
+}
+
+/* 4. 分割线 (HR) */
+.w-e-text-container hr,
+.markdown-body hr {
+  border: none;
+  border-top: 2px dashed var(--pixel-border-light);
+  margin: 20px 0;
 }
 
 /* ============================================

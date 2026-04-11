@@ -31,7 +31,7 @@
 
 <script setup>
 import { ref, shallowRef, onMounted, onBeforeUnmount, watch, nextTick, computed } from 'vue'
-import { createEditor, createToolbar } from '@wangeditor/editor'
+import { createEditor, createToolbar, Boot } from '@wangeditor/editor'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import '@wangeditor/editor/dist/css/style.css'
 import { uploadImage } from '../api/common'
@@ -85,6 +85,31 @@ const completionStyle = computed(() => ({
   left: `${completionPosition.value.left}px`
 }))
 
+// 自定义“一键分割线”菜单类
+class QuickDividerMenu {
+  constructor() {
+    this.title = '分割线' 
+    this.iconSvg = '<svg viewBox="0 0 1024 1024"><path d="M128 512h768v64H128z"></path></svg>'
+    this.tag = 'button'
+  }
+  getValue(editor) { return '' }
+  isActive(editor) { return false }
+  isDisabled(editor) { return false }
+  exec(editor, value) {
+    // 直接插入分割线节点，不经过二次确认
+    editor.insertNode({ type: 'divider', children: [{ text: '' }] })
+  }
+}
+
+// 注册自定义菜单
+const menuConf = {
+  key: 'quick-divider',
+  factory() {
+    return new QuickDividerMenu()
+  }
+}
+Boot.registerMenu(menuConf)
+
 // 组件挂载时创建编辑器
 onMounted(() => {
   // 自定义图片上传
@@ -117,14 +142,19 @@ onMounted(() => {
   
   // 工具栏配置：失焦时不禁用
   const toolbarConfig = {
-    // 排除不需要的功能
+    // 工具栏配置
     excludeKeys: [
-      'fullScreen',      // 移除全屏
-      'insertVideo',     // 移除插入视频
-      'uploadVideo',     // 移除上传视频
-      'insertImage',     // 移除插入网络图片（保留uploadImage上传本地图片）
-      'group-video'      // 移除视频菜单组
-    ]
+      'fullScreen',      
+      'insertVideo',     
+      'uploadVideo',     
+      'insertImage',     
+      'group-video',
+      'divider'          // 排除原有的分割线（带弹窗）
+    ],
+    insertKeys: {
+      index: 10,         // 插入到合适位置
+      keys: ['quick-divider'] // 加入自定义的一键分割线
+    }
   }
 
   // 创建编辑器
@@ -373,16 +403,24 @@ watch(() => props.modelValue, (newValue) => {
   // 判断编辑器实例是否存在
   if (!editorRef.value || newValue === undefined || newValue === null) return
   // 判断内容是否变化
-  if (newValue !== editorContent.value) {
-    editorContent.value = newValue
-    try {
-      // 使用setHtml方法设置内容
-      editorRef.value.setHtml(newValue)
-      console.log('编辑器内容更新成功')
-    } catch (error) {
-      console.error('设置编辑器内容失败', error)
+    if (newValue !== editorContent.value) {
+      // 进一步检查：如果只是 HTML 标签闭合等非实质性差异，则不强制更新
+      // 这可以防止在使用颜色选择器等工具时，因为内容同步导致的 UI 状态丢失
+      const div1 = document.createElement('div')
+      div1.innerHTML = newValue
+      const div2 = document.createElement('div')
+      div2.innerHTML = editorContent.value
+      
+      if (div1.innerHTML === div2.innerHTML) return
+
+      editorContent.value = newValue
+      try {
+        editorRef.value.setHtml(newValue)
+        console.log('编辑器内容同步成功')
+      } catch (error) {
+        console.error('设置编辑器内容失败', error)
+      }
     }
-  }
 })
 
 // 销毁编辑器
@@ -597,8 +635,9 @@ defineExpose({
 }
 
 /* 2. 所有图标和按钮 */
-:deep(.w-e-bar-item svg) {
+:deep(.w-e-menu-icon svg) {
   fill: var(--pixel-text-primary) !important;
+  pointer-events: none; /* 防止图标拦截点击，确保按钮点击逻辑（如 Toggle）生效 */
 }
 
 :deep(.w-e-bar-item button) {
@@ -648,7 +687,7 @@ defineExpose({
 }
 
 :deep(.w-e-text-container [data-slate-editor]) {
-  color: var(--pixel-text-primary) !important;
+  color: var(--pixel-text-primary); /* 移除 !important，允许内联样式（如字体颜色）生效 */
   background-color: transparent !important;
 }
 
@@ -690,11 +729,7 @@ defineExpose({
   font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace !important;
 }
 
-/* 修复编辑器内的文字选中颜色 */
-:deep([data-slate-editor] ::selection) {
-  background-color: var(--pixel-primary-light) !important;
-  color: #fff !important;
-}
+
 </style>
 
  
