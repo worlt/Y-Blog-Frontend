@@ -674,10 +674,27 @@ defineExpose({
   color: var(--pixel-text-primary) !important;
 }
 
+/* 8. 修复代码块背景色 */
+:deep(.w-e-text-container pre) {
+  background-color: var(--pixel-bg-secondary) !important;
+  border: 2px solid #000 !important;
+  padding: 12px !important;
+  color: var(--pixel-text-primary) !important;
+  border-radius: 0 !important;
+  margin: 10px 0 !important;
+}
+
+:deep(.w-e-text-container code) {
+  background-color: transparent !important;
+  color: inherit !important;
+  font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace !important;
+}
+
 /* 修复编辑器内的文字选中颜色 */
 :deep([data-slate-editor] ::selection) {
   background-color: var(--pixel-primary-light) !important;
   color: #fff !important;
 }
 </style>
+
  
