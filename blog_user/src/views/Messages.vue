@@ -576,13 +576,13 @@ const goToUserProfile = (userId) => {
           </div>
         </div>
         
-        <div class="conversations-search">
-          <el-input
-            placeholder="搜索会话"
-            prefix-icon="Search"
-            clearable
-          />
-        </div>
+<!--        <div class="conversations-search">-->
+<!--          <el-input-->
+<!--            placeholder="搜索会话"-->
+<!--            prefix-icon="Search"-->
+<!--            clearable-->
+<!--          />-->
+<!--        </div>-->
         
         <div class="conversations-list">
           <el-empty 
@@ -716,13 +716,21 @@ const goToUserProfile = (userId) => {
                     <span>{{ formatTime(message.createTime || message.sendTime) }}</span>
                   </div>
                   
-                  <!-- 消息气泡 -->
+                  <!-- 撤回消息系统提示 (微信风格) -->
                   <div 
+                    v-if="message.status === 0 || message.content.includes('[该消息已撤回]')" 
+                    class="retracted-system-tip"
+                  >
+                    <span>{{ message.isMine ? '你' : '对方' }}撤回了一条消息</span>
+                  </div>
+
+                  <!-- 普通消息气泡 -->
+                  <div 
+                    v-else
                     class="message-item"
                     :class="{
                       'message-self': message.isMine,
-                      'message-other': !message.isMine,
-                      'message-retracted': message.status === 0 || message.content.includes('[该消息已撤回]')
+                      'message-other': !message.isMine
                     }"
                   >
                     <!-- 左侧头像 - 只在对方消息显示 -->
@@ -741,14 +749,10 @@ const goToUserProfile = (userId) => {
                     <div class="message-content-wrapper">
                       <div 
                         class="message-bubble"
-                        @contextmenu.prevent="message.isMine && message.status !== 0 && !message.content.includes('[该消息已撤回]') && retractMessage(message)"
-                        :data-can-retract="message.isMine && message.status !== 0 && !message.content.includes('[该消息已撤回]') && dayjs().diff(dayjs(message.createTime || message.sendTime), 'minute') <= 2"
+                        @contextmenu.prevent="message.isMine && retractMessage(message)"
+                        :data-can-retract="message.isMine && dayjs().diff(dayjs(message.createTime || message.sendTime), 'minute') <= 2"
                       >
-                        <div v-if="message.status === 0 || message.content.includes('[该消息已撤回]')" class="retracted-message">
-                          <el-icon><Delete /></el-icon>
-                          <span>消息已撤回</span>
-                        </div>
-                        <div v-else class="message-text" v-html="message.content" @click="handleMessageClick($event)"></div>
+                        <div class="message-text" v-html="message.content" @click="handleMessageClick($event)"></div>
                       </div>
                     </div>
                     
@@ -1161,17 +1165,22 @@ const goToUserProfile = (userId) => {
   word-break: break-word;
 }
 
-.retracted-message {
+.retracted-system-tip {
   display: flex;
+  justify-content: center;
   align-items: center;
-  color: #909399;
-  font-style: italic;
-  font-size: 14px;
+  margin: 12px 0;
+  width: 100%;
 }
 
-.retracted-message .el-icon {
-  margin-right: 4px;
-  font-size: 14px;
+.retracted-system-tip span {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--pixel-text-muted);
+  background-color: var(--pixel-bg-secondary);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
 }
 
 .message-status {
