@@ -1,29 +1,29 @@
-# blog_admin
+# Y-Blog · 管理端
 
-This template should help get you started developing with Vue 3 in Vite.
+这是 [Y-Blog 前端仓库](../README.md) 的管理端应用，默认开发端口为 **2000**。
 
-## Recommended IDE Setup
+请克隆完整仓库：本应用通过 `@common` 引用相邻的 `common/`，不能脱离它单独运行。
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 开发
 
-## Customize configuration
+在当前应用目录执行：
 
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
+```bash
+npm ci
 npm run dev
 ```
 
-### Compile and Minify for Production
+后端默认位于 `http://localhost:8088`，API 代理配置见本目录的 `vite.config.js`。
 
-```sh
+## 构建
+
+```bash
 npm run build
+npm run preview
 ```
+
+静态产物位于本应用的 `dist/`。`preview` 只用于本地预览。
+
+完整功能、联调与部署说明见 [根 README](../README.md)，安全要求见 [SECURITY.md](../SECURITY.md)。
+
+原创代码使用 **AGPL-3.0-only**，见 [LICENSE](../LICENSE)。维护者：**worlt <2516930419@qq.com>**。

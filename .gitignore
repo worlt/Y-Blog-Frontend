@@ -32,3 +32,24 @@ coverage
 
 #bug
 /bug/
+
+# Local secrets and private runtime files
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.sql.gz
+*.dump
+*.bak
+
+# Local code-intelligence indexes
+.gitnexus/
+
+# Keep all local IDE metadata out of the public repository
+.idea/
