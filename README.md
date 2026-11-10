@@ -14,6 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/worlt/Y-Blog-Backend">后端仓库</a> ·
+  <a href="#界面预览">界面预览</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#部署说明">部署说明</a> ·
   <a href="SECURITY.md">安全与隐私</a>
@@ -38,6 +39,52 @@ Y-Blog 不只是文章展示页面，还包含内容创作、社区互动、即�
 
 具体行为以当前源码及后端接口为准；邮件、对象存储和 AI 功能需要部署者提供对应服务。
 
+## 界面预览
+
+以下截图展示用户端、审核端与管理端的实际界面。截图内容为演示时的页面状态，管理看板中的 IP 地址已脱敏。
+
+### 用户端
+
+**首页与内容发现**：像素风首页整合文章列表、分类导航、热门博客与推荐阅读。
+
+![用户端首页：文章列表、分类导航与热门推荐](docs/images/screenshots/user-home.png)
+
+#### 文章详情、评论互动与富文本创作
+
+**文章详情**：展示文章正文、代码块、作者信息，以及点赞、收藏、分享和举报入口。
+
+![文章详情：正文阅读、代码展示与互动入口](docs/images/screenshots/article-detail.png)
+
+**评论互动**：侧边评论区支持发表评论、回复、删除与举报。
+
+![文章评论：评论列表、回复与举报入口](docs/images/screenshots/article-comments.png)
+
+**富文本创作**：编辑正文，设置分类、标签、封面与摘要，并保存草稿或发布文章。
+
+![文章创作：富文本编辑器与博客设置](docs/images/screenshots/article-editor.png)
+
+#### 即时私信与个人创作中心
+
+**消息中心**：提供会话搜索、聊天记录、消息输入与系统通知入口。
+
+![消息中心：会话列表与即时私信界面](docs/images/screenshots/private-messages.png)
+
+**个人创作中心**：按文章状态筛选自己的博客，查看阅读和点赞数据，并进行预览、编辑或删除。
+
+![个人创作中心：文章状态筛选与博客管理](docs/images/screenshots/creator-center.png)
+
+### 审核端
+
+**博客举报处理**：按举报用户和处理状态筛选记录，查看被举报内容并进行处理或忽略。
+
+![审核端：博客举报查询与处理列表](docs/images/screenshots/auditor-reports.png)
+
+### 管理端
+
+**数据仪表盘**：展示网站访问趋势、浏览量（PV）、访客数（UV）与访问记录，侧边栏提供内容、账户和系统配置入口。
+
+![管理端：网站访问趋势与数据仪表盘，IP 地址已脱敏](docs/images/screenshots/admin-dashboard.png)
+
 ## 技术栈
 
 - **界面与路由**：Vue 3、Vue Router 4、Element Plus、Iconify。
@@ -54,6 +101,7 @@ Y-Blog-Frontend/
 ├── blog_admin/      # 管理端，默认端口 2000
 ├── blog_auditor/    # 审核端，默认端口 2001
 ├── common/          # 共享工具，被三个应用通过 @common 引用
+├── docs/images/     # README 界面截图
 ├── README.md
 ├── SECURITY.md
 ├── NOTICE
